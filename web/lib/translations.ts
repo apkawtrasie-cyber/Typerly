@@ -110,7 +110,9 @@ export type TranslationKey =
   // Competitions
   | "comp.cl" | "comp.wc" | "comp.football"
   // Badge names (by badge id)
-  | "badge.exact_score" | "badge.goal_diff" | "badge.tendency" | "badge.consolation";
+  | "badge.exact_score" | "badge.goal_diff" | "badge.tendency" | "badge.consolation"
+  // Tournament rules modal
+  | "rules.title" | "rules.close" | "rules.scroll_hint";
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -256,6 +258,7 @@ const en: Translations = {
   "profile.email_changed": "Email changed — check your inbox.", "profile.pass_changed": "Password has been changed.", "profile.error_prefix": "Error",
   "comp.cl": "Champions League", "comp.wc": "World Cup", "comp.football": "Football",
   "badge.exact_score": "Sniper", "badge.goal_diff": "Strategist", "badge.tendency": "Analyst", "badge.consolation": "Shield",
+  "rules.title": "Tournament Rules", "rules.close": "Close", "rules.scroll_hint": "Scroll to read all rules",
 };
 
 const pl: Translations = {
@@ -386,6 +389,7 @@ const pl: Translations = {
   "profile.email_changed": "Email zmieniony — sprawdź skrzynkę.", "profile.pass_changed": "Hasło zostało zmienione.", "profile.error_prefix": "Błąd",
   "comp.cl": "Liga Mistrzów", "comp.wc": "MŚ", "comp.football": "Piłka nożna",
   "badge.exact_score": "Snajper", "badge.goal_diff": "Strateg", "badge.tendency": "Analityk", "badge.consolation": "Tarcza",
+  "rules.title": "Regulamin turnieju", "rules.close": "Zamknij", "rules.scroll_hint": "Przewiń, aby przeczytać wszystkie zasady",
 };
 
 const de: Translations = {
@@ -516,6 +520,7 @@ const de: Translations = {
   "profile.email_changed": "E-Mail geändert — überprüfe dein Postfach.", "profile.pass_changed": "Passwort wurde geändert.", "profile.error_prefix": "Fehler",
   "comp.cl": "Champions League", "comp.wc": "WM", "comp.football": "Fußball",
   "badge.exact_score": "Scharfschütze", "badge.goal_diff": "Stratege", "badge.tendency": "Analyst", "badge.consolation": "Schild",
+  "rules.title": "Turnierregeln", "rules.close": "Schließen", "rules.scroll_hint": "Scrollen, um alle Regeln zu lesen",
 };
 
 const fr: Translations = {
@@ -646,6 +651,7 @@ const fr: Translations = {
   "profile.email_changed": "E-mail modifié — vérifie ta boîte de réception.", "profile.pass_changed": "Le mot de passe a été modifié.", "profile.error_prefix": "Erreur",
   "comp.cl": "Ligue des Champions", "comp.wc": "CM", "comp.football": "Football",
   "badge.exact_score": "Sniper", "badge.goal_diff": "Stratège", "badge.tendency": "Analyste", "badge.consolation": "Bouclier",
+  "rules.title": "Règlement du tournoi", "rules.close": "Fermer", "rules.scroll_hint": "Faites défiler pour lire toutes les règles",
 };
 
 const es: Translations = {
@@ -776,6 +782,7 @@ const es: Translations = {
   "profile.email_changed": "Correo cambiado — revisa tu bandeja.", "profile.pass_changed": "La contraseña ha sido cambiada.", "profile.error_prefix": "Error",
   "comp.cl": "Liga de Campeones", "comp.wc": "Mundial", "comp.football": "Fútbol",
   "badge.exact_score": "Francotirador", "badge.goal_diff": "Estratega", "badge.tendency": "Analista", "badge.consolation": "Escudo",
+  "rules.title": "Reglamento del torneo", "rules.close": "Cerrar", "rules.scroll_hint": "Desplázate para leer todas las reglas",
 };
 
 const it: Translations = {
@@ -906,6 +913,7 @@ const it: Translations = {
   "profile.email_changed": "Email cambiata — controlla la casella.", "profile.pass_changed": "La password è stata cambiata.", "profile.error_prefix": "Errore",
   "comp.cl": "Champions League", "comp.wc": "Mondiali", "comp.football": "Calcio",
   "badge.exact_score": "Cecchino", "badge.goal_diff": "Stratega", "badge.tendency": "Analista", "badge.consolation": "Scudo",
+  "rules.title": "Regolamento del torneo", "rules.close": "Chiudi", "rules.scroll_hint": "Scorri per leggere tutte le regole",
 };
 
 export const translations: Record<Locale, Translations> = { en, pl, de, fr, es, it };
