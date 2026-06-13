@@ -1,11 +1,11 @@
 "use client";
 export const dynamic = 'force-dynamic';
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Trophy, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
-export default function JoinPage() {
+function JoinInner() {
   const router = useRouter();
   const params = useSearchParams();
   const code = params.get("code")?.toUpperCase() ?? "";
@@ -22,13 +22,11 @@ export default function JoinPage() {
     setStatus("joining");
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      // Store code in sessionStorage, redirect to login
       sessionStorage.setItem("pending_join_code", code);
       router.push(`/login?redirect=/join?code=${code}`);
       return;
     }
 
-    // Find tournament by code
     const { data: t } = await supabase
       .from("custom_tournaments")
       .select("id, name")
@@ -38,7 +36,6 @@ export default function JoinPage() {
     if (!t) { setStatus("notfound"); return; }
     setName(t.name);
 
-    // Check if already a member
     const { data: existing } = await supabase
       .from("tournament_members")
       .select("id")
@@ -48,7 +45,6 @@ export default function JoinPage() {
 
     if (existing) { setStatus("already"); setTimeout(() => router.push(`/tournaments/${t.id}`), 1500); return; }
 
-    // Join
     const { error } = await supabase.from("tournament_members").insert({ tournament_id: t.id, user_id: user.id });
     if (error) { setStatus("notfound"); return; }
 
@@ -95,5 +91,17 @@ export default function JoinPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function JoinPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#080808]">
+        <Loader2 size={48} className="text-[#F5C400] animate-spin" />
+      </div>
+    }>
+      <JoinInner />
+    </Suspense>
   );
 }
