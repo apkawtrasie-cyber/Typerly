@@ -1,9 +1,11 @@
 "use client";
 export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback } from "react";
-import { supabase, League } from "@/lib/supabase";
+import { supabase, League, Match, isUpcoming, isLive } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Crown, Copy, Check, MoreVertical, Pencil, Trash2, LogOut, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Crown, Copy, Check, MoreVertical, Pencil, Trash2, LogOut, X, ChevronRight } from "lucide-react";
+import { TeamLogo } from "@/components/MatchCard";
 
 type Member = { user_id: string; username: string; points: number; predictions: number };
 
@@ -12,6 +14,7 @@ export default function LeagueDetailPage() {
   const router = useRouter();
   const [league, setLeague] = useState<League | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -58,6 +61,17 @@ export default function LeagueDetailPage() {
     });
     list.sort((a, b) => b.points - a.points);
     setMembers(list);
+
+    // Nadchodzące mecze do typowania w tej grupie
+    const since = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const { data: ms } = await supabase
+      .from("matches")
+      .select("*")
+      .gte("match_time", since)
+      .order("match_time", { ascending: true })
+      .limit(30);
+    setMatches((ms ?? []) as Match[]);
+
     setLoading(false);
   }, [id]);
 
@@ -170,6 +184,31 @@ export default function LeagueDetailPage() {
           </div>
         ))}
       </div>
+
+      {/* Mecze do typowania w grupie */}
+      <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mt-7 mb-3">Mecze do typowania</h2>
+      {(() => {
+        const upcoming = matches.filter(m => isUpcoming(m.status) || isLive(m.status));
+        if (upcoming.length === 0) {
+          return <p className="text-white/20 text-sm text-center py-6">Brak nadchodzących meczów</p>;
+        }
+        return (
+          <div className="flex flex-col gap-2">
+            {upcoming.map(m => (
+              <Link key={m.id} href={`/matches/${m.id}?league=${league.id}`}>
+                <div className="flex items-center gap-2 bg-[#111] border border-white/[0.06] rounded-xl px-3 py-3 active:scale-[0.98] transition">
+                  <TeamLogo url={m.home_team_logo_url} name={m.home_team_name} />
+                  <span className="flex-1 text-white text-xs font-semibold text-center truncate">{m.home_team_name}</span>
+                  <span className="text-white/20 text-[10px] font-black px-1.5">VS</span>
+                  <span className="flex-1 text-white text-xs font-semibold text-center truncate">{m.away_team_name}</span>
+                  <TeamLogo url={m.away_team_logo_url} name={m.away_team_name} />
+                  <ChevronRight size={16} className="text-white/20 flex-shrink-0" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Dialog: edycja nazwy */}
       {editing && (

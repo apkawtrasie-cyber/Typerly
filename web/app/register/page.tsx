@@ -38,7 +38,7 @@ export default function RegisterPage() {
   }
 
   if (success) return (
-    <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center px-6 text-center">
+    <div className="min-h-[100dvh] bg-[#0A0A0A] flex flex-col items-center justify-center px-6 py-10 text-center">
       <div className="text-5xl mb-4">✉️</div>
       <h2 className="text-white font-black text-2xl mb-2">Sprawdź email!</h2>
       <p className="text-white/50 text-sm mb-8">Wysłaliśmy link potwierdzający na <strong className="text-white">{email}</strong></p>
@@ -47,8 +47,8 @@ export default function RegisterPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-sm">
+    <div className="min-h-[100dvh] bg-[#0A0A0A] flex flex-col items-center px-6 py-10 overflow-y-auto">
+      <div className="w-full max-w-sm m-auto">
         <div className="flex flex-col items-center mb-10">
           <div className="relative mb-5">
             <div className="absolute inset-0 rounded-full bg-[#F5C400] opacity-30 blur-2xl scale-110" />

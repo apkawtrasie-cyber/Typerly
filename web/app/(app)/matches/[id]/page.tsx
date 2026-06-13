@@ -26,6 +26,9 @@ export default function MatchDetailPage() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [username, setUsername] = useState("Ty");
+  // Kontekst ligi (zamknięta grupa) — z ?league=<id>. Null = typy globalne.
+  const [leagueId, setLeagueId] = useState<string | null>(null);
+  const [leagueName, setLeagueName] = useState<string | null>(null);
   const [predHome, setPredHome] = useState("");
   const [predAway, setPredAway] = useState("");
   const [saving, setSaving] = useState(false);
@@ -60,17 +63,26 @@ export default function MatchDetailPage() {
 
   useEffect(() => {
     async function load() {
+      const lid = new URLSearchParams(window.location.search).get("league");
+      setLeagueId(lid);
+
       const { data: { user } } = await supabase.auth.getUser();
       setUserId(user?.id ?? null);
 
-      const [{ data: m }, { data: preds }, { data: profile }] = await Promise.all([
+      // Typy filtrowane po kontekście: w lidze tylko typy tej grupy, globalnie tylko league_id NULL
+      let predQuery = supabase.from("predictions").select("*, profiles(username)").eq("match_id", id);
+      predQuery = lid ? predQuery.eq("league_id", lid) : predQuery.is("league_id", null);
+
+      const [{ data: m }, { data: preds }, { data: profile }, { data: lg }] = await Promise.all([
         supabase.from("matches").select("*").eq("id", id).single(),
-        supabase.from("predictions").select("*, profiles(username)").eq("match_id", id).order("points_earned", { ascending: false, nullsFirst: false }),
+        predQuery.order("points_earned", { ascending: false, nullsFirst: false }),
         user ? supabase.from("profiles").select("username").eq("id", user.id).single() : Promise.resolve({ data: null }),
+        lid ? supabase.from("leagues").select("name").eq("id", lid).single() : Promise.resolve({ data: null }),
       ]);
 
       setMatch(m);
       setPredictions(preds ?? []);
+      if ((lg as any)?.name) setLeagueName((lg as any).name);
       if ((profile as any)?.username) setUsername((profile as any).username);
 
       const own = (preds ?? []).find((p: Prediction) => p.user_id === user?.id);
@@ -91,9 +103,11 @@ export default function MatchDetailPage() {
     await ensureProfile();
 
     const h = parseInt(predHome), a = parseInt(predAway);
-    // Tabela predictions nie ma constraintu (user_id, match_id) — robimy ręcznie: update albo insert
-    const { data: existing } = await supabase
-      .from("predictions").select("id").eq("user_id", userId).eq("match_id", id).maybeSingle();
+    // Tabela predictions nie ma constraintu (user_id, match_id, league_id) — robimy ręcznie: update albo insert.
+    // Filtr po league_id zapewnia osobny typ dla każdej zamkniętej grupy.
+    let existsQuery = supabase.from("predictions").select("id").eq("user_id", userId).eq("match_id", id);
+    existsQuery = leagueId ? existsQuery.eq("league_id", leagueId) : existsQuery.is("league_id", null);
+    const { data: existing } = await existsQuery.maybeSingle();
 
     let error;
     if (existing) {
@@ -102,15 +116,17 @@ export default function MatchDetailPage() {
         .eq("id", existing.id));
     } else {
       ({ error } = await supabase.from("predictions")
-        .insert({ user_id: userId, match_id: id, predicted_home_score: h, predicted_away_score: a }));
+        .insert({ user_id: userId, match_id: id, predicted_home_score: h, predicted_away_score: a, league_id: leagueId }));
     }
     if (error) {
       setSaveError("Nie udało się zapisać typu: " + error.message);
       setSaving(false);
       return;
     }
-    // odśwież listę
-    const { data: preds } = await supabase.from("predictions").select("*, profiles(username)").eq("match_id", id).order("points_earned", { ascending: false, nullsFirst: false });
+    // odśwież listę (ten sam kontekst ligi)
+    let refreshQuery = supabase.from("predictions").select("*, profiles(username)").eq("match_id", id);
+    refreshQuery = leagueId ? refreshQuery.eq("league_id", leagueId) : refreshQuery.is("league_id", null);
+    const { data: preds } = await refreshQuery.order("points_earned", { ascending: false, nullsFirst: false });
     setPredictions(preds ?? []);
     setSaving(false);
   }
@@ -156,6 +172,13 @@ export default function MatchDetailPage() {
           </div>
           <p className="text-white/30 text-xs text-center mt-4">{formatMatchTime(match.match_time)}</p>
         </div>
+
+        {leagueName && (
+          <div className="mt-3 flex items-center justify-center gap-2 bg-[#F5C400]/10 border border-[#F5C400]/20 rounded-xl px-4 py-2">
+            <span className="text-base">🏆</span>
+            <span className="text-[#F5C400] text-xs font-bold">Typujesz w lidze: {leagueName}</span>
+          </div>
+        )}
       </div>
 
       {/* Mój typ */}
@@ -191,7 +214,7 @@ export default function MatchDetailPage() {
 
       {/* Lista typów */}
       <div className="px-4">
-        <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">Typy graczy ({predictions.length})</h3>
+        <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{leagueName ? "Typy w grupie" : "Typy graczy"} ({predictions.length})</h3>
         {predictions.length === 0 ? (
           <p className="text-white/20 text-sm text-center py-8">Nikt jeszcze nie typował</p>
         ) : (

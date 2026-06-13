@@ -3,17 +3,28 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback } from "react";
 import { supabase, League, generateInviteCode } from "@/lib/supabase";
 import Link from "next/link";
-import { Plus, LogIn, Users, Crown, Copy, Check, X } from "lucide-react";
+import { Users, Crown, Copy, Check, X, Trophy, Gift } from "lucide-react";
 
 type LeagueWithCount = League & { memberCount: number; isAdmin: boolean };
+type Tournament = {
+  id: string;
+  name: string;
+  admin_id: string;
+  invite_code: string;
+  prize_description: string | null;
+  created_at: string;
+  isAdmin: boolean;
+};
 
 export default function LeaguesPage() {
   const [leagues, setLeagues] = useState<LeagueWithCount[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dialog, setDialog] = useState<null | "create" | "join">(null);
+  const [dialog, setDialog] = useState<null | "create" | "join" | "tournament">(null);
   const [name, setName] = useState("");
   const [fee, setFee] = useState("0");
+  const [prize, setPrize] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -24,16 +35,14 @@ export default function LeaguesPage() {
     if (!user) return;
     setUserId(user.id);
 
-    // Ligi, których jestem członkiem (leagues + league_members!inner)
+    // Ligi, których jestem członkiem
     const { data: mine } = await supabase
       .from("leagues")
       .select("*, league_members!inner(user_id)")
       .eq("league_members.user_id", user.id)
       .order("created_at", { ascending: false });
-
     const list = (mine ?? []) as League[];
 
-    // Liczby członków
     const counts: Record<string, number> = {};
     if (list.length > 0) {
       const { data: members } = await supabase
@@ -44,12 +53,42 @@ export default function LeaguesPage() {
         counts[m.league_id] = (counts[m.league_id] ?? 0) + 1;
       }
     }
-
     setLeagues(list.map(l => ({ ...l, memberCount: counts[l.id] ?? 1, isAdmin: l.admin_id === user.id })));
+
+    // Turnieje (admin + członkostwo)
+    try {
+      const { data: adminT } = await supabase
+        .from("custom_tournaments").select("*").eq("admin_id", user.id);
+      const { data: memberRows } = await supabase
+        .from("tournament_members").select("tournament_id").eq("user_id", user.id);
+      const memberIds = (memberRows ?? []).map((r: { tournament_id: string }) => r.tournament_id);
+      const map: Record<string, Tournament> = {};
+      for (const t of (adminT ?? []) as Tournament[]) map[t.id] = { ...t, isAdmin: true };
+      if (memberIds.length > 0) {
+        const { data: memberT } = await supabase
+          .from("custom_tournaments").select("*").in("id", memberIds);
+        for (const t of (memberT ?? []) as Tournament[]) {
+          if (!map[t.id]) map[t.id] = { ...t, isAdmin: t.admin_id === user.id };
+        }
+      }
+      setTournaments(Object.values(map).sort((a, b) => b.created_at.localeCompare(a.created_at)));
+    } catch {
+      setTournaments([]);
+    }
+
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // Odczyt intencji z FAB (?fab=create-league|create-tournament|join)
+  useEffect(() => {
+    const fab = new URLSearchParams(window.location.search).get("fab");
+    if (fab === "create-league") setDialog("create");
+    else if (fab === "create-tournament") setDialog("tournament");
+    else if (fab === "join") setDialog("join");
+    if (fab) window.history.replaceState({}, "", "/leagues");
+  }, []);
 
   async function createLeague() {
     if (!userId || !name.trim()) return;
@@ -65,21 +104,45 @@ export default function LeaguesPage() {
     load();
   }
 
-  async function joinLeague() {
+  async function createTournament() {
+    if (!userId || !name.trim()) return;
+    setBusy(true); setError("");
+    const invite = generateInviteCode();
+    const { data: t, error: e1 } = await supabase
+      .from("custom_tournaments")
+      .insert({ name: name.trim(), admin_id: userId, invite_code: invite, prize_description: prize.trim() || null })
+      .select().single();
+    if (e1 || !t) { setError("Nie udało się utworzyć turnieju: " + (e1?.message ?? "")); setBusy(false); return; }
+    await supabase.from("tournament_members").insert({ tournament_id: t.id, user_id: userId });
+    setBusy(false); setDialog(null); setName(""); setPrize("");
+    load();
+  }
+
+  async function joinByCode() {
     if (!userId || !code.trim()) return;
     setBusy(true); setError("");
+    const c = code.trim().toUpperCase();
+
+    // Najpierw szukamy ligi
     const { data: league } = await supabase
-      .from("leagues").select().eq("invite_code", code.trim().toUpperCase()).maybeSingle();
-    if (!league) { setError("Nie znaleziono ligi o tym kodzie"); setBusy(false); return; }
-    // Sprawdź czy już członek
-    const { data: existing } = await supabase
-      .from("league_members").select("id").eq("league_id", league.id).eq("user_id", userId).maybeSingle();
-    if (!existing) {
-      const { error: e2 } = await supabase.from("league_members").insert({ league_id: league.id, user_id: userId });
-      if (e2) { setError("Nie udało się dołączyć: " + e2.message); setBusy(false); return; }
+      .from("leagues").select().eq("invite_code", c).maybeSingle();
+    if (league) {
+      const { data: existing } = await supabase
+        .from("league_members").select("id").eq("league_id", league.id).eq("user_id", userId).maybeSingle();
+      if (!existing) await supabase.from("league_members").insert({ league_id: league.id, user_id: userId });
+      setBusy(false); setDialog(null); setCode(""); load(); return;
     }
-    setBusy(false); setDialog(null); setCode("");
-    load();
+
+    // Potem turnieju
+    const { data: t } = await supabase
+      .from("custom_tournaments").select().eq("invite_code", c).maybeSingle();
+    if (t) {
+      await supabase.from("tournament_members").upsert({ tournament_id: t.id, user_id: userId });
+      setBusy(false); setDialog(null); setCode(""); load(); return;
+    }
+
+    setError("Nie znaleziono ligi ani turnieju o tym kodzie");
+    setBusy(false);
   }
 
   function copyCode(c: string) {
@@ -88,29 +151,21 @@ export default function LeaguesPage() {
     setTimeout(() => setCopied(null), 1500);
   }
 
+  const empty = !loading && leagues.length === 0 && tournaments.length === 0;
+
   return (
-    <div className="px-4 pt-6 pb-6 fade-in">
+    <div className="px-4 pt-6 fade-in">
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-white font-black text-2xl font-archivo">Ligi</h1>
-        <div className="flex gap-2">
-          <button onClick={() => { setDialog("join"); setError(""); }}
-            className="flex items-center gap-1.5 bg-[#111] border border-white/[0.06] text-white/70 text-sm font-bold px-3 py-2 rounded-xl active:scale-95 transition">
-            <LogIn size={15} /> Dołącz
-          </button>
-          <button onClick={() => { setDialog("create"); setError(""); }}
-            className="flex items-center gap-1.5 bg-[#F5C400] text-black text-sm font-black px-3 py-2 rounded-xl active:scale-95 transition">
-            <Plus size={15} /> Stwórz
-          </button>
-        </div>
+        <h1 className="text-white font-black text-2xl font-archivo">Ligi i turnieje</h1>
       </div>
 
       {loading ? (
         <div className="flex flex-col gap-3">{[0,1,2].map(i => <div key={i} className="skeleton h-20 rounded-2xl" />)}</div>
-      ) : leagues.length === 0 ? (
+      ) : empty ? (
         <div className="text-center py-16">
           <p className="text-5xl mb-3">🏆</p>
-          <p className="text-white/60 font-bold mb-1">Brak lig</p>
-          <p className="text-white/30 text-sm mb-5">Stwórz własną ligę lub dołącz kodem znajomych</p>
+          <p className="text-white/60 font-bold mb-1">Brak lig i turniejów</p>
+          <p className="text-white/30 text-sm mb-5">Użyj przycisku <span className="text-[#F5C400] font-bold">+</span> w prawym dolnym rogu, aby stworzyć ligę, turniej lub dołączyć kodem</p>
           <button onClick={() => setDialog("create")} className="bg-[#F5C400] text-black font-black px-6 py-3 rounded-xl active:scale-95 transition">
             Stwórz pierwszą ligę
           </button>
@@ -140,19 +195,46 @@ export default function LeaguesPage() {
               </div>
             </Link>
           ))}
+
+          {tournaments.map(t => (
+            <div key={t.id} className="bg-[#111] border border-white/[0.06] rounded-2xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+                  <Trophy size={22} className="text-purple-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-white font-bold truncate">{t.name}</h3>
+                    {t.isAdmin && <Crown size={13} className="text-[#F5C400] flex-shrink-0" />}
+                    <span className="text-[9px] font-black uppercase tracking-wide text-purple-300 bg-purple-500/15 px-1.5 py-0.5 rounded">Turniej</span>
+                  </div>
+                  {t.prize_description && (
+                    <p className="flex items-center gap-1 text-white/40 text-xs mt-0.5 truncate"><Gift size={12} /> {t.prize_description}</p>
+                  )}
+                  <button onClick={() => copyCode(t.invite_code)}
+                    className="flex items-center gap-1 text-white/40 text-xs hover:text-[#F5C400] transition mt-0.5">
+                    {copied === t.invite_code ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                    <span className="font-mono tracking-wider">{t.invite_code}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Dialog Stwórz / Dołącz */}
+      {/* Dialogi */}
       {dialog && (
-        <div onClick={() => setDialog(null)} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-          <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm">
+        <div onClick={() => setDialog(null)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+          <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm mb-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white font-black text-lg font-archivo">{dialog === "create" ? "Nowa liga" : "Dołącz do ligi"}</h2>
+              <h2 className="text-white font-black text-lg font-archivo">
+                {dialog === "create" ? "Nowa liga" : dialog === "tournament" ? "Nowy turniej" : "Dołącz kodem"}
+              </h2>
               <button onClick={() => setDialog(null)} className="text-white/40"><X size={20} /></button>
             </div>
 
-            {dialog === "create" ? (
+            {dialog === "create" && (
               <div className="flex flex-col gap-3">
                 <input value={name} onChange={e => setName(e.target.value)} placeholder="Nazwa ligi"
                   className="bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40" />
@@ -167,12 +249,31 @@ export default function LeaguesPage() {
                   {busy ? "Tworzenie..." : "Stwórz ligę"}
                 </button>
               </div>
-            ) : (
+            )}
+
+            {dialog === "tournament" && (
               <div className="flex flex-col gap-3">
-                <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="Kod zaproszenia" maxLength={6}
+                <input value={name} onChange={e => setName(e.target.value)} placeholder="np. Turniej Osiedlowy 2026"
+                  className="bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40" />
+                <div>
+                  <label className="text-white/40 text-xs font-semibold mb-1 block">Nagroda (opcjonalnie)</label>
+                  <input value={prize} onChange={e => setPrize(e.target.value)} placeholder="np. Obiad dla zwycięzcy"
+                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40" />
+                </div>
+                {error && <p className="text-red-400 text-sm">{error}</p>}
+                <button onClick={createTournament} disabled={busy || !name.trim()}
+                  className="bg-[#F5C400] text-black font-black py-3 rounded-xl mt-1 disabled:opacity-40 active:scale-95 transition">
+                  {busy ? "Tworzenie..." : "Stwórz turniej"}
+                </button>
+              </div>
+            )}
+
+            {dialog === "join" && (
+              <div className="flex flex-col gap-3">
+                <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="Kod zaproszenia" maxLength={8}
                   className="bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-white text-center text-lg font-mono tracking-widest placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40" />
                 {error && <p className="text-red-400 text-sm">{error}</p>}
-                <button onClick={joinLeague} disabled={busy || !code.trim()}
+                <button onClick={joinByCode} disabled={busy || !code.trim()}
                   className="bg-[#F5C400] text-black font-black py-3 rounded-xl mt-1 disabled:opacity-40 active:scale-95 transition">
                   {busy ? "Dołączanie..." : "Dołącz"}
                 </button>

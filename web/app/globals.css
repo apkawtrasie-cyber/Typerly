@@ -28,6 +28,9 @@ html, body {
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 .pt-safe { padding-top: env(safe-area-inset-top); }
 
+/* Odstęp na dole, by treść nie chowała się pod dolnym menu (wysokość nawigacji + safe area) */
+.pb-nav { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+
 /* Scrollbar hidden */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

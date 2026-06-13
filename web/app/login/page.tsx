@@ -33,8 +33,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-sm">
+    <div className="min-h-[100dvh] bg-[#0A0A0A] flex flex-col items-center px-6 py-10 overflow-y-auto">
+      <div className="w-full max-w-sm m-auto">
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
           <div className="relative mb-5">
