@@ -22,10 +22,16 @@ export default function TyperlyFab() {
 
   function go(action: string) {
     setOpen(false);
-    if (action === "create-league") router.push("/leagues?fab=create-league");
-    else if (action === "create-tournament") router.push("/leagues?fab=create-tournament");
-    else if (action === "join") router.push("/leagues?fab=join");
-    else if (action === "chat") router.push("/chat");
+    if (action === "chat") { router.push("/chat"); return; }
+
+    // create-league | create-tournament | join → otwórz dialog na stronie Ligi
+    if (pathname === "/leagues") {
+      // Już na stronie — komponent się nie przemontuje, więc wysyłamy zdarzenie
+      window.dispatchEvent(new CustomEvent("typerly-fab", { detail: action }));
+    } else {
+      // Z innej zakładki — przekaż intencję w URL, strona odczyta ją przy montażu
+      router.push(`/leagues?fab=${action}`);
+    }
   }
 
   async function share() {

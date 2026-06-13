@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback } from "react";
 import { supabase, League, generateInviteCode } from "@/lib/supabase";
 import Link from "next/link";
-import { Users, Crown, Copy, Check, X, Trophy, Gift } from "lucide-react";
+import { Users, Crown, Copy, Check, X, Trophy, Gift, Trash2 } from "lucide-react";
 
 type LeagueWithCount = League & { memberCount: number; isAdmin: boolean };
 type Tournament = {
@@ -29,6 +29,7 @@ export default function LeaguesPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
+  const [delTournament, setDelTournament] = useState<Tournament | null>(null);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -81,13 +82,25 @@ export default function LeaguesPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Odczyt intencji z FAB (?fab=create-league|create-tournament|join)
+  // Mapowanie akcji FAB → typ dialogu
+  function openFromAction(action: string | null) {
+    setError("");
+    if (action === "create-league") setDialog("create");
+    else if (action === "create-tournament") setDialog("tournament");
+    else if (action === "join") setDialog("join");
+  }
+
+  // Odczyt intencji z FAB przy wejściu z innej zakładki (?fab=...)
   useEffect(() => {
     const fab = new URLSearchParams(window.location.search).get("fab");
-    if (fab === "create-league") setDialog("create");
-    else if (fab === "create-tournament") setDialog("tournament");
-    else if (fab === "join") setDialog("join");
-    if (fab) window.history.replaceState({}, "", "/leagues");
+    if (fab) { openFromAction(fab); window.history.replaceState({}, "", "/leagues"); }
+  }, []);
+
+  // Nasłuch zdarzenia z FAB, gdy już jesteśmy na stronie Ligi
+  useEffect(() => {
+    const handler = (e: Event) => openFromAction((e as CustomEvent).detail as string);
+    window.addEventListener("typerly-fab", handler);
+    return () => window.removeEventListener("typerly-fab", handler);
   }, []);
 
   async function createLeague() {
@@ -116,6 +129,16 @@ export default function LeaguesPage() {
     await supabase.from("tournament_members").insert({ tournament_id: t.id, user_id: userId });
     setBusy(false); setDialog(null); setName(""); setPrize("");
     load();
+  }
+
+  async function deleteTournament() {
+    if (!delTournament) return;
+    setBusy(true);
+    // Najpierw członkowie (gdy brak kaskady), potem turniej
+    await supabase.from("tournament_members").delete().eq("tournament_id", delTournament.id);
+    const { error } = await supabase.from("custom_tournaments").delete().eq("id", delTournament.id);
+    setBusy(false);
+    if (!error) { setDelTournament(null); load(); }
   }
 
   async function joinByCode() {
@@ -217,6 +240,12 @@ export default function LeaguesPage() {
                     <span className="font-mono tracking-wider">{t.invite_code}</span>
                   </button>
                 </div>
+                {t.isAdmin && (
+                  <button onClick={() => setDelTournament(t)}
+                    className="text-white/30 hover:text-red-400 p-2 rounded-lg transition flex-shrink-0" aria-label="Usuń turniej">
+                    <Trash2 size={17} />
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -279,6 +308,23 @@ export default function LeaguesPage() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Potwierdzenie usunięcia turnieju */}
+      {delTournament && (
+        <div onClick={() => setDelTournament(null)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+          <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm text-center mb-4">
+            <div className="text-4xl mb-3">🗑️</div>
+            <h2 className="text-white font-black text-lg mb-1">Usunąć turniej?</h2>
+            <p className="text-white/50 text-sm mb-5">Turniej „{delTournament.name}" zostanie trwale usunięty wraz z członkami. Tej operacji nie można cofnąć.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setDelTournament(null)} className="flex-1 bg-white/5 border border-white/10 text-white/70 font-bold py-3 rounded-xl active:scale-95 transition">Anuluj</button>
+              <button onClick={deleteTournament} disabled={busy} className="flex-1 bg-red-500 text-white font-black py-3 rounded-xl disabled:opacity-40 active:scale-95 transition">
+                {busy ? "Usuwanie..." : "Usuń"}
+              </button>
+            </div>
           </div>
         </div>
       )}
