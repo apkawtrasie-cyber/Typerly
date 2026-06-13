@@ -3,7 +3,9 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { LogOut, ChevronRight, Mail, Lock } from "lucide-react";
+import { LogOut, ChevronRight, Mail, Lock, Globe } from "lucide-react";
+import { useLang } from "@/contexts/LangContext";
+import { LOCALES, Locale } from "@/lib/translations";
 
 type Profile = { id: string; username: string; avatar_url: string | null };
 type BadgeDef = { name: string; icon: string; rarity: string };
@@ -63,6 +65,7 @@ function PointsRow({ icon, label, sub, count, pts, color, last }: {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { t, locale, setLocale } = useLang();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -134,7 +137,7 @@ export default function ProfilePage() {
   }
 
   async function handlePassChange() {
-    if (newPass.length < 6) { setDialogMsg("Hasło za krótkie (min. 6 znaków)"); return; }
+    if (newPass.length < 6) { setDialogMsg(t("profile.too_short")); return; }
     const { error } = await supabase.auth.updateUser({ password: newPass });
     setDialogMsg(error ? `Błąd: ${error.message}` : "Hasło zostało zmienione.");
   }
@@ -173,30 +176,29 @@ export default function ProfilePage() {
 
       {/* Statystyki główne */}
       <div className="flex gap-3 mb-3">
-        <StatBox value={s.totalPoints} label="Punkty" accent />
-        <StatBox value={s.totalPredictions} label="Typy" />
-        <StatBox value={`${s.accuracy}%`} label="Skuteczność" />
+        <StatBox value={s.totalPoints} label={t("profile.total_points")} accent />
+        <StatBox value={s.totalPredictions} label={t("profile.predictions")} />
+        <StatBox value={`${s.accuracy}%`} label={t("profile.accuracy")} />
       </div>
 
       {/* Druga linia statystyk */}
       <div className="flex gap-3 mb-6">
-        <StatBox value={`+${s.weekPoints}`} label="W tym tyg." />
+        <StatBox value={`+${s.weekPoints}`} label={t("profile.week_points")} />
         <StatBox value={s.calculated} label="Rozliczone" />
         <StatBox value={s.streak} label="Seria 🔥" />
       </div>
 
-      {/* Rozbicie punktów — ZA CO SĄ PUNKTY */}
+      {/* Rozbicie punktów */}
       <div className="mb-6">
-        <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">Skąd masz punkty</h2>
+        <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{t("profile.stats")}</h2>
         <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
-          <PointsRow icon="🎯" label="Dokładny wynik" sub="3 pkt za typ" count={s.exact} pts={s.exact * 3} color="#F5C400" />
-          <PointsRow icon="⚡" label="Trafiona różnica" sub="2 pkt za typ" count={s.diff} pts={s.diff * 2} color="#44AAFF" />
-          <PointsRow icon="📊" label="Trafiona tendencja" sub="1 pkt za typ" count={s.tendency} pts={s.tendency * 1} color="#66DD66" />
-          <PointsRow icon="❌" label="Pudło" sub="0 pkt" count={s.miss} pts={0} color="#FF4444" last />
-          {/* Suma */}
+          <PointsRow icon="🎯" label={t("profile.exact")} sub="3 pkt" count={s.exact} pts={s.exact * 3} color="#F5C400" />
+          <PointsRow icon="⚡" label={t("profile.diff")} sub="2 pkt" count={s.diff} pts={s.diff * 2} color="#44AAFF" />
+          <PointsRow icon="📊" label={t("profile.tendency")} sub="1 pkt" count={s.tendency} pts={s.tendency * 1} color="#66DD66" />
+          <PointsRow icon="❌" label={t("profile.miss")} sub="0 pkt" count={s.miss} pts={0} color="#FF4444" last />
           <div className="flex items-center justify-between px-4 py-3 bg-[#1a1500] border-t border-[#F5C400]/20">
-            <span className="text-white font-black text-sm uppercase tracking-wide">Razem</span>
-            <span className="text-[#F5C400] font-black text-lg">{s.totalPoints} pkt</span>
+            <span className="text-white font-black text-sm uppercase tracking-wide">Total</span>
+            <span className="text-[#F5C400] font-black text-lg">{s.totalPoints} {t("home.points")}</span>
           </div>
         </div>
       </div>
@@ -221,11 +223,11 @@ export default function ProfilePage() {
 
       {/* Odznaki */}
       <div className="mb-6">
-        <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">Odznaki</h2>
+        <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{t("profile.badges")}</h2>
         {badges.length === 0 ? (
           <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-6 text-center">
             <p className="text-2xl mb-2">🎯</p>
-            <p className="text-white/30 text-sm font-semibold">Zacznij typować — zdobywaj nagrody!</p>
+            <p className="text-white/30 text-sm font-semibold">{t("profile.no_badges")}</p>
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -250,43 +252,66 @@ export default function ProfilePage() {
       </div>
 
       {/* Ustawienia konta */}
-      <div className="mb-6">
-        <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">Konto</h2>
+      <div className="mb-4">
+        <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{t("profile.settings")}</h2>
         <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
           <button onClick={() => setShowEmailDialog(true)}
             className="w-full flex items-center gap-3 px-4 py-4 border-b border-white/[0.04] active:bg-white/5 transition">
             <Mail size={16} className="text-white/30" />
-            <span className="flex-1 text-white/70 text-sm font-semibold text-left">Zmień email</span>
+            <span className="flex-1 text-white/70 text-sm font-semibold text-left">{t("profile.change_email")}</span>
             <ChevronRight size={16} className="text-white/20" />
           </button>
           <button onClick={() => setShowPassDialog(true)}
-            className="w-full flex items-center gap-3 px-4 py-4 active:bg-white/5 transition">
+            className="w-full flex items-center gap-3 px-4 py-4 border-b border-white/[0.04] active:bg-white/5 transition">
             <Lock size={16} className="text-white/30" />
-            <span className="flex-1 text-white/70 text-sm font-semibold text-left">Zmień hasło</span>
+            <span className="flex-1 text-white/70 text-sm font-semibold text-left">{t("profile.change_password")}</span>
             <ChevronRight size={16} className="text-white/20" />
           </button>
+          {/* Wybór języka */}
+          <div className="px-4 py-4">
+            <div className="flex items-center gap-3 mb-3">
+              <Globe size={16} className="text-white/30" />
+              <span className="flex-1 text-white/70 text-sm font-semibold">{t("profile.current_lang")}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {LOCALES.map(loc => (
+                <button
+                  key={loc.code}
+                  onClick={() => setLocale(loc.code as Locale)}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-semibold transition active:scale-95 ${
+                    locale === loc.code
+                      ? "bg-[#F5C400]/15 border-[#F5C400]/50 text-[#F5C400]"
+                      : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:text-white/60"
+                  }`}
+                >
+                  <span className="text-base">{loc.flag}</span>
+                  <span className="text-xs">{loc.nativeName}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Wyloguj */}
       <button onClick={handleLogout}
-        className="w-full flex items-center justify-center gap-2 border border-red-500/20 text-red-400 font-bold py-3.5 rounded-2xl active:scale-95 transition">
+        className="w-full flex items-center justify-center gap-2 border border-red-500/20 text-red-400 font-bold py-3.5 rounded-2xl active:scale-95 transition mb-6">
         <LogOut size={16} />
-        Wyloguj się
+        {t("profile.logout")}
       </button>
 
       {/* Dialog - email */}
       {showEmailDialog && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center px-6">
           <div className="bg-[#141414] border border-white/10 rounded-2xl p-6 w-full max-w-sm">
-            <h3 className="text-white font-black text-lg mb-4">Zmień email</h3>
-            <input value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" placeholder="Nowy adres email"
+            <h3 className="text-white font-black text-lg mb-4">{t("profile.change_email")}</h3>
+            <input value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" placeholder={t("profile.email_placeholder")}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40 mb-3" />
             {dialogMsg && <p className="text-[#F5C400] text-sm mb-3">{dialogMsg}</p>}
             <div className="flex gap-3">
               <button onClick={() => { setShowEmailDialog(false); setDialogMsg(""); setNewEmail(""); }}
-                className="flex-1 border border-white/10 text-white/50 py-3 rounded-xl font-bold">Anuluj</button>
-              <button onClick={handleEmailChange} className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl">Zmień</button>
+                className="flex-1 border border-white/10 text-white/50 py-3 rounded-xl font-bold">{t("profile.cancel")}</button>
+              <button onClick={handleEmailChange} className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl">{t("profile.change")}</button>
             </div>
           </div>
         </div>
@@ -296,14 +321,14 @@ export default function ProfilePage() {
       {showPassDialog && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center px-6">
           <div className="bg-[#141414] border border-white/10 rounded-2xl p-6 w-full max-w-sm">
-            <h3 className="text-white font-black text-lg mb-4">Zmień hasło</h3>
-            <input value={newPass} onChange={e => setNewPass(e.target.value)} type="password" placeholder="Nowe hasło (min. 6 znaków)"
+            <h3 className="text-white font-black text-lg mb-4">{t("profile.change_password")}</h3>
+            <input value={newPass} onChange={e => setNewPass(e.target.value)} type="password" placeholder={t("profile.pass_placeholder")}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40 mb-3" />
             {dialogMsg && <p className="text-[#F5C400] text-sm mb-3">{dialogMsg}</p>}
             <div className="flex gap-3">
               <button onClick={() => { setShowPassDialog(false); setDialogMsg(""); setNewPass(""); }}
-                className="flex-1 border border-white/10 text-white/50 py-3 rounded-xl font-bold">Anuluj</button>
-              <button onClick={handlePassChange} className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl">Zmień</button>
+                className="flex-1 border border-white/10 text-white/50 py-3 rounded-xl font-bold">{t("profile.cancel")}</button>
+              <button onClick={handlePassChange} className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl">{t("profile.change")}</button>
             </div>
           </div>
         </div>

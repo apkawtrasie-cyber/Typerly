@@ -2,17 +2,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Trophy, Users, MessageCircle, User } from "lucide-react";
-
-const tabs = [
-  { href: "/home",    icon: Home,           label: "Home" },
-  { href: "/matches", icon: Trophy,          label: "Mecze" },
-  { href: "/leagues", icon: Users,           label: "Ligi" },
-  { href: "/chat",    icon: MessageCircle,   label: "Czat" },
-  { href: "/profile", icon: User,            label: "Profil" },
-];
+import { useLang } from "@/contexts/LangContext";
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { t } = useLang();
+
+  const tabs = [
+    { href: "/home",    icon: Home,          label: t("nav.home") },
+    { href: "/matches", icon: Trophy,         label: t("nav.matches") },
+    { href: "/leagues", icon: Users,          label: t("nav.leagues") },
+    { href: "/chat",    icon: MessageCircle,  label: t("nav.chat") },
+    { href: "/profile", icon: User,           label: t("nav.profile") },
+  ];
 
   return (
     <nav

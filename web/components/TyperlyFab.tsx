@@ -1,64 +1,53 @@
 "use client";
-
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Plus, X, Users, Trophy, LogIn, Share2, MessageCircle } from "lucide-react";
+import { useLang } from "@/contexts/LangContext";
 
-const SHARE_TEXT = "Typuj wyniki meczów i rywalizuj ze znajomymi w Typerly!";
 const SHARE_URL = "https://typerly.andrzejmich.ch";
 
-/**
- * Globalny FAB Typerly — pojawia się tylko na zakładkach Mecze i Ligi.
- * Otwiera dolny arkusz z akcjami (jak w aplikacji natywnej).
- */
 export default function TyperlyFab() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const { t } = useLang();
 
-  // Widoczny tylko na liście meczów i lig (nie w szczegółach, nie na Home/Czat/Profil)
   const visible = pathname === "/matches" || pathname === "/leagues";
   if (!visible) return null;
 
   function go(action: string) {
     setOpen(false);
     if (action === "chat") { router.push("/chat"); return; }
-
-    // create-league | create-tournament | join → otwórz dialog na stronie Ligi
     if (pathname === "/leagues") {
-      // Już na stronie — komponent się nie przemontuje, więc wysyłamy zdarzenie
       window.dispatchEvent(new CustomEvent("typerly-fab", { detail: action }));
     } else {
-      // Z innej zakładki — przekaż intencję w URL, strona odczyta ją przy montażu
       router.push(`/leagues?fab=${action}`);
     }
   }
 
   async function share() {
     setOpen(false);
+    const text = "Typuj wyniki meczów i rywalizuj ze znajomymi w Typerly!";
     try {
       if (navigator.share) {
-        await navigator.share({ title: "Typerly", text: SHARE_TEXT, url: SHARE_URL });
+        await navigator.share({ title: "Typerly", text, url: SHARE_URL });
       } else {
-        await navigator.clipboard.writeText(`${SHARE_TEXT} ${SHARE_URL}`);
+        await navigator.clipboard.writeText(`${text} ${SHARE_URL}`);
         alert("Skopiowano link do schowka!");
       }
-    } catch {
-      /* użytkownik anulował — ignorujemy */
-    }
+    } catch { /* anulowano */ }
   }
 
   const items = [
-    { icon: Users, label: "Stwórz ligę", onClick: () => go("create-league") },
-    { icon: Trophy, label: "Stwórz turniej", onClick: () => go("create-tournament") },
-    { icon: LogIn, label: "Dołącz kodem", onClick: () => go("join") },
-    { icon: Share2, label: "Udostępnij Typerly", onClick: share },
-    { icon: MessageCircle, label: "Czat", onClick: () => go("chat") },
+    { icon: Users,         label: t("fab.create_league"),      onClick: () => go("create-league") },
+    { icon: Trophy,        label: t("fab.create_tournament"),   onClick: () => go("create-tournament") },
+    { icon: LogIn,         label: t("fab.join_code"),           onClick: () => go("join") },
+    { icon: Share2,        label: t("fab.share_app"),           onClick: share },
+    { icon: MessageCircle, label: t("fab.chat"),                onClick: () => go("chat") },
   ];
 
   return (
     <>
-      {/* Przycisk FAB */}
       <button
         onClick={() => setOpen(true)}
         aria-label="Akcje"
@@ -68,7 +57,6 @@ export default function TyperlyFab() {
         <Plus size={28} strokeWidth={2.5} />
       </button>
 
-      {/* Dolny arkusz */}
       {open && (
         <div
           onClick={() => setOpen(false)}

@@ -1,9 +1,11 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useLang } from "@/contexts/LangContext";
 
-export default function GoogleAuthButton({ label = "Kontynuuj z Google" }: { label?: string }) {
+export default function GoogleAuthButton({ mode = "login" }: { mode?: "login" | "register" }) {
   const [loading, setLoading] = useState(false);
+  const { t } = useLang();
 
   async function handleGoogle() {
     setLoading(true);
@@ -14,8 +16,9 @@ export default function GoogleAuthButton({ label = "Kontynuuj z Google" }: { lab
         queryParams: { prompt: "select_account" },
       },
     });
-    // Po redirect przeglądarka opuści stronę — nie resetujemy loading
   }
+
+  const label = mode === "register" ? t("auth.google_register") : t("auth.google_login");
 
   return (
     <button
@@ -29,7 +32,7 @@ export default function GoogleAuthButton({ label = "Kontynuuj z Google" }: { lab
       ) : (
         <GoogleIcon />
       )}
-      {loading ? "Przekierowywanie..." : label}
+      {loading ? "..." : label}
     </button>
   );
 }

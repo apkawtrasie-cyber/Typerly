@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Manrope } from "next/font/google";
 import "./globals.css";
+import { LangProvider } from "@/contexts/LangContext";
 
 const archivo = Archivo({ subsets: ["latin"], variable: "--font-archivo", weight: ["400","700","900"] });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
@@ -33,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className="bg-[#0A0A0A] text-white min-h-screen font-manrope antialiased">
-        {children}
+        <LangProvider>{children}</LangProvider>
       </body>
     </html>
   );
