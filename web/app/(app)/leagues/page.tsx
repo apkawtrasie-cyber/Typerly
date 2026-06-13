@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback } from "react";
 import { supabase, League, generateInviteCode } from "@/lib/supabase";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Users, Crown, Copy, Check, X, Trophy, Gift, Trash2, Pencil, HelpCircle } from "lucide-react";
 import { useLang } from "@/contexts/LangContext";
 import TournamentRulesModal from "@/components/TournamentRulesModal";
@@ -20,6 +21,7 @@ type Tournament = {
 
 export default function LeaguesPage() {
   const { t: tr } = useLang();
+  const router = useRouter();
   const [leagues, setLeagues] = useState<LeagueWithCount[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
@@ -249,12 +251,13 @@ export default function LeaguesPage() {
           ))}
 
           {tournaments.map(t => (
-            <div key={t.id} className="bg-[#111] border border-white/[0.06] rounded-2xl p-4">
+            <div key={t.id} className="bg-[#111] border border-white/[0.06] rounded-2xl p-4 active:scale-[0.98] transition-transform">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+                <button onClick={() => router.push(`/tournaments/${t.id}`)}
+                  className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
                   <Trophy size={22} className="text-purple-400" />
-                </div>
-                <div className="flex-1 min-w-0">
+                </button>
+                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => router.push(`/tournaments/${t.id}`)}>
                   <div className="flex items-center gap-2">
                     <h3 className="text-white font-bold truncate">{t.name}</h3>
                     {t.isAdmin && <Crown size={13} className="text-[#F5C400] flex-shrink-0" />}
@@ -263,24 +266,25 @@ export default function LeaguesPage() {
                   {t.prize_description && (
                     <p className="flex items-center gap-1 text-white/40 text-xs mt-0.5 truncate"><Gift size={12} /> {t.prize_description}</p>
                   )}
-                  <button onClick={() => copyCode(t.invite_code)}
-                    className="flex items-center gap-1 text-white/40 text-xs hover:text-[#F5C400] transition mt-0.5">
-                    {copied === t.invite_code ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
-                    <span className="font-mono tracking-wider">{t.invite_code}</span>
-                  </button>
                 </div>
-                {t.isAdmin && (
-                  <div className="flex items-center flex-shrink-0">
-                    <button onClick={() => { setName(t.name); setPrize(t.prize_description ?? ""); setEditTournamentId(t.id); setDialog("tournament"); }}
-                      className="text-white/30 hover:text-[#F5C400] p-2 rounded-lg transition" aria-label={tr("dialog.edit_tournament")}>
-                      <Pencil size={16} />
-                    </button>
-                    <button onClick={() => setDelTournament(t)}
-                      className="text-white/30 hover:text-red-400 p-2 rounded-lg transition" aria-label={tr("leagues.delete")}>
-                      <Trash2 size={17} />
-                    </button>
-                  </div>
-                )}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button onClick={e => { e.stopPropagation(); copyCode(t.invite_code); }}
+                    className="flex items-center gap-1 text-white/30 hover:text-[#F5C400] transition p-1.5 rounded-lg">
+                    {copied === t.invite_code ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
+                  </button>
+                  {t.isAdmin && (
+                    <>
+                      <button onClick={e => { e.stopPropagation(); setName(t.name); setPrize(t.prize_description ?? ""); setEditTournamentId(t.id); setDialog("tournament"); }}
+                        className="text-white/30 hover:text-[#F5C400] p-1.5 rounded-lg transition" aria-label={tr("dialog.edit_tournament")}>
+                        <Pencil size={15} />
+                      </button>
+                      <button onClick={e => { e.stopPropagation(); setDelTournament(t); }}
+                        className="text-white/30 hover:text-red-400 p-1.5 rounded-lg transition" aria-label={tr("leagues.delete")}>
+                        <Trash2 size={15} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           ))}

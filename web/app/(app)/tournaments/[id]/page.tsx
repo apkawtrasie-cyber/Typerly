@@ -1,0 +1,533 @@
+"use client";
+export const dynamic = 'force-dynamic';
+import { useEffect, useState, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { ArrowLeft, Plus, Trash2, Trophy, Gift, Copy, Check, Users, Crown, Shuffle, ListOrdered } from "lucide-react";
+import Image from "next/image";
+import { useLang } from "@/contexts/LangContext";
+
+type Team = { id: string; name: string; logo_url: string | null; tournament_id: string };
+type KnockoutMatch = {
+  id: string;
+  home_team_name: string;
+  away_team_name: string;
+  home_team_logo: string | null;
+  away_team_logo: string | null;
+  home_score: number | null;
+  away_score: number | null;
+  round_name: string;
+  knockout_round: number;
+  knockout_slot: number;
+  status: string | null;
+  match_phase: string;
+};
+type Tournament = {
+  id: string;
+  name: string;
+  admin_id: string;
+  invite_code: string;
+  prize_description: string | null;
+};
+
+function TeamAvatar({ url, name, size = 10 }: { url: string | null; name: string; size?: number }) {
+  const cls = `w-${size} h-${size} rounded-xl flex-shrink-0`;
+  if (url) return (
+    <div className={`${cls} relative overflow-hidden`}>
+      <Image src={url} alt={name} fill className="object-contain" unoptimized />
+    </div>
+  );
+  return (
+    <div className={`${cls} bg-white/10 flex items-center justify-center text-white/50 font-black text-sm`}>
+      {name.slice(0, 2).toUpperCase()}
+    </div>
+  );
+}
+
+export default function TournamentDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const { t } = useLang();
+
+  const [tournament, setTournament] = useState<Tournament | null>(null);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [matches, setMatches] = useState<KnockoutMatch[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Add team form
+  const [addOpen, setAddOpen] = useState(false);
+  const [teamName, setTeamName] = useState("");
+  const [teamLogo, setTeamLogo] = useState("");
+  const [adding, setAdding] = useState(false);
+
+  // Result dialog
+  const [resultMatch, setResultMatch] = useState<KnockoutMatch | null>(null);
+  const [scoreH, setScoreH] = useState("");
+  const [scoreA, setScoreA] = useState("");
+  const [savingResult, setSavingResult] = useState(false);
+
+  // Seeding dialog
+  const [seedingOpen, setSeedingOpen] = useState(false);
+  const [seedOrder, setSeedOrder] = useState<Team[]>([]);
+  const [generating, setGenerating] = useState(false);
+
+  const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUserId(user?.id ?? null);
+
+    const [{ data: tr }, { data: tm }, { data: km }] = await Promise.all([
+      supabase.from("custom_tournaments").select("*").eq("id", id).single(),
+      supabase.from("custom_teams").select("*").eq("tournament_id", id).order("created_at"),
+      supabase.from("custom_matches").select("*").eq("tournament_id", id)
+        .eq("match_phase", "knockout").order("knockout_round", { ascending: false }).order("knockout_slot"),
+    ]);
+
+    setTournament(tr as Tournament);
+    setTeams((tm ?? []) as Team[]);
+    setMatches((km ?? []) as KnockoutMatch[]);
+    setLoading(false);
+  }, [id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const isAdmin = tournament?.admin_id === userId;
+
+  async function addTeam() {
+    if (!teamName.trim()) return;
+    setAdding(true);
+    const { error } = await supabase.from("custom_teams").insert({
+      tournament_id: id,
+      name: teamName.trim(),
+      logo_url: teamLogo.trim() || null,
+    });
+    if (!error) {
+      setTeamName(""); setTeamLogo(""); setAddOpen(false);
+      await load();
+    }
+    setAdding(false);
+  }
+
+  async function deleteTeam(teamId: string) {
+    await supabase.from("custom_teams").delete().eq("id", teamId);
+    await load();
+  }
+
+  function openSeeding() {
+    setSeedOrder([...teams]);
+    setSeedingOpen(true);
+  }
+
+  async function generateRandom() {
+    setGenerating(true);
+    const shuffled = [...teams].sort(() => Math.random() - 0.5);
+    await generateKnockout(shuffled);
+    setGenerating(false);
+    setSeedingOpen(false);
+  }
+
+  async function generateManual() {
+    setGenerating(true);
+    await generateKnockout(seedOrder);
+    setGenerating(false);
+    setSeedingOpen(false);
+  }
+
+  async function generateKnockout(ordered: Team[]) {
+    // Delete existing knockout matches
+    await supabase.from("custom_matches").delete().eq("tournament_id", id).eq("match_phase", "knockout");
+
+    const n = ordered.length;
+    if (n < 2) return;
+
+    let slots = 1;
+    while (slots < n) slots *= 2;
+
+    const seeded: (Team | null)[] = Array(slots).fill(null);
+    for (let i = 0; i < n; i++) seeded[i] = ordered[i];
+
+    const baseTime = new Date(Date.now() + 86400000).toISOString();
+    const roundNames: Record<number, string> = { 1: "Finał", 2: "Półfinał", 4: "Ćwierćfinał", 8: "1/8 finału" };
+    const firstRoundMatches = slots / 2;
+    const byeTeams: Record<number, Team> = {};
+
+    for (let i = 0; i < firstRoundMatches; i++) {
+      const home = seeded[i];
+      const away = seeded[slots - 1 - i];
+      if (!home && !away) continue;
+      if (!home || !away) {
+        byeTeams[i] = (home ?? away)!;
+        continue;
+      }
+      const rn = roundNames[firstRoundMatches] ?? "Faza pucharowa";
+      const mt = new Date(Date.now() + 86400000 + i * 7200000).toISOString();
+      await supabase.from("custom_matches").insert({
+        tournament_id: id,
+        home_team_id: home.id, away_team_id: away.id,
+        home_team_name: home.name, away_team_name: away.name,
+        home_team_logo: home.logo_url, away_team_logo: away.logo_url,
+        match_time: mt, round_name: rn,
+        match_phase: "knockout", knockout_round: firstRoundMatches, knockout_slot: i,
+      });
+    }
+
+    let currentRound = firstRoundMatches / 2;
+    let dayOffset = 7;
+    let prevByes = { ...byeTeams };
+
+    while (currentRound >= 1) {
+      const rn = roundNames[currentRound] ?? "Faza pucharowa";
+      for (let i = 0; i < currentRound; i++) {
+        const preHome = prevByes[i * 2];
+        const preAway = prevByes[i * 2 + 1];
+        const mt = new Date(Date.now() + dayOffset * 86400000 + i * 7200000).toISOString();
+        await supabase.from("custom_matches").insert({
+          tournament_id: id,
+          home_team_id: preHome?.id ?? null, away_team_id: preAway?.id ?? null,
+          home_team_name: preHome?.name ?? "TBD", away_team_name: preAway?.name ?? "TBD",
+          home_team_logo: preHome?.logo_url ?? null, away_team_logo: preAway?.logo_url ?? null,
+          match_time: mt, round_name: rn,
+          match_phase: "knockout", knockout_round: currentRound, knockout_slot: i,
+        });
+      }
+      currentRound = Math.floor(currentRound / 2);
+      dayOffset += 7;
+      prevByes = {};
+    }
+
+    await load();
+  }
+
+  async function saveResult() {
+    if (!resultMatch) return;
+    setSavingResult(true);
+    const h = parseInt(scoreH), a = parseInt(scoreA);
+    if (isNaN(h) || isNaN(a)) { setSavingResult(false); return; }
+
+    await supabase.from("custom_matches").update({
+      home_score: h, away_score: a, status: "FT",
+    }).eq("id", resultMatch.id);
+
+    // Advance winner to next round
+    const slot = resultMatch.knockout_slot;
+    const round = resultMatch.knockout_round;
+    if (round > 1) {
+      const nextRound = Math.floor(round / 2);
+      const nextSlot = Math.floor(slot / 2);
+      const isHome = slot % 2 === 0;
+      const winnerIsHome = h >= a;
+      const winnerName = winnerIsHome ? resultMatch.home_team_name : resultMatch.away_team_name;
+      const winnerLogo = winnerIsHome ? resultMatch.home_team_logo : resultMatch.away_team_logo;
+
+      const { data: nextMatch } = await supabase.from("custom_matches").select("id")
+        .eq("tournament_id", id).eq("match_phase", "knockout")
+        .eq("knockout_round", nextRound).eq("knockout_slot", nextSlot).maybeSingle();
+
+      if (nextMatch) {
+        await supabase.from("custom_matches").update(
+          isHome ? { home_team_name: winnerName, home_team_logo: winnerLogo }
+                 : { away_team_name: winnerName, away_team_logo: winnerLogo }
+        ).eq("id", (nextMatch as { id: string }).id);
+      }
+    }
+
+    setResultMatch(null); setScoreH(""); setScoreA("");
+    setSavingResult(false);
+    await load();
+  }
+
+  function copyCode() {
+    navigator.clipboard.writeText(tournament?.invite_code ?? "");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  // Group matches by round for display
+  const rounds = matches.reduce<Record<number, KnockoutMatch[]>>((acc, m) => {
+    if (!acc[m.knockout_round]) acc[m.knockout_round] = [];
+    acc[m.knockout_round].push(m);
+    return acc;
+  }, {});
+  const sortedRounds = Object.keys(rounds).map(Number).sort((a, b) => b - a);
+
+  // Calculate bye count for seeding display
+  const byeCount = (() => {
+    if (teams.length < 2) return 0;
+    let slots = 1;
+    while (slots < teams.length) slots *= 2;
+    return slots - teams.length;
+  })();
+
+  if (loading) return (
+    <div className="flex justify-center pt-20">
+      <div className="w-8 h-8 border-2 border-[#F5C400] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (!tournament) return (
+    <div className="flex justify-center pt-20 text-white/40">Turniej nie istnieje</div>
+  );
+
+  return (
+    <div className="flex flex-col min-h-screen pb-24 fade-in">
+      {/* Header */}
+      <div className="px-4 pt-6 pb-4">
+        <button onClick={() => router.back()} className="text-white/40 mb-4 flex items-center gap-1 text-sm">
+          <ArrowLeft size={18} /> Wstecz
+        </button>
+
+        <div className="rounded-2xl bg-gradient-to-br from-purple-900/40 to-purple-900/10 border border-purple-500/20 p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
+              <Trophy size={22} className="text-purple-300" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-white font-black text-xl font-archivo truncate">{tournament.name}</h1>
+              {tournament.prize_description && (
+                <p className="flex items-center gap-1 text-white/50 text-sm mt-0.5">
+                  <Gift size={13} /> {tournament.prize_description}
+                </p>
+              )}
+              <button onClick={copyCode} className="flex items-center gap-1.5 mt-2 text-white/40 text-xs hover:text-[#F5C400] transition">
+                {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                <span className="font-mono tracking-wider">{tournament.invite_code}</span>
+              </button>
+            </div>
+            {isAdmin && <Crown size={16} className="text-[#F5C400] flex-shrink-0 mt-1" />}
+          </div>
+        </div>
+      </div>
+
+      {/* Teams */}
+      <div className="px-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+            <Users size={12} /> Drużyny ({teams.length})
+          </h2>
+          {isAdmin && (
+            <button onClick={() => setAddOpen(true)}
+              className="flex items-center gap-1 text-[#F5C400] text-xs font-bold">
+              <Plus size={14} /> Dodaj
+            </button>
+          )}
+        </div>
+
+        {teams.length === 0 ? (
+          <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] px-4 py-8 text-center">
+            <p className="text-white/40 text-sm">Brak drużyn</p>
+            {isAdmin && (
+              <button onClick={() => setAddOpen(true)}
+                className="mt-3 text-[#F5C400] text-sm font-bold">
+                + Dodaj pierwszą drużynę
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {teams.map((team, i) => (
+              <div key={team.id} className="flex items-center gap-3 bg-[#111] border border-white/[0.06] rounded-xl px-3 py-2.5">
+                <span className="text-white/20 text-xs font-black w-4">{i + 1}</span>
+                <TeamAvatar url={team.logo_url} name={team.name} size={8} />
+                <span className="text-white font-semibold text-sm flex-1 truncate">{team.name}</span>
+                {isAdmin && (
+                  <button onClick={() => deleteTeam(team.id)} className="text-white/20 hover:text-red-400 transition p-1">
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Generate bracket button */}
+        {isAdmin && teams.length >= 2 && matches.length === 0 && (
+          <button onClick={openSeeding}
+            className="mt-4 w-full bg-purple-600 text-white font-black py-4 rounded-2xl active:scale-95 transition flex items-center justify-center gap-2">
+            <Trophy size={18} /> Generuj drabinkę
+          </button>
+        )}
+        {isAdmin && teams.length >= 2 && matches.length > 0 && (
+          <button onClick={openSeeding}
+            className="mt-3 w-full bg-white/[0.05] border border-white/10 text-white/50 font-bold py-3 rounded-xl active:scale-95 transition text-sm">
+            Regeneruj drabinkę
+          </button>
+        )}
+      </div>
+
+      {/* Bracket */}
+      {matches.length > 0 && (
+        <div className="px-4">
+          <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3 flex items-center gap-2">
+            <Trophy size={12} /> Drabinka
+          </h2>
+          <div className="flex flex-col gap-5">
+            {sortedRounds.map(roundNum => (
+              <div key={roundNum}>
+                <p className="text-[#F5C400] text-xs font-black uppercase tracking-widest mb-2">
+                  {rounds[roundNum][0]?.round_name ?? `Runda ${roundNum}`}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {rounds[roundNum].map(m => (
+                    <div key={m.id}
+                      className={`rounded-2xl border overflow-hidden ${m.status === "FT" ? "border-white/10 bg-[#111]" : "border-white/[0.06] bg-[#0d0d0d]"}`}>
+                      {/* Home */}
+                      <div className={`flex items-center gap-3 px-4 py-2.5 ${m.status === "FT" && (m.home_score ?? 0) > (m.away_score ?? 0) ? "bg-[#F5C400]/5" : ""}`}>
+                        <TeamAvatar url={m.home_team_logo} name={m.home_team_name} size={7} />
+                        <span className={`flex-1 text-sm font-semibold truncate ${m.home_team_name === "TBD" ? "text-white/30" : "text-white"}`}>
+                          {m.home_team_name}
+                        </span>
+                        {m.status === "FT" && (
+                          <span className={`font-black text-lg tabular-nums ${(m.home_score ?? 0) > (m.away_score ?? 0) ? "text-[#F5C400]" : "text-white/40"}`}>
+                            {m.home_score}
+                          </span>
+                        )}
+                      </div>
+                      {/* Divider */}
+                      <div className="h-px bg-white/[0.06] mx-4" />
+                      {/* Away */}
+                      <div className={`flex items-center gap-3 px-4 py-2.5 ${m.status === "FT" && (m.away_score ?? 0) > (m.home_score ?? 0) ? "bg-[#F5C400]/5" : ""}`}>
+                        <TeamAvatar url={m.away_team_logo} name={m.away_team_name} size={7} />
+                        <span className={`flex-1 text-sm font-semibold truncate ${m.away_team_name === "TBD" ? "text-white/30" : "text-white"}`}>
+                          {m.away_team_name}
+                        </span>
+                        {m.status === "FT" && (
+                          <span className={`font-black text-lg tabular-nums ${(m.away_score ?? 0) > (m.home_score ?? 0) ? "text-[#F5C400]" : "text-white/40"}`}>
+                            {m.away_score}
+                          </span>
+                        )}
+                      </div>
+                      {/* Set result button for admin */}
+                      {isAdmin && m.home_team_name !== "TBD" && m.away_team_name !== "TBD" && m.status !== "FT" && (
+                        <button
+                          onClick={() => { setResultMatch(m); setScoreH(""); setScoreA(""); }}
+                          className="w-full border-t border-white/[0.06] text-white/40 text-xs font-semibold py-2 hover:text-[#F5C400] transition"
+                        >
+                          Wpisz wynik
+                        </button>
+                      )}
+                      {m.status === "FT" && isAdmin && (
+                        <button
+                          onClick={() => { setResultMatch(m); setScoreH(String(m.home_score ?? "")); setScoreA(String(m.away_score ?? "")); }}
+                          className="w-full border-t border-white/[0.06] text-white/25 text-[11px] py-1.5"
+                        >
+                          Zmień wynik
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Add team dialog */}
+      {addOpen && (
+        <div onClick={() => setAddOpen(false)} className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-end justify-center p-4">
+          <div onClick={e => e.stopPropagation()} className="bg-[#1a1a1a] border border-white/[0.08] rounded-2xl p-5 w-full max-w-sm">
+            <h3 className="text-white font-black text-lg mb-4">Dodaj drużynę</h3>
+            <input value={teamName} onChange={e => setTeamName(e.target.value)}
+              placeholder="Nazwa drużyny" autoFocus
+              className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white text-sm mb-3 focus:border-[#F5C400]/40 focus:outline-none"
+            />
+            <input value={teamLogo} onChange={e => setTeamLogo(e.target.value)}
+              placeholder="URL logo (opcjonalnie)"
+              className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white text-sm mb-4 focus:border-[#F5C400]/40 focus:outline-none"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setAddOpen(false)}
+                className="flex-1 bg-white/5 border border-white/10 text-white/60 font-bold py-3 rounded-xl">
+                Anuluj
+              </button>
+              <button onClick={addTeam} disabled={adding || !teamName.trim()}
+                className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl disabled:opacity-40">
+                {adding ? "Dodawanie..." : "Dodaj"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Seeding dialog */}
+      {seedingOpen && (
+        <div onClick={() => setSeedingOpen(false)} className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-end justify-center p-4">
+          <div onClick={e => e.stopPropagation()} className="bg-[#1a1a1a] border border-white/[0.08] rounded-2xl p-5 w-full max-w-sm max-h-[80vh] flex flex-col">
+            <h3 className="text-white font-black text-lg mb-1">Generuj drabinkę</h3>
+            {byeCount > 0 && (
+              <p className="text-white/40 text-xs mb-4">
+                Pierwsze <span className="text-[#F5C400] font-bold">{byeCount}</span> drużyny w kolejności dostają wolny los (awansują bez meczu)
+              </p>
+            )}
+            {!byeCount && <div className="mb-4" />}
+
+            {/* Order list (drag not supported on web easily — show numbered + swap buttons) */}
+            <div className="flex-1 overflow-y-auto flex flex-col gap-2 mb-4">
+              {seedOrder.map((team, i) => (
+                <div key={team.id} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border ${i < byeCount ? "border-[#F5C400]/30 bg-[#F5C400]/5" : "border-white/[0.06] bg-white/[0.03]"}`}>
+                  <span className={`text-xs font-black w-5 ${i < byeCount ? "text-[#F5C400]" : "text-white/30"}`}>{i + 1}</span>
+                  <TeamAvatar url={team.logo_url} name={team.name} size={7} />
+                  <span className="flex-1 text-white text-sm font-semibold truncate">{team.name}</span>
+                  {i < byeCount && <span className="text-[9px] font-black text-[#F5C400] bg-[#F5C400]/10 px-1.5 py-0.5 rounded">BYE</span>}
+                  <div className="flex flex-col gap-0.5">
+                    <button disabled={i === 0}
+                      onClick={() => setSeedOrder(prev => { const a = [...prev]; [a[i-1], a[i]] = [a[i], a[i-1]]; return a; })}
+                      className="text-white/30 hover:text-white disabled:opacity-20 text-xs leading-none px-1">▲</button>
+                    <button disabled={i === seedOrder.length - 1}
+                      onClick={() => setSeedOrder(prev => { const a = [...prev]; [a[i], a[i+1]] = [a[i+1], a[i]]; return a; })}
+                      className="text-white/30 hover:text-white disabled:opacity-20 text-xs leading-none px-1">▼</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={() => setSeedingOpen(false)}
+                className="flex-1 bg-white/5 border border-white/10 text-white/60 font-bold py-3 rounded-xl text-sm">
+                Anuluj
+              </button>
+              <button onClick={generateRandom} disabled={generating}
+                className="flex-1 bg-purple-600/80 text-white font-bold py-3 rounded-xl disabled:opacity-40 text-sm flex items-center justify-center gap-1.5">
+                <Shuffle size={14} /> Losuj
+              </button>
+              <button onClick={generateManual} disabled={generating}
+                className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl disabled:opacity-40 text-sm flex items-center justify-center gap-1.5">
+                <ListOrdered size={14} /> Generuj
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Result dialog */}
+      {resultMatch && (
+        <div onClick={() => setResultMatch(null)} className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div onClick={e => e.stopPropagation()} className="bg-[#1a1a1a] border border-white/[0.08] rounded-2xl p-5 w-full max-w-xs">
+            <h3 className="text-white font-black text-base mb-1">Wpisz wynik</h3>
+            <p className="text-white/40 text-xs mb-4 truncate">{resultMatch.home_team_name} vs {resultMatch.away_team_name}</p>
+            <div className="flex items-center gap-3 mb-4">
+              <input value={scoreH} onChange={e => setScoreH(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
+                className="flex-1 bg-[#111] border border-white/10 rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
+              <span className="text-white/20 font-black">:</span>
+              <input value={scoreA} onChange={e => setScoreA(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
+                className="flex-1 bg-[#111] border border-white/10 rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setResultMatch(null)}
+                className="flex-1 bg-white/5 border border-white/10 text-white/60 font-bold py-3 rounded-xl">
+                Anuluj
+              </button>
+              <button onClick={saveResult} disabled={savingResult}
+                className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl disabled:opacity-40">
+                {savingResult ? "Zapisuję..." : "Zapisz"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
