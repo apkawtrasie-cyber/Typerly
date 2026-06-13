@@ -4,10 +4,12 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase, ChatMessage, ChatRoom } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Send } from "lucide-react";
+import { useLang } from "@/contexts/LangContext";
 
 export default function ChatRoomPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { t } = useLang();
   const [room, setRoom] = useState<ChatRoom | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState("");
@@ -56,7 +58,7 @@ export default function ChatRoomPage() {
     if (!userId || !text.trim()) return;
     const content = text.trim();
     setText("");
-    await supabase.from("chat_messages").insert({ room_id: id, user_id: userId, username: username || "Gracz", content });
+    await supabase.from("chat_messages").insert({ room_id: id, user_id: userId, username: username || t("league.player_fallback"), content });
   }
 
   return (
@@ -64,13 +66,13 @@ export default function ChatRoomPage() {
       {/* Header */}
       <div className="px-4 pt-5 pb-3 border-b border-white/[0.06] flex items-center gap-3">
         <button onClick={() => router.back()} className="text-white/40"><ArrowLeft size={20} /></button>
-        <h1 className="text-white font-black text-lg font-archivo flex-1 truncate">{room?.name ?? "Czat"}</h1>
+        <h1 className="text-white font-black text-lg font-archivo flex-1 truncate">{room?.name ?? t("chat.title")}</h1>
       </div>
 
       {/* Wiadomości */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
         {messages.length === 0 ? (
-          <p className="text-white/20 text-sm text-center py-8">Brak wiadomości — napisz pierwszy! 👋</p>
+          <p className="text-white/20 text-sm text-center py-8">{t("chat.empty_room")}</p>
         ) : messages.map(m => {
           const mine = m.user_id === userId;
           return (
@@ -90,7 +92,7 @@ export default function ChatRoomPage() {
         style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
         <input value={text} onChange={e => setText(e.target.value)}
           onKeyDown={e => e.key === "Enter" && send()}
-          placeholder="Napisz wiadomość..."
+          placeholder={t("chat.placeholder")}
           className="flex-1 bg-[#111] border border-white/[0.06] rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40" />
         <button onClick={send} disabled={!text.trim()}
           className="bg-[#F5C400] text-black p-3 rounded-xl disabled:opacity-40 active:scale-95 transition">

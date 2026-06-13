@@ -5,11 +5,12 @@ import { supabase, Match, Prediction, isLive, isFinished, isUpcoming, competitio
 import MatchCard from "@/components/MatchCard";
 import { Search, ChevronRight, Zap, Clock, TrendingUp } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { useLang } from "@/contexts/LangContext";
 
 type RankingEntry = { user_id: string; username: string; total_points: number; predictions_count: number };
 
 function SectionHeader({ title, icon, count, href }: { title: string; icon: React.ReactNode; count?: number; href?: string }) {
+  const { t } = useLang();
   return (
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center gap-2">
@@ -19,7 +20,7 @@ function SectionHeader({ title, icon, count, href }: { title: string; icon: Reac
       </div>
       {href && (
         <Link href={href} className="flex items-center gap-1 text-[#F5C400] text-xs font-bold">
-          Zobacz <ChevronRight size={14} />
+          {t("home.see")} <ChevronRight size={14} />
         </Link>
       )}
     </div>
@@ -31,6 +32,7 @@ function SkeletonCard() {
 }
 
 export default function HomePage() {
+  const { t, locale } = useLang();
   const [username, setUsername] = useState("");
   const [totalPoints, setTotalPoints] = useState(0);
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
@@ -100,7 +102,8 @@ export default function HomePage() {
   }, [search]);
 
   const greetHour = new Date().getHours();
-  const greeting = greetHour < 12 ? "Dzień dobry" : greetHour < 18 ? "Cześć" : "Dobry wieczór";
+  const greeting = greetHour < 12 ? t("home.greeting_morning") : greetHour < 18 ? t("home.greeting_afternoon") : t("home.greeting_evening");
+  const numLocale: Record<string, string> = { en: "en-GB", pl: "pl-PL", de: "de-DE", fr: "fr-FR", es: "es-ES", it: "it-IT" };
 
   return (
     <div className="px-4 pt-6 pb-6 fade-in">
@@ -108,7 +111,7 @@ export default function HomePage() {
       <div className="flex items-start justify-between mb-5">
         <div>
           <p className="text-white/30 text-sm">{greeting},</p>
-          <h1 className="text-white font-black text-2xl font-archivo">{username || "Graczu"} 👋</h1>
+          <h1 className="text-white font-black text-2xl font-archivo">{username || t("home.player_fallback")} 👋</h1>
         </div>
         <Link href="/profile">
           <div className="w-11 h-11 rounded-full bg-[#F5C400]/10 border border-[#F5C400]/20 flex items-center justify-center text-[#F5C400] font-black text-lg">
@@ -120,10 +123,10 @@ export default function HomePage() {
       {/* Punkty hero */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a1500] to-[#111] border border-[#F5C400]/20 gold-glow p-5 mb-6">
         <div className="absolute top-0 right-0 w-32 h-32 bg-[#F5C400]/5 rounded-full blur-2xl -translate-y-8 translate-x-8" />
-        <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">Twoje punkty</p>
-        <p className="text-[#F5C400] font-black text-5xl font-archivo">{totalPoints.toLocaleString("pl-PL")}</p>
+        <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">{t("home.your_points")}</p>
+        <p className="text-[#F5C400] font-black text-5xl font-archivo">{totalPoints.toLocaleString(numLocale[locale])}</p>
         <p className="text-white/20 text-xs mt-1">
-          {Object.keys(myPredictions).length} typów oddanych
+          {Object.keys(myPredictions).length} {t("home.predictions_made")}
         </p>
       </div>
 
@@ -132,7 +135,7 @@ export default function HomePage() {
         <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />
         <input
           value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Szukaj meczu, drużyny..."
+          placeholder={t("home.search_placeholder")}
           className="w-full bg-[#111] border border-white/[0.06] rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/30 transition"
         />
       </div>
@@ -140,9 +143,9 @@ export default function HomePage() {
       {/* Wyniki wyszukiwania */}
       {search && (
         <div className="mb-6">
-          <SectionHeader title="Wyniki" icon={<Search size={14} className="text-white/40" />} count={searchResults.length} />
+          <SectionHeader title={t("home.results")} icon={<Search size={14} className="text-white/40" />} count={searchResults.length} />
           {searchResults.length === 0 ? (
-            <p className="text-white/20 text-sm text-center py-4">Brak wyników</p>
+            <p className="text-white/20 text-sm text-center py-4">{t("home.no_results")}</p>
           ) : (
             <div className="flex flex-col gap-2">
               {searchResults.map((m, i) => <MatchCard key={m.id} match={m} myPrediction={myPredictions[m.id]} index={i} />)}
@@ -157,7 +160,7 @@ export default function HomePage() {
           {liveMatches.length > 0 && (
             <div className="mb-6">
               <SectionHeader
-                title="Na żywo"
+                title={t("home.live")}
                 icon={<Zap size={14} className="text-red-400 fill-red-400" />}
                 count={liveMatches.length}
                 href="/matches"
@@ -171,7 +174,7 @@ export default function HomePage() {
           {/* Nadchodzące */}
           <div className="mb-6">
             <SectionHeader
-              title={liveMatches.length > 0 ? "Nadchodzące" : "Najbliższe mecze"}
+              title={liveMatches.length > 0 ? t("home.upcoming") : t("home.nearest_matches")}
               icon={<Clock size={14} className="text-[#F5C400]" />}
               count={upcoming.length}
               href="/matches"
@@ -181,7 +184,7 @@ export default function HomePage() {
                 {[0,1,2].map(i => <SkeletonCard key={i} />)}
               </div>
             ) : upcoming.length === 0 ? (
-              <p className="text-white/20 text-sm text-center py-6">Brak nadchodzących meczów</p>
+              <p className="text-white/20 text-sm text-center py-6">{t("home.no_upcoming")}</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {upcoming.slice(0, 5).map((m, i) => <MatchCard key={m.id} match={m} myPrediction={myPredictions[m.id]} index={i} />)}
@@ -192,7 +195,7 @@ export default function HomePage() {
           {/* Ranking tygodnia */}
           {ranking.length > 0 && (
             <div className="mb-6">
-              <SectionHeader title="Ranking tygodnia" icon={<TrendingUp size={14} className="text-[#F5C400]" />} />
+              <SectionHeader title={t("home.week_ranking")} icon={<TrendingUp size={14} className="text-[#F5C400]" />} />
               <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
                 {ranking.slice(0, 5).map((r, i) => (
                   <div key={r.user_id} className={`flex items-center px-4 py-3 gap-3 ${i < ranking.length - 1 ? "border-b border-white/[0.04]" : ""}`}>
@@ -201,9 +204,9 @@ export default function HomePage() {
                     </span>
                     <div className="flex-1">
                       <p className="text-white font-semibold text-sm">{r.username}</p>
-                      <p className="text-white/30 text-[10px]">{r.predictions_count} typów</p>
+                      <p className="text-white/30 text-[10px]">{r.predictions_count} {t("home.predictions_short")}</p>
                     </div>
-                    <span className="text-[#F5C400] font-black">{r.total_points} pkt</span>
+                    <span className="text-[#F5C400] font-black">{r.total_points} {t("home.points")}</span>
                   </div>
                 ))}
               </div>

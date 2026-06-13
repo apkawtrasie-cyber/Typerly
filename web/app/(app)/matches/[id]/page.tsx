@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { TeamLogo } from "@/components/MatchCard";
 import { calculatePoints, badgeFor } from "@/lib/scorer";
 import PredictionResultOverlay from "@/components/PredictionResultOverlay";
+import { useLang } from "@/contexts/LangContext";
 
 type Prediction = {
   id: string; user_id: string; predicted_home_score: number;
@@ -20,6 +21,7 @@ function predUsername(p: Prediction): string {
 }
 
 export default function MatchDetailPage() {
+  const { t } = useLang();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [match, setMatch] = useState<Match | null>(null);
@@ -135,7 +137,7 @@ export default function MatchDetailPage() {
 
     // Typ po zapisaniu jest zablokowany — nie pozwalamy dodać drugiego
     if (existing) {
-      setSaveError("Już dodałeś typ do tego meczu — typować można tylko raz.");
+      setSaveError(t("match.already_predicted"));
       await refresh();
       setSaving(false);
       return;
@@ -146,9 +148,9 @@ export default function MatchDetailPage() {
     if (error) {
       // 23505 = naruszenie unikalności (ktoś zdążył dodać typ równolegle)
       if ((error as { code?: string }).code === "23505") {
-        setSaveError("Już dodałeś typ do tego meczu — typować można tylko raz.");
+        setSaveError(t("match.already_predicted"));
       } else {
-        setSaveError("Nie udało się zapisać typu: " + error.message);
+        setSaveError(t("match.save_error") + ": " + error.message);
       }
       await refresh();
       setSaving(false);
@@ -172,7 +174,7 @@ export default function MatchDetailPage() {
       {/* Header */}
       <div className="px-4 pt-6 pb-4">
         <button onClick={() => router.back()} className="text-white/40 mb-4 flex items-center gap-1 text-sm">
-          <ArrowLeft size={18} /> Wróć
+          <ArrowLeft size={18} /> {t("match.back")}
         </button>
 
         <div className="relative overflow-hidden rounded-2xl bg-[#111] border border-white/[0.06] p-5">
@@ -203,7 +205,7 @@ export default function MatchDetailPage() {
         {leagueName && (
           <div className="mt-3 flex items-center justify-center gap-2 bg-[#F5C400]/10 border border-[#F5C400]/20 rounded-xl px-4 py-2">
             <span className="text-base">🏆</span>
-            <span className="text-[#F5C400] text-xs font-bold">Typujesz w lidze: {leagueName}</span>
+            <span className="text-[#F5C400] text-xs font-bold">{t("match.predicting_in_league")} {leagueName}</span>
           </div>
         )}
       </div>
@@ -211,7 +213,7 @@ export default function MatchDetailPage() {
       {/* Mój typ — po zapisaniu zablokowany (nie można zmienić) */}
       {myPred ? (
         <div className="px-4 mb-5">
-          <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">Twój typ</h3>
+          <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">{t("match.your_prediction")}</h3>
           <div className={`rounded-xl px-4 py-3 flex items-center justify-between ${myPred.points_earned != null && myPred.points_earned > 0 ? "bg-green-500/10 border border-green-500/20" : "bg-[#111] border border-white/[0.06]"}`}>
             <span className="text-[#F5C400] font-black text-xl tabular-nums">{myPred.predicted_home_score}:{myPred.predicted_away_score}</span>
             {myPred.points_earned != null ? (
@@ -219,13 +221,13 @@ export default function MatchDetailPage() {
                 +{myPred.points_earned} pkt
               </span>
             ) : (
-              <span className="text-white/30 text-xs font-semibold">🔒 Typ zapisany — nie można zmienić</span>
+              <span className="text-white/30 text-xs font-semibold">{t("match.locked")}</span>
             )}
           </div>
         </div>
       ) : canPredict ? (
         <div className="px-4 mb-5">
-          <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">Twój typ</h3>
+          <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">{t("match.your_prediction")}</h3>
           <div className="flex items-center gap-3 mb-3">
             <input value={predHome} onChange={e => setPredHome(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
               className="flex-1 min-w-0 bg-[#111] border border-white/[0.06] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
@@ -235,18 +237,18 @@ export default function MatchDetailPage() {
           </div>
           <button onClick={submitPrediction} disabled={saving || predHome === "" || predAway === ""}
             className="w-full bg-[#F5C400] text-black font-black py-3.5 rounded-xl disabled:opacity-50 active:scale-95 transition">
-            {saving ? "Zapisywanie..." : "Zapisz typ"}
+            {saving ? t("match.saving") : t("match.save")}
           </button>
-          <p className="text-white/25 text-[11px] text-center mt-2">Po zapisaniu typu nie można go już zmienić</p>
+          <p className="text-white/25 text-[11px] text-center mt-2">{t("match.once_only")}</p>
           {saveError && <p className="text-red-400 text-sm mt-2 text-center">{saveError}</p>}
         </div>
       ) : null}
 
       {/* Lista typów */}
       <div className="px-4">
-        <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{leagueName ? "Typy w grupie" : "Typy graczy"} ({predictions.length})</h3>
+        <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{leagueName ? t("match.predictions_group") : t("match.predictions_list")} ({predictions.length})</h3>
         {predictions.length === 0 ? (
-          <p className="text-white/20 text-sm text-center py-8">Nikt jeszcze nie typował</p>
+          <p className="text-white/20 text-sm text-center py-8">{t("match.no_predictions")}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {predictions.map(p => (

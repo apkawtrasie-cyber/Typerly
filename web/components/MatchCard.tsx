@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Match, isLive, isFinished, formatMatchTime, competitionLabel } from "@/lib/supabase";
+import { useLang } from "@/contexts/LangContext";
 
 type Props = {
   match: Match;
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export default function MatchCard({ match, myPrediction, index = 0 }: Props) {
+  const { t } = useLang();
   const live = isLive(match.status);
   const finished = isFinished(match.status);
 
@@ -26,10 +28,10 @@ export default function MatchCard({ match, myPrediction, index = 0 }: Props) {
           {live ? (
             <span className="flex items-center gap-1.5 text-red-400 text-[10px] font-black uppercase">
               <span className="w-1.5 h-1.5 rounded-full bg-red-400 pulse-live" />
-              NA ŻYWO
+              {t("match.live_badge")}
             </span>
           ) : finished ? (
-            <span className="text-white/20 text-[10px] font-semibold">Zakończony</span>
+            <span className="text-white/20 text-[10px] font-semibold">{t("matches.finished_short")}</span>
           ) : (
             <span className="text-[#F5C400]/70 text-[10px] font-semibold">{formatMatchTime(match.match_time)}</span>
           )}
@@ -73,7 +75,7 @@ export default function MatchCard({ match, myPrediction, index = 0 }: Props) {
           <div className={`border-t border-white/[0.06] px-4 py-2 flex items-center justify-between ${
             myPrediction.points_earned != null ? "bg-[#F5C400]/5" : ""
           }`}>
-            <span className="text-white/30 text-[10px] font-semibold">Twój typ</span>
+            <span className="text-white/30 text-[10px] font-semibold">{t("match.your_prediction")}</span>
             <span className="text-[#F5C400] font-black text-sm">
               {myPrediction.predicted_home_score} : {myPrediction.predicted_away_score}
             </span>
@@ -81,7 +83,7 @@ export default function MatchCard({ match, myPrediction, index = 0 }: Props) {
               <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                 myPrediction.points_earned > 0 ? "bg-green-500/20 text-green-400" : "bg-white/10 text-white/40"
               }`}>
-                +{myPrediction.points_earned} pkt
+                +{myPrediction.points_earned} {t("home.points")}
               </span>
             )}
           </div>

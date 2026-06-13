@@ -4,10 +4,12 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase, ChatRoom, generateInviteCode } from "@/lib/supabase";
 import Link from "next/link";
 import { Plus, LogIn, X, MessageCircle } from "lucide-react";
+import { useLang } from "@/contexts/LangContext";
 
 type RoomWithMeta = ChatRoom & { lastMessage: string | null; lastAt: string | null };
 
 export default function ChatPage() {
+  const { t } = useLang();
   const [rooms, setRooms] = useState<RoomWithMeta[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [username, setUsername] = useState("");
@@ -62,7 +64,7 @@ export default function ChatPage() {
       .from("chat_rooms")
       .insert({ name: name.trim(), created_by: userId, invite_code: invite })
       .select().single();
-    if (e1 || !room) { setError("Nie udało się utworzyć grupy: " + (e1?.message ?? "")); setBusy(false); return; }
+    if (e1 || !room) { setError(t("chat.create_error") + ": " + (e1?.message ?? "")); setBusy(false); return; }
     await supabase.from("chat_members").insert({ room_id: room.id, user_id: userId, role: "admin" });
     setBusy(false); setDialog(null); setName("");
     load();
@@ -73,12 +75,12 @@ export default function ChatPage() {
     setBusy(true); setError("");
     const { data: room } = await supabase
       .from("chat_rooms").select().eq("invite_code", code.trim().toUpperCase()).maybeSingle();
-    if (!room) { setError("Nie znaleziono grupy o tym kodzie"); setBusy(false); return; }
+    if (!room) { setError(t("chat.group_not_found")); setBusy(false); return; }
     const { data: existing } = await supabase
       .from("chat_members").select("user_id").eq("room_id", room.id).eq("user_id", userId).maybeSingle();
     if (!existing) {
       const { error: e2 } = await supabase.from("chat_members").insert({ room_id: room.id, user_id: userId, role: "member" });
-      if (e2) { setError("Nie udało się dołączyć: " + e2.message); setBusy(false); return; }
+      if (e2) { setError(t("chat.join_error") + ": " + e2.message); setBusy(false); return; }
     }
     setBusy(false); setDialog(null); setCode("");
     load();
@@ -87,15 +89,15 @@ export default function ChatPage() {
   return (
     <div className="px-4 pt-6 pb-6 fade-in">
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-white font-black text-2xl font-archivo">Czat</h1>
+        <h1 className="text-white font-black text-2xl font-archivo">{t("chat.title")}</h1>
         <div className="flex gap-2">
           <button onClick={() => { setDialog("join"); setError(""); }}
             className="flex items-center gap-1.5 bg-[#111] border border-white/[0.06] text-white/70 text-sm font-bold px-3 py-2 rounded-xl active:scale-95 transition">
-            <LogIn size={15} /> Dołącz
+            <LogIn size={15} /> {t("dialog.join")}
           </button>
           <button onClick={() => { setDialog("create"); setError(""); }}
             className="flex items-center gap-1.5 bg-[#F5C400] text-black text-sm font-black px-3 py-2 rounded-xl active:scale-95 transition">
-            <Plus size={15} /> Grupa
+            <Plus size={15} /> {t("chat.group_btn")}
           </button>
         </div>
       </div>
@@ -105,10 +107,10 @@ export default function ChatPage() {
       ) : rooms.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-5xl mb-3">💬</p>
-          <p className="text-white/60 font-bold mb-1">Brak grup czatu</p>
-          <p className="text-white/30 text-sm mb-5">Stwórz grupę lub dołącz kodem znajomych</p>
+          <p className="text-white/60 font-bold mb-1">{t("chat.no_groups")}</p>
+          <p className="text-white/30 text-sm mb-5">{t("chat.no_groups_sub")}</p>
           <button onClick={() => setDialog("create")} className="bg-[#F5C400] text-black font-black px-6 py-3 rounded-xl active:scale-95 transition">
-            Stwórz pierwszą grupę
+            {t("chat.create_first")}
           </button>
         </div>
       ) : (
@@ -121,7 +123,7 @@ export default function ChatPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-white font-bold truncate">{r.name}</h3>
-                  <p className="text-white/30 text-xs truncate">{r.lastMessage ?? "Brak wiadomości — napisz pierwszy!"}</p>
+                  <p className="text-white/30 text-xs truncate">{r.lastMessage ?? t("chat.last_empty")}</p>
                 </div>
               </div>
             </Link>
@@ -134,27 +136,27 @@ export default function ChatPage() {
         <div onClick={() => setDialog(null)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white font-black text-lg font-archivo">{dialog === "create" ? "Nowa grupa" : "Dołącz do grupy"}</h2>
+              <h2 className="text-white font-black text-lg font-archivo">{dialog === "create" ? t("chat.new_group") : t("chat.join_group")}</h2>
               <button onClick={() => setDialog(null)} className="text-white/40"><X size={20} /></button>
             </div>
             {dialog === "create" ? (
               <div className="flex flex-col gap-3">
-                <input value={name} onChange={e => setName(e.target.value)} placeholder="Nazwa grupy"
+                <input value={name} onChange={e => setName(e.target.value)} placeholder={t("chat.group_name")}
                   className="bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40" />
                 {error && <p className="text-red-400 text-sm">{error}</p>}
                 <button onClick={createRoom} disabled={busy || !name.trim()}
                   className="bg-[#F5C400] text-black font-black py-3 rounded-xl mt-1 disabled:opacity-40 active:scale-95 transition">
-                  {busy ? "Tworzenie..." : "Stwórz grupę"}
+                  {busy ? t("dialog.creating") : t("chat.create_group")}
                 </button>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="Kod zaproszenia" maxLength={6}
+                <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder={t("dialog.join_code_placeholder")} maxLength={6}
                   className="bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-white text-center text-lg font-mono tracking-widest placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40" />
                 {error && <p className="text-red-400 text-sm">{error}</p>}
                 <button onClick={joinRoom} disabled={busy || !code.trim()}
                   className="bg-[#F5C400] text-black font-black py-3 rounded-xl mt-1 disabled:opacity-40 active:scale-95 transition">
-                  {busy ? "Dołączanie..." : "Dołącz"}
+                  {busy ? t("dialog.joining") : t("dialog.join")}
                 </button>
               </div>
             )}

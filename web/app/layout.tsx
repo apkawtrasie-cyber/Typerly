@@ -8,7 +8,7 @@ const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
 export const metadata: Metadata = {
   title: "Typerly",
-  description: "Typuj · Rywalizuj · Wygrywaj",
+  description: "Predict · Compete · Win",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

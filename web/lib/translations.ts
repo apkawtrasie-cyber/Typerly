@@ -72,7 +72,41 @@ export type TranslationKey =
   // Scoring
   | "score.exact" | "score.diff" | "score.tendency" | "score.miss"
   // Chat
-  | "chat.title" | "chat.placeholder" | "chat.send" | "chat.no_messages";
+  | "chat.title" | "chat.placeholder" | "chat.send" | "chat.no_messages"
+  // Rarity
+  | "rarity.legendary" | "rarity.epic" | "rarity.rare" | "rarity.common"
+  // Chat extra
+  | "chat.group_btn" | "chat.no_groups" | "chat.no_groups_sub" | "chat.create_first"
+  | "chat.new_group" | "chat.join_group" | "chat.group_name" | "chat.create_group"
+  | "chat.group_not_found" | "chat.create_error" | "chat.join_error"
+  | "chat.empty_room" | "chat.last_empty"
+  // Matches extra
+  | "matches.wc_tables" | "matches.no_in_category" | "matches.finished_short"
+  // Leagues extra
+  | "leagues.title_full" | "leagues.empty_title" | "leagues.empty_hint_a" | "leagues.empty_hint_b"
+  | "leagues.create_first" | "leagues.tournament_label" | "leagues.create_error"
+  | "leagues.save_error" | "leagues.tournament_create_error"
+  | "leagues.delete_tournament_q" | "leagues.delete_permanent_suffix"
+  // Dialog extra
+  | "dialog.new_league" | "dialog.new_tournament" | "dialog.edit_tournament"
+  | "dialog.entry_fee" | "dialog.prize_optional" | "dialog.prize_placeholder" | "dialog.save_changes"
+  // Home extra
+  | "home.greeting_morning" | "home.greeting_afternoon" | "home.greeting_evening"
+  | "home.player_fallback" | "home.your_points" | "home.predictions_made"
+  | "home.results" | "home.no_results" | "home.nearest_matches"
+  | "home.week_ranking" | "home.predictions_short" | "home.see"
+  // League detail extra
+  | "league.player_fallback"
+  // World Cup
+  | "wc.no_data" | "wc.swipe_hint" | "wc.group" | "wc.team"
+  | "wc.col_played" | "wc.col_won" | "wc.col_draw" | "wc.col_lost" | "wc.col_pts"
+  // Profile extra
+  | "profile.calculated" | "profile.streak" | "profile.streak_suffix"
+  | "profile.trophies" | "profile.stars"
+  // Match detail extra
+  | "match.predictions_group" | "match.already_predicted" | "match.save_error"
+  // Profile messages
+  | "profile.email_changed" | "profile.pass_changed" | "profile.error_prefix";
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -183,6 +217,39 @@ const en: Translations = {
   // Chat
   "chat.title": "Chat", "chat.placeholder": "Write a message...",
   "chat.send": "Send", "chat.no_messages": "No messages yet",
+  "rarity.legendary": "LEGENDARY", "rarity.epic": "EPIC", "rarity.rare": "RARE", "rarity.common": "COMMON",
+  "chat.group_btn": "Group", "chat.no_groups": "No chat groups",
+  "chat.no_groups_sub": "Create a group or join with a friend's code",
+  "chat.create_first": "Create your first group", "chat.new_group": "New group",
+  "chat.join_group": "Join a group", "chat.group_name": "Group name",
+  "chat.create_group": "Create group", "chat.group_not_found": "No group found with this code",
+  "chat.create_error": "Could not create group", "chat.join_error": "Could not join",
+  "chat.empty_room": "No messages — be the first! 👋", "chat.last_empty": "No messages — be the first!",
+  "matches.wc_tables": "WC tables", "matches.no_in_category": "No matches in this category",
+  "matches.finished_short": "Finished",
+  "leagues.title_full": "Leagues & tournaments", "leagues.empty_title": "No leagues or tournaments",
+  "leagues.empty_hint_a": "Use the", "leagues.empty_hint_b": "button in the bottom-right to create a league, tournament or join with a code",
+  "leagues.create_first": "Create your first league", "leagues.tournament_label": "Tournament",
+  "leagues.create_error": "Could not create league", "leagues.save_error": "Could not save changes",
+  "leagues.tournament_create_error": "Could not create tournament",
+  "leagues.delete_tournament_q": "Delete tournament?",
+  "leagues.delete_permanent_suffix": "will be permanently deleted along with its members. This cannot be undone.",
+  "dialog.new_league": "New league", "dialog.new_tournament": "New tournament",
+  "dialog.edit_tournament": "Edit tournament", "dialog.entry_fee": "Entry fee (gemings)",
+  "dialog.prize_optional": "Prize (optional)", "dialog.prize_placeholder": "e.g. Dinner for the winner",
+  "dialog.save_changes": "Save changes",
+  "home.greeting_morning": "Good morning", "home.greeting_afternoon": "Hi", "home.greeting_evening": "Good evening",
+  "home.player_fallback": "Player", "home.your_points": "Your points", "home.predictions_made": "predictions made",
+  "home.results": "Results", "home.no_results": "No results", "home.nearest_matches": "Nearest matches",
+  "home.week_ranking": "Weekly ranking", "home.predictions_short": "predictions", "home.see": "See",
+  "league.player_fallback": "Player",
+  "wc.no_data": "No WC table data", "wc.swipe_hint": "Swipe or use arrows · 3 pts win · 1 pt draw",
+  "wc.group": "Group", "wc.team": "Team",
+  "wc.col_played": "P", "wc.col_won": "W", "wc.col_draw": "D", "wc.col_lost": "L", "wc.col_pts": "Pts",
+  "profile.calculated": "Settled", "profile.streak": "Streak", "profile.streak_suffix": "in a row",
+  "profile.trophies": "Trophies", "profile.stars": "Stars",
+  "match.predictions_group": "Group predictions", "match.already_predicted": "You already predicted this match — only one prediction allowed.", "match.save_error": "Could not save prediction",
+  "profile.email_changed": "Email changed — check your inbox.", "profile.pass_changed": "Password has been changed.", "profile.error_prefix": "Error",
 };
 
 const pl: Translations = {
@@ -278,6 +345,39 @@ const pl: Translations = {
   "score.tendency": "Dobra tendencja", "score.miss": "Pudło",
   "chat.title": "Czat", "chat.placeholder": "Napisz wiadomość...",
   "chat.send": "Wyślij", "chat.no_messages": "Brak wiadomości",
+  "rarity.legendary": "LEGENDARNY", "rarity.epic": "EPICKI", "rarity.rare": "RZADKI", "rarity.common": "ZWYKŁY",
+  "chat.group_btn": "Grupa", "chat.no_groups": "Brak grup czatu",
+  "chat.no_groups_sub": "Stwórz grupę lub dołącz kodem znajomych",
+  "chat.create_first": "Stwórz pierwszą grupę", "chat.new_group": "Nowa grupa",
+  "chat.join_group": "Dołącz do grupy", "chat.group_name": "Nazwa grupy",
+  "chat.create_group": "Stwórz grupę", "chat.group_not_found": "Nie znaleziono grupy o tym kodzie",
+  "chat.create_error": "Nie udało się utworzyć grupy", "chat.join_error": "Nie udało się dołączyć",
+  "chat.empty_room": "Brak wiadomości — napisz pierwszy! 👋", "chat.last_empty": "Brak wiadomości — napisz pierwszy!",
+  "matches.wc_tables": "Tabele MŚ", "matches.no_in_category": "Brak meczów w tej kategorii",
+  "matches.finished_short": "Zakończony",
+  "leagues.title_full": "Ligi i turnieje", "leagues.empty_title": "Brak lig i turniejów",
+  "leagues.empty_hint_a": "Użyj przycisku", "leagues.empty_hint_b": "w prawym dolnym rogu, aby stworzyć ligę, turniej lub dołączyć kodem",
+  "leagues.create_first": "Stwórz pierwszą ligę", "leagues.tournament_label": "Turniej",
+  "leagues.create_error": "Nie udało się utworzyć ligi", "leagues.save_error": "Nie udało się zapisać zmian",
+  "leagues.tournament_create_error": "Nie udało się utworzyć turnieju",
+  "leagues.delete_tournament_q": "Usunąć turniej?",
+  "leagues.delete_permanent_suffix": "zostanie trwale usunięty wraz z członkami. Tej operacji nie można cofnąć.",
+  "dialog.new_league": "Nowa liga", "dialog.new_tournament": "Nowy turniej",
+  "dialog.edit_tournament": "Edytuj turniej", "dialog.entry_fee": "Wpisowe (gemings)",
+  "dialog.prize_optional": "Nagroda (opcjonalnie)", "dialog.prize_placeholder": "np. Obiad dla zwycięzcy",
+  "dialog.save_changes": "Zapisz zmiany",
+  "home.greeting_morning": "Dzień dobry", "home.greeting_afternoon": "Cześć", "home.greeting_evening": "Dobry wieczór",
+  "home.player_fallback": "Graczu", "home.your_points": "Twoje punkty", "home.predictions_made": "typów oddanych",
+  "home.results": "Wyniki", "home.no_results": "Brak wyników", "home.nearest_matches": "Najbliższe mecze",
+  "home.week_ranking": "Ranking tygodnia", "home.predictions_short": "typów", "home.see": "Zobacz",
+  "league.player_fallback": "Gracz",
+  "wc.no_data": "Brak danych tabeli MŚ", "wc.swipe_hint": "Przesuń palcem lub użyj strzałek · 3 pkt zwycięstwo · 1 pkt remis",
+  "wc.group": "Grupa", "wc.team": "Drużyna",
+  "wc.col_played": "M", "wc.col_won": "Z", "wc.col_draw": "R", "wc.col_lost": "P", "wc.col_pts": "Pkt",
+  "profile.calculated": "Rozliczone", "profile.streak": "Seria", "profile.streak_suffix": "trafień z rzędu",
+  "profile.trophies": "Puchary", "profile.stars": "Gwiazdki",
+  "match.predictions_group": "Typy w grupie", "match.already_predicted": "Już dodałeś typ do tego meczu — typować można tylko raz.", "match.save_error": "Nie udało się zapisać typu",
+  "profile.email_changed": "Email zmieniony — sprawdź skrzynkę.", "profile.pass_changed": "Hasło zostało zmienione.", "profile.error_prefix": "Błąd",
 };
 
 const de: Translations = {
@@ -373,6 +473,39 @@ const de: Translations = {
   "score.tendency": "Richtige Tendenz", "score.miss": "Daneben",
   "chat.title": "Chat", "chat.placeholder": "Nachricht schreiben...",
   "chat.send": "Senden", "chat.no_messages": "Noch keine Nachrichten",
+  "rarity.legendary": "LEGENDÄR", "rarity.epic": "EPISCH", "rarity.rare": "SELTEN", "rarity.common": "GEWÖHNLICH",
+  "chat.group_btn": "Gruppe", "chat.no_groups": "Keine Chat-Gruppen",
+  "chat.no_groups_sub": "Erstelle eine Gruppe oder tritt mit einem Code bei",
+  "chat.create_first": "Erste Gruppe erstellen", "chat.new_group": "Neue Gruppe",
+  "chat.join_group": "Gruppe beitreten", "chat.group_name": "Gruppenname",
+  "chat.create_group": "Gruppe erstellen", "chat.group_not_found": "Keine Gruppe mit diesem Code gefunden",
+  "chat.create_error": "Gruppe konnte nicht erstellt werden", "chat.join_error": "Beitritt fehlgeschlagen",
+  "chat.empty_room": "Keine Nachrichten — sei der Erste! 👋", "chat.last_empty": "Keine Nachrichten — sei der Erste!",
+  "matches.wc_tables": "WM-Tabellen", "matches.no_in_category": "Keine Spiele in dieser Kategorie",
+  "matches.finished_short": "Beendet",
+  "leagues.title_full": "Ligen & Turniere", "leagues.empty_title": "Keine Ligen oder Turniere",
+  "leagues.empty_hint_a": "Nutze die", "leagues.empty_hint_b": "Schaltfläche unten rechts, um eine Liga, ein Turnier zu erstellen oder mit Code beizutreten",
+  "leagues.create_first": "Erste Liga erstellen", "leagues.tournament_label": "Turnier",
+  "leagues.create_error": "Liga konnte nicht erstellt werden", "leagues.save_error": "Änderungen konnten nicht gespeichert werden",
+  "leagues.tournament_create_error": "Turnier konnte nicht erstellt werden",
+  "leagues.delete_tournament_q": "Turnier löschen?",
+  "leagues.delete_permanent_suffix": "wird mit allen Mitgliedern dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
+  "dialog.new_league": "Neue Liga", "dialog.new_tournament": "Neues Turnier",
+  "dialog.edit_tournament": "Turnier bearbeiten", "dialog.entry_fee": "Startgebühr (Gemings)",
+  "dialog.prize_optional": "Preis (optional)", "dialog.prize_placeholder": "z.B. Abendessen für den Sieger",
+  "dialog.save_changes": "Änderungen speichern",
+  "home.greeting_morning": "Guten Morgen", "home.greeting_afternoon": "Hallo", "home.greeting_evening": "Guten Abend",
+  "home.player_fallback": "Spieler", "home.your_points": "Deine Punkte", "home.predictions_made": "Tipps abgegeben",
+  "home.results": "Ergebnisse", "home.no_results": "Keine Ergebnisse", "home.nearest_matches": "Nächste Spiele",
+  "home.week_ranking": "Wochenrangliste", "home.predictions_short": "Tipps", "home.see": "Ansehen",
+  "league.player_fallback": "Spieler",
+  "wc.no_data": "Keine WM-Tabellendaten", "wc.swipe_hint": "Wischen oder Pfeile nutzen · 3 Pkt Sieg · 1 Pkt Unentschieden",
+  "wc.group": "Gruppe", "wc.team": "Team",
+  "wc.col_played": "Sp", "wc.col_won": "S", "wc.col_draw": "U", "wc.col_lost": "N", "wc.col_pts": "Pkt",
+  "profile.calculated": "Abgerechnet", "profile.streak": "Serie", "profile.streak_suffix": "in Folge",
+  "profile.trophies": "Pokale", "profile.stars": "Sterne",
+  "match.predictions_group": "Gruppen-Tipps", "match.already_predicted": "Du hast für dieses Spiel bereits getippt — nur ein Tipp erlaubt.", "match.save_error": "Tipp konnte nicht gespeichert werden",
+  "profile.email_changed": "E-Mail geändert — überprüfe dein Postfach.", "profile.pass_changed": "Passwort wurde geändert.", "profile.error_prefix": "Fehler",
 };
 
 const fr: Translations = {
@@ -468,6 +601,39 @@ const fr: Translations = {
   "score.tendency": "Bonne tendance", "score.miss": "Raté",
   "chat.title": "Chat", "chat.placeholder": "Écrire un message...",
   "chat.send": "Envoyer", "chat.no_messages": "Aucun message",
+  "rarity.legendary": "LÉGENDAIRE", "rarity.epic": "ÉPIQUE", "rarity.rare": "RARE", "rarity.common": "COMMUN",
+  "chat.group_btn": "Groupe", "chat.no_groups": "Aucun groupe de chat",
+  "chat.no_groups_sub": "Crée un groupe ou rejoins avec le code d'un ami",
+  "chat.create_first": "Crée ton premier groupe", "chat.new_group": "Nouveau groupe",
+  "chat.join_group": "Rejoindre un groupe", "chat.group_name": "Nom du groupe",
+  "chat.create_group": "Créer le groupe", "chat.group_not_found": "Aucun groupe trouvé avec ce code",
+  "chat.create_error": "Impossible de créer le groupe", "chat.join_error": "Impossible de rejoindre",
+  "chat.empty_room": "Aucun message — sois le premier ! 👋", "chat.last_empty": "Aucun message — sois le premier !",
+  "matches.wc_tables": "Tableaux CM", "matches.no_in_category": "Aucun match dans cette catégorie",
+  "matches.finished_short": "Terminé",
+  "leagues.title_full": "Ligues & tournois", "leagues.empty_title": "Aucune ligue ni tournoi",
+  "leagues.empty_hint_a": "Utilise le bouton", "leagues.empty_hint_b": "en bas à droite pour créer une ligue, un tournoi ou rejoindre avec un code",
+  "leagues.create_first": "Crée ta première ligue", "leagues.tournament_label": "Tournoi",
+  "leagues.create_error": "Impossible de créer la ligue", "leagues.save_error": "Impossible d'enregistrer les modifications",
+  "leagues.tournament_create_error": "Impossible de créer le tournoi",
+  "leagues.delete_tournament_q": "Supprimer le tournoi ?",
+  "leagues.delete_permanent_suffix": "sera supprimé définitivement avec ses membres. Cette action est irréversible.",
+  "dialog.new_league": "Nouvelle ligue", "dialog.new_tournament": "Nouveau tournoi",
+  "dialog.edit_tournament": "Modifier le tournoi", "dialog.entry_fee": "Frais d'inscription (gemings)",
+  "dialog.prize_optional": "Prix (optionnel)", "dialog.prize_placeholder": "ex. Dîner pour le gagnant",
+  "dialog.save_changes": "Enregistrer",
+  "home.greeting_morning": "Bonjour", "home.greeting_afternoon": "Salut", "home.greeting_evening": "Bonsoir",
+  "home.player_fallback": "Joueur", "home.your_points": "Tes points", "home.predictions_made": "pronostics faits",
+  "home.results": "Résultats", "home.no_results": "Aucun résultat", "home.nearest_matches": "Prochains matchs",
+  "home.week_ranking": "Classement de la semaine", "home.predictions_short": "pronostics", "home.see": "Voir",
+  "league.player_fallback": "Joueur",
+  "wc.no_data": "Aucune donnée de tableau CM", "wc.swipe_hint": "Glisse ou utilise les flèches · 3 pts victoire · 1 pt nul",
+  "wc.group": "Groupe", "wc.team": "Équipe",
+  "wc.col_played": "J", "wc.col_won": "G", "wc.col_draw": "N", "wc.col_lost": "P", "wc.col_pts": "Pts",
+  "profile.calculated": "Réglés", "profile.streak": "Série", "profile.streak_suffix": "d'affilée",
+  "profile.trophies": "Trophées", "profile.stars": "Étoiles",
+  "match.predictions_group": "Pronostics du groupe", "match.already_predicted": "Tu as déjà pronostiqué ce match — un seul pronostic autorisé.", "match.save_error": "Impossible d'enregistrer le pronostic",
+  "profile.email_changed": "E-mail modifié — vérifie ta boîte de réception.", "profile.pass_changed": "Le mot de passe a été modifié.", "profile.error_prefix": "Erreur",
 };
 
 const es: Translations = {
@@ -563,6 +729,39 @@ const es: Translations = {
   "score.tendency": "Tendencia correcta", "score.miss": "Fallo",
   "chat.title": "Chat", "chat.placeholder": "Escribe un mensaje...",
   "chat.send": "Enviar", "chat.no_messages": "Sin mensajes",
+  "rarity.legendary": "LEGENDARIO", "rarity.epic": "ÉPICO", "rarity.rare": "RARO", "rarity.common": "COMÚN",
+  "chat.group_btn": "Grupo", "chat.no_groups": "Sin grupos de chat",
+  "chat.no_groups_sub": "Crea un grupo o únete con el código de un amigo",
+  "chat.create_first": "Crea tu primer grupo", "chat.new_group": "Nuevo grupo",
+  "chat.join_group": "Unirse a un grupo", "chat.group_name": "Nombre del grupo",
+  "chat.create_group": "Crear grupo", "chat.group_not_found": "No se encontró ningún grupo con este código",
+  "chat.create_error": "No se pudo crear el grupo", "chat.join_error": "No se pudo unir",
+  "chat.empty_room": "Sin mensajes — ¡sé el primero! 👋", "chat.last_empty": "Sin mensajes — ¡sé el primero!",
+  "matches.wc_tables": "Tablas del Mundial", "matches.no_in_category": "Sin partidos en esta categoría",
+  "matches.finished_short": "Terminado",
+  "leagues.title_full": "Ligas y torneos", "leagues.empty_title": "Sin ligas ni torneos",
+  "leagues.empty_hint_a": "Usa el botón", "leagues.empty_hint_b": "abajo a la derecha para crear una liga, un torneo o unirte con un código",
+  "leagues.create_first": "Crea tu primera liga", "leagues.tournament_label": "Torneo",
+  "leagues.create_error": "No se pudo crear la liga", "leagues.save_error": "No se pudieron guardar los cambios",
+  "leagues.tournament_create_error": "No se pudo crear el torneo",
+  "leagues.delete_tournament_q": "¿Eliminar torneo?",
+  "leagues.delete_permanent_suffix": "se eliminará permanentemente junto con sus miembros. Esta acción no se puede deshacer.",
+  "dialog.new_league": "Nueva liga", "dialog.new_tournament": "Nuevo torneo",
+  "dialog.edit_tournament": "Editar torneo", "dialog.entry_fee": "Cuota de entrada (gemings)",
+  "dialog.prize_optional": "Premio (opcional)", "dialog.prize_placeholder": "ej. Cena para el ganador",
+  "dialog.save_changes": "Guardar cambios",
+  "home.greeting_morning": "Buenos días", "home.greeting_afternoon": "Hola", "home.greeting_evening": "Buenas noches",
+  "home.player_fallback": "Jugador", "home.your_points": "Tus puntos", "home.predictions_made": "predicciones hechas",
+  "home.results": "Resultados", "home.no_results": "Sin resultados", "home.nearest_matches": "Próximos partidos",
+  "home.week_ranking": "Ranking semanal", "home.predictions_short": "predicciones", "home.see": "Ver",
+  "league.player_fallback": "Jugador",
+  "wc.no_data": "Sin datos de tabla del Mundial", "wc.swipe_hint": "Desliza o usa las flechas · 3 pts victoria · 1 pt empate",
+  "wc.group": "Grupo", "wc.team": "Equipo",
+  "wc.col_played": "PJ", "wc.col_won": "G", "wc.col_draw": "E", "wc.col_lost": "P", "wc.col_pts": "Pts",
+  "profile.calculated": "Liquidados", "profile.streak": "Racha", "profile.streak_suffix": "seguidas",
+  "profile.trophies": "Trofeos", "profile.stars": "Estrellas",
+  "match.predictions_group": "Predicciones del grupo", "match.already_predicted": "Ya hiciste una predicción para este partido — solo se permite una.", "match.save_error": "No se pudo guardar la predicción",
+  "profile.email_changed": "Correo cambiado — revisa tu bandeja.", "profile.pass_changed": "La contraseña ha sido cambiada.", "profile.error_prefix": "Error",
 };
 
 const it: Translations = {
@@ -658,6 +857,39 @@ const it: Translations = {
   "score.tendency": "Tendenza corretta", "score.miss": "Errore",
   "chat.title": "Chat", "chat.placeholder": "Scrivi un messaggio...",
   "chat.send": "Invia", "chat.no_messages": "Nessun messaggio",
+  "rarity.legendary": "LEGGENDARIO", "rarity.epic": "EPICO", "rarity.rare": "RARO", "rarity.common": "COMUNE",
+  "chat.group_btn": "Gruppo", "chat.no_groups": "Nessun gruppo chat",
+  "chat.no_groups_sub": "Crea un gruppo o unisciti con il codice di un amico",
+  "chat.create_first": "Crea il tuo primo gruppo", "chat.new_group": "Nuovo gruppo",
+  "chat.join_group": "Unisciti a un gruppo", "chat.group_name": "Nome del gruppo",
+  "chat.create_group": "Crea gruppo", "chat.group_not_found": "Nessun gruppo trovato con questo codice",
+  "chat.create_error": "Impossibile creare il gruppo", "chat.join_error": "Impossibile unirsi",
+  "chat.empty_room": "Nessun messaggio — scrivi per primo! 👋", "chat.last_empty": "Nessun messaggio — scrivi per primo!",
+  "matches.wc_tables": "Tabelle Mondiali", "matches.no_in_category": "Nessuna partita in questa categoria",
+  "matches.finished_short": "Terminata",
+  "leagues.title_full": "Leghe e tornei", "leagues.empty_title": "Nessuna lega o torneo",
+  "leagues.empty_hint_a": "Usa il pulsante", "leagues.empty_hint_b": "in basso a destra per creare una lega, un torneo o unirti con un codice",
+  "leagues.create_first": "Crea la tua prima lega", "leagues.tournament_label": "Torneo",
+  "leagues.create_error": "Impossibile creare la lega", "leagues.save_error": "Impossibile salvare le modifiche",
+  "leagues.tournament_create_error": "Impossibile creare il torneo",
+  "leagues.delete_tournament_q": "Eliminare il torneo?",
+  "leagues.delete_permanent_suffix": "sarà eliminato definitivamente insieme ai membri. Questa azione non può essere annullata.",
+  "dialog.new_league": "Nuova lega", "dialog.new_tournament": "Nuovo torneo",
+  "dialog.edit_tournament": "Modifica torneo", "dialog.entry_fee": "Quota d'iscrizione (gemings)",
+  "dialog.prize_optional": "Premio (opzionale)", "dialog.prize_placeholder": "es. Cena per il vincitore",
+  "dialog.save_changes": "Salva modifiche",
+  "home.greeting_morning": "Buongiorno", "home.greeting_afternoon": "Ciao", "home.greeting_evening": "Buonasera",
+  "home.player_fallback": "Giocatore", "home.your_points": "I tuoi punti", "home.predictions_made": "pronostici fatti",
+  "home.results": "Risultati", "home.no_results": "Nessun risultato", "home.nearest_matches": "Prossime partite",
+  "home.week_ranking": "Classifica settimanale", "home.predictions_short": "pronostici", "home.see": "Vedi",
+  "league.player_fallback": "Giocatore",
+  "wc.no_data": "Nessun dato tabella Mondiali", "wc.swipe_hint": "Scorri o usa le frecce · 3 pti vittoria · 1 pt pareggio",
+  "wc.group": "Gruppo", "wc.team": "Squadra",
+  "wc.col_played": "G", "wc.col_won": "V", "wc.col_draw": "N", "wc.col_lost": "P", "wc.col_pts": "Pti",
+  "profile.calculated": "Conteggiati", "profile.streak": "Serie", "profile.streak_suffix": "di fila",
+  "profile.trophies": "Trofei", "profile.stars": "Stelle",
+  "match.predictions_group": "Pronostici del gruppo", "match.already_predicted": "Hai già pronosticato questa partita — è consentito un solo pronostico.", "match.save_error": "Impossibile salvare il pronostico",
+  "profile.email_changed": "Email cambiata — controlla la casella.", "profile.pass_changed": "La password è stata cambiata.", "profile.error_prefix": "Errore",
 };
 
 export const translations: Record<Locale, Translations> = { en, pl, de, fr, es, it };

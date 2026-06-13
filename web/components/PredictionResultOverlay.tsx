@@ -3,11 +3,23 @@ import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import confetti from "canvas-confetti";
-import { pointsLabel, badgeFor } from "@/lib/scorer";
+import { badgeFor } from "@/lib/scorer";
+import { useLang } from "@/contexts/LangContext";
+import { TranslationKey } from "@/lib/translations";
 import gwiazdaData from "@/public/lottie/gwiazda.json";
 import tarczaData from "@/public/lottie/tarcza.json";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
+
+// Etykieta punktów (wersje wielkimi literami z kluczy score.*)
+function pointsLabelKey(points: number): TranslationKey {
+  switch (points) {
+    case 3: return "score.exact";
+    case 2: return "score.diff";
+    case 1: return "score.tendency";
+    default: return "score.miss";
+  }
+}
 
 type Props = {
   username: string;
@@ -26,9 +38,6 @@ type Props = {
 
 const RARITY_COLOR: Record<string, string> = {
   legendary: "#FF9500", epic: "#AA44FF", rare: "#44AAFF", common: "#88CC88",
-};
-const RARITY_LABEL: Record<string, string> = {
-  legendary: "LEGENDARNY", epic: "EPICKI", rare: "RZADKI", common: "ZWYKŁY",
 };
 
 function accentColor(points: number): string {
@@ -62,6 +71,7 @@ export default function PredictionResultOverlay({
   homeTeam, awayTeam, homeLogo, awayLogo,
   onClose, onCheck,
 }: Props) {
+  const { t } = useLang();
   const won = points > 0;
   const accent = accentColor(points);
   const badge = badgeFor(points);
@@ -126,7 +136,7 @@ export default function PredictionResultOverlay({
             <p className="font-black text-4xl font-archivo leading-none" style={{ color: accent }}>
               +{points} {points === 1 ? "punkt" : "punkty"}
             </p>
-            <p className="text-white/60 text-xs font-bold tracking-widest mt-1">{pointsLabel(points)}</p>
+            <p className="text-white/60 text-xs font-bold tracking-widest mt-1">{t(pointsLabelKey(points)).toUpperCase()}</p>
           </div>
 
           {/* Karta meczu */}
@@ -138,7 +148,7 @@ export default function PredictionResultOverlay({
             accent={accent}
           />
 
-          <BadgeChip name={`${badge.name} ${badge.icon}`} rarity={badge.rarity} color={badgeColor} subtitle="Zdobywasz odznakę!" />
+          <BadgeChip name={`${badge.name} ${badge.icon}`} rarity={badge.rarity} color={badgeColor} subtitle={t("overlay.badge_earned")} />
         </div>
       ) : (
         /* ===== PUDŁO ===== */
@@ -150,8 +160,8 @@ export default function PredictionResultOverlay({
           <p className="font-black text-2xl font-archivo text-white/80 mb-3">{username}</p>
 
           <div className="rounded-2xl px-5 py-3 text-center mb-3 w-full" style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
-            <p className="text-white/70 text-sm font-bold mb-2">Nie tym razem — ale odznaka za udział! 🛡️</p>
-            <p className="text-white/35 text-xs">Każdy typ to krok do mistrzostwa 🚀</p>
+            <p className="text-white/70 text-sm font-bold mb-2">{t("overlay.miss_title")}</p>
+            <p className="text-white/35 text-xs">{t("overlay.miss_sub")}</p>
           </div>
 
           {/* Karta meczu */}
@@ -163,7 +173,7 @@ export default function PredictionResultOverlay({
             accent={accent}
           />
 
-          <BadgeChip name={`${badge.name} ${badge.icon}`} rarity={badge.rarity} color={badgeColor} subtitle="Zdobywasz odznakę!" />
+          <BadgeChip name={`${badge.name} ${badge.icon}`} rarity={badge.rarity} color={badgeColor} subtitle={t("overlay.badge_earned")} />
         </div>
       )}
 
@@ -178,10 +188,10 @@ export default function PredictionResultOverlay({
           className="w-full font-black text-black text-lg py-4 rounded-2xl active:scale-95 transition"
           style={{ backgroundColor: accent, boxShadow: `0 6px 24px ${accent}55` }}
         >
-          Sprawdź wyniki
+          {t("overlay.check")}
         </button>
         <button onClick={handleClose} className="w-full text-white/35 text-sm font-semibold py-3 mt-1">
-          Zamknij
+          {t("overlay.close")}
         </button>
       </div>
     </div>
@@ -240,6 +250,7 @@ function MatchCard({
 }
 
 function BadgeChip({ name, rarity, color, subtitle }: { name: string; rarity: string; color: string; subtitle?: string }) {
+  const { t } = useLang();
   return (
     <div className="flex flex-col items-center" style={{ animation: "slide-up 0.5s ease 0.2s both" }}>
       {subtitle && (
@@ -251,7 +262,7 @@ function BadgeChip({ name, rarity, color, subtitle }: { name: string; rarity: st
       >
         <span className="font-black text-sm" style={{ color }}>{name}</span>
         <span className="text-[9px] font-black px-1.5 py-0.5 rounded tracking-wider" style={{ color, backgroundColor: color + "33" }}>
-          {RARITY_LABEL[rarity]}
+          {t(`rarity.${rarity}` as TranslationKey)}
         </span>
       </div>
     </div>

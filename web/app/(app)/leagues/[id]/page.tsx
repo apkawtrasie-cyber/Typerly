@@ -6,10 +6,12 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Crown, Copy, Check, MoreVertical, Pencil, Trash2, LogOut, X, ChevronRight } from "lucide-react";
 import { TeamLogo } from "@/components/MatchCard";
+import { useLang } from "@/contexts/LangContext";
 
 type Member = { user_id: string; username: string; points: number; predictions: number };
 
 export default function LeagueDetailPage() {
+  const { t } = useLang();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [league, setLeague] = useState<League | null>(null);
@@ -54,7 +56,7 @@ export default function LeagueDetailPage() {
       const prof = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
       return {
         user_id: m.user_id,
-        username: prof?.username ?? "Gracz",
+        username: prof?.username ?? t("league.player_fallback"),
         points: pts[m.user_id] ?? 0,
         predictions: cnt[m.user_id] ?? 0,
       };
@@ -121,7 +123,7 @@ export default function LeagueDetailPage() {
     <div className="px-4 pt-6 pb-6 fade-in">
       <div className="flex items-center justify-between mb-4">
         <button onClick={() => router.back()} className="text-white/40 flex items-center gap-1 text-sm">
-          <ArrowLeft size={18} /> Wróć
+          <ArrowLeft size={18} /> {t("league.back")}
         </button>
 
         {/* Menu trzy kropki */}
@@ -137,17 +139,17 @@ export default function LeagueDetailPage() {
                   <>
                     <button onClick={() => { setMenuOpen(false); setEditName(league.name); setEditing(true); }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-white/80 text-sm hover:bg-white/5 transition">
-                      <Pencil size={15} /> Edytuj nazwę
+                      <Pencil size={15} /> {t("league.edit_name")}
                     </button>
                     <button onClick={() => { setMenuOpen(false); setConfirmDelete(true); }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-red-400 text-sm hover:bg-red-500/10 transition border-t border-white/[0.06]">
-                      <Trash2 size={15} /> Usuń ligę
+                      <Trash2 size={15} /> {t("league.delete_league")}
                     </button>
                   </>
                 ) : (
                   <button onClick={() => { setMenuOpen(false); setConfirmLeave(true); }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-red-400 text-sm hover:bg-red-500/10 transition">
-                    <LogOut size={15} /> Opuść grupę
+                    <LogOut size={15} /> {t("league.leave")}
                   </button>
                 )}
               </div>
@@ -164,11 +166,11 @@ export default function LeagueDetailPage() {
           {copied ? <Check size={13} className="text-green-400" /> : <Copy size={13} className="text-white/50" />}
           <span className="text-white/70 font-mono tracking-widest">{league.invite_code}</span>
         </button>
-        <p className="text-white/30 text-xs mt-2">Udostępnij kod, by zaprosić znajomych</p>
+        <p className="text-white/30 text-xs mt-2">{t("league.share_code")}</p>
       </div>
 
       {/* Ranking */}
-      <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">Ranking ({members.length})</h2>
+      <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{t("league.ranking")} ({members.length})</h2>
       <div className="flex flex-col gap-2">
         {members.map((m, i) => (
           <div key={m.user_id} className={`flex items-center gap-3 rounded-xl px-4 py-3 border ${m.user_id === userId ? "border-[#F5C400]/40 bg-[#F5C400]/5" : "border-white/[0.06] bg-[#111]"}`}>
@@ -179,18 +181,18 @@ export default function LeagueDetailPage() {
               <span className="text-white font-semibold text-sm truncate">{m.username}</span>
               {m.user_id === league.admin_id && <Crown size={12} className="text-[#F5C400] flex-shrink-0" />}
             </div>
-            <span className="text-white/30 text-xs">{m.predictions} typów</span>
-            <span className="text-[#F5C400] font-black tabular-nums w-14 text-right">{m.points} pkt</span>
+            <span className="text-white/30 text-xs">{m.predictions} {t("league.predictions_count")}</span>
+            <span className="text-[#F5C400] font-black tabular-nums w-14 text-right">{m.points} {t("home.points")}</span>
           </div>
         ))}
       </div>
 
       {/* Mecze do typowania w grupie */}
-      <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mt-7 mb-3">Mecze do typowania</h2>
+      <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mt-7 mb-3">{t("league.matches_to_predict")}</h2>
       {(() => {
         const upcoming = matches.filter(m => isUpcoming(m.status) || isLive(m.status));
         if (upcoming.length === 0) {
-          return <p className="text-white/20 text-sm text-center py-6">Brak nadchodzących meczów</p>;
+          return <p className="text-white/20 text-sm text-center py-6">{t("league.no_upcoming")}</p>;
         }
         return (
           <div className="flex flex-col gap-2">
@@ -215,14 +217,14 @@ export default function LeagueDetailPage() {
         <div onClick={() => setEditing(false)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white font-black text-lg font-archivo">Edytuj nazwę</h2>
+              <h2 className="text-white font-black text-lg font-archivo">{t("league.edit_name")}</h2>
               <button onClick={() => setEditing(false)} className="text-white/40"><X size={20} /></button>
             </div>
             <input value={editName} onChange={e => setEditName(e.target.value)} autoFocus
               className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#F5C400]/40 mb-3" />
             <button onClick={saveRename} disabled={busy || !editName.trim()}
               className="w-full bg-[#F5C400] text-black font-black py-3 rounded-xl disabled:opacity-40 active:scale-95 transition">
-              {busy ? "Zapisywanie..." : "Zapisz"}
+              {busy ? t("league.saving") : t("league.save")}
             </button>
           </div>
         </div>
@@ -233,12 +235,12 @@ export default function LeagueDetailPage() {
         <div onClick={() => setConfirmDelete(false)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm text-center">
             <div className="text-4xl mb-3">🗑️</div>
-            <h2 className="text-white font-black text-lg mb-1">Usunąć ligę?</h2>
-            <p className="text-white/50 text-sm mb-5">Liga „{league.name}" zostanie trwale usunięta wraz z członkami. Tej operacji nie można cofnąć.</p>
+            <h2 className="text-white font-black text-lg mb-1">{t("league.confirm_delete")}</h2>
+            <p className="text-white/50 text-sm mb-5">„{league.name}" — {t("league.confirm_delete_msg")}</p>
             <div className="flex gap-3">
-              <button onClick={() => setConfirmDelete(false)} className="flex-1 bg-white/5 border border-white/10 text-white/70 font-bold py-3 rounded-xl active:scale-95 transition">Anuluj</button>
+              <button onClick={() => setConfirmDelete(false)} className="flex-1 bg-white/5 border border-white/10 text-white/70 font-bold py-3 rounded-xl active:scale-95 transition">{t("league.cancel")}</button>
               <button onClick={deleteLeague} disabled={busy} className="flex-1 bg-red-500 text-white font-black py-3 rounded-xl disabled:opacity-40 active:scale-95 transition">
-                {busy ? "Usuwanie..." : "Usuń"}
+                {busy ? t("league.deleting") : t("leagues.delete")}
               </button>
             </div>
           </div>
@@ -250,12 +252,12 @@ export default function LeagueDetailPage() {
         <div onClick={() => setConfirmLeave(false)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm text-center">
             <div className="text-4xl mb-3">👋</div>
-            <h2 className="text-white font-black text-lg mb-1">Opuścić grupę?</h2>
-            <p className="text-white/50 text-sm mb-5">Przestaniesz być członkiem ligi „{league.name}". Możesz dołączyć ponownie kodem.</p>
+            <h2 className="text-white font-black text-lg mb-1">{t("league.confirm_leave")}</h2>
+            <p className="text-white/50 text-sm mb-5">„{league.name}" — {t("league.confirm_leave_msg")}</p>
             <div className="flex gap-3">
-              <button onClick={() => setConfirmLeave(false)} className="flex-1 bg-white/5 border border-white/10 text-white/70 font-bold py-3 rounded-xl active:scale-95 transition">Anuluj</button>
+              <button onClick={() => setConfirmLeave(false)} className="flex-1 bg-white/5 border border-white/10 text-white/70 font-bold py-3 rounded-xl active:scale-95 transition">{t("league.cancel")}</button>
               <button onClick={leaveLeague} disabled={busy} className="flex-1 bg-red-500 text-white font-black py-3 rounded-xl disabled:opacity-40 active:scale-95 transition">
-                {busy ? "..." : "Opuść"}
+                {busy ? "..." : t("league.leave")}
               </button>
             </div>
           </div>

@@ -4,8 +4,10 @@ import Image from "next/image";
 import { supabase, Match } from "@/lib/supabase";
 import { computeGroupTables, GroupTable } from "@/lib/worldcup";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLang } from "@/contexts/LangContext";
 
 export default function WorldCupStandings() {
+  const { t } = useLang();
   const [groups, setGroups] = useState<GroupTable[]>([]);
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -42,7 +44,7 @@ export default function WorldCupStandings() {
     return (
       <div className="text-center py-16">
         <p className="text-4xl mb-3">🏆</p>
-        <p className="text-white/30 font-semibold">Brak danych tabeli MŚ</p>
+        <p className="text-white/30 font-semibold">{t("wc.no_data")}</p>
       </div>
     );
   }
@@ -84,31 +86,32 @@ export default function WorldCupStandings() {
       </div>
 
       <p className="text-center text-white/20 text-[11px] mt-3">
-        Przesuń palcem lub użyj strzałek · 3 pkt zwycięstwo · 1 pkt remis
+        {t("wc.swipe_hint")}
       </p>
     </div>
   );
 }
 
 function GroupCard({ group }: { group: GroupTable }) {
+  const { t } = useLang();
   return (
     <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
       {/* Nagłówek grupy */}
       <div className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-[#1a1500] to-transparent border-b border-white/[0.06]">
         <span className="w-7 h-7 rounded-lg bg-[#F5C400] text-black font-black text-sm flex items-center justify-center">{group.letter}</span>
-        <span className="text-white font-black text-sm uppercase tracking-wide">Grupa {group.letter}</span>
+        <span className="text-white font-black text-sm uppercase tracking-wide">{t("wc.group")} {group.letter}</span>
       </div>
 
       {/* Nagłówki kolumn */}
       <div className="flex items-center px-3 py-2 text-white/30 text-[10px] font-bold uppercase border-b border-white/[0.04]">
         <span className="w-6 text-center">#</span>
-        <span className="flex-1 pl-1">Drużyna</span>
-        <span className="w-6 text-center">M</span>
-        <span className="w-6 text-center block">Z</span>
-        <span className="w-6 text-center block">R</span>
-        <span className="w-6 text-center block">P</span>
+        <span className="flex-1 pl-1">{t("wc.team")}</span>
+        <span className="w-6 text-center">{t("wc.col_played")}</span>
+        <span className="w-6 text-center block">{t("wc.col_won")}</span>
+        <span className="w-6 text-center block">{t("wc.col_draw")}</span>
+        <span className="w-6 text-center block">{t("wc.col_lost")}</span>
         <span className="w-9 text-center">+/-</span>
-        <span className="w-8 text-center text-[#F5C400]">Pkt</span>
+        <span className="w-8 text-center text-[#F5C400]">{t("wc.col_pts")}</span>
       </div>
 
       {/* Wiersze */}

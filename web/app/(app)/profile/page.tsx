@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { LogOut, ChevronRight, Mail, Lock, Globe } from "lucide-react";
 import { useLang } from "@/contexts/LangContext";
-import { LOCALES, Locale } from "@/lib/translations";
+import { LOCALES, Locale, TranslationKey } from "@/lib/translations";
 
 type Profile = { id: string; username: string; avatar_url: string | null };
 type BadgeDef = { name: string; icon: string; rarity: string };
@@ -27,7 +27,6 @@ type Stats = {
 };
 
 const RARITY_COLOR: Record<string, string> = { legendary: "#FF9500", epic: "#AA44FF", rare: "#44AAFF", common: "#88CC88" };
-const RARITY_LABEL: Record<string, string> = { legendary: "LEGENDARNY", epic: "EPICKI", rare: "RZADKI", common: "ZWYKŁY" };
 
 function getBadgeDef(b: Badge): BadgeDef | null {
   if (!b.badge_definitions) return null;
@@ -133,13 +132,13 @@ export default function ProfilePage() {
 
   async function handleEmailChange() {
     const { error } = await supabase.auth.updateUser({ email: newEmail });
-    setDialogMsg(error ? `Błąd: ${error.message}` : "Email zmieniony — sprawdź skrzynkę.");
+    setDialogMsg(error ? `${t("profile.error_prefix")}: ${error.message}` : t("profile.email_changed"));
   }
 
   async function handlePassChange() {
     if (newPass.length < 6) { setDialogMsg(t("profile.too_short")); return; }
     const { error } = await supabase.auth.updateUser({ password: newPass });
-    setDialogMsg(error ? `Błąd: ${error.message}` : "Hasło zostało zmienione.");
+    setDialogMsg(error ? `${t("profile.error_prefix")}: ${error.message}` : t("profile.pass_changed"));
   }
 
   if (loading) return (
@@ -170,7 +169,7 @@ export default function ProfilePage() {
         </div>
         <h1 className="text-white font-black text-2xl font-archivo">{profile?.username}</h1>
         {streak > 0 && (
-          <p className="text-red-400 text-xs font-bold mt-1">{streak} trafień z rzędu 🔥</p>
+          <p className="text-red-400 text-xs font-bold mt-1">{streak} {t("profile.streak_suffix")} 🔥</p>
         )}
       </div>
 
@@ -184,8 +183,8 @@ export default function ProfilePage() {
       {/* Druga linia statystyk */}
       <div className="flex gap-3 mb-6">
         <StatBox value={`+${s.weekPoints}`} label={t("profile.week_points")} />
-        <StatBox value={s.calculated} label="Rozliczone" />
-        <StatBox value={s.streak} label="Seria 🔥" />
+        <StatBox value={s.calculated} label={t("profile.calculated")} />
+        <StatBox value={s.streak} label={`${t("profile.streak")} 🔥`} />
       </div>
 
       {/* Rozbicie punktów */}
@@ -209,14 +208,14 @@ export default function ProfilePage() {
           <span className="text-3xl">🏆</span>
           <div>
             <p className="text-white font-black text-xl">{trophies.length}</p>
-            <p className="text-white/30 text-xs">Puchary</p>
+            <p className="text-white/30 text-xs">{t("profile.trophies")}</p>
           </div>
         </div>
         <div className="flex-1 bg-[#111] border border-white/[0.06] rounded-2xl p-4 flex items-center gap-3">
           <span className="text-3xl">⭐</span>
           <div>
             <p className="text-white font-black text-xl">{stars.length}</p>
-            <p className="text-white/30 text-xs">Gwiazdki</p>
+            <p className="text-white/30 text-xs">{t("profile.stars")}</p>
           </div>
         </div>
       </div>
@@ -242,7 +241,7 @@ export default function ProfilePage() {
                   <span className="text-base">{def?.icon}</span>
                   <span style={{ color }} className="text-xs font-black">{def?.name}</span>
                   <span style={{ color, backgroundColor: color + "25" }} className="text-[8px] font-black px-1.5 py-0.5 rounded">
-                    {RARITY_LABEL[rarity]}
+                    {t(`rarity.${rarity}` as TranslationKey)}
                   </span>
                 </div>
               );
