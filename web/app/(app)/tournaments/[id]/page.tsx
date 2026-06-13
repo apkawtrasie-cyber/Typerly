@@ -1,13 +1,14 @@
 "use client";
 export const dynamic = 'force-dynamic';
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Plus, Trash2, Trophy, Gift, Copy, Check, Users, Crown, Shuffle, ListOrdered } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Trophy, Gift, Copy, Check, Users, Crown, Shuffle, ListOrdered, Camera } from "lucide-react";
 import Image from "next/image";
 import { useLang } from "@/contexts/LangContext";
 
 type Team = { id: string; name: string; logo_url: string | null; tournament_id: string };
+type UserTeam = { id?: string; name: string; logo_url: string | null };
 type KnockoutMatch = {
   id: string;
   home_team_name: string;
@@ -30,6 +31,9 @@ type Tournament = {
   prize_description: string | null;
 };
 
+// z-index above BottomNav (z-50) and FAB overlay (z-[60])
+const MODAL_Z = "z-[200]";
+
 function TeamAvatar({ url, name, size = 10 }: { url: string | null; name: string; size?: number }) {
   const cls = `w-${size} h-${size} rounded-xl flex-shrink-0`;
   if (url) return (
@@ -44,6 +48,38 @@ function TeamAvatar({ url, name, size = 10 }: { url: string | null; name: string
   );
 }
 
+// Sheet backdrop — covers full screen including bottom nav
+function Sheet({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div
+      onClick={onClose}
+      className={`fixed inset-0 ${MODAL_Z} bg-black/80 backdrop-blur-sm flex flex-col justify-end`}
+      style={{ paddingBottom: 0 }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        className="bg-[#1a1a1a] border-t border-white/[0.08] rounded-t-3xl w-full max-w-lg mx-auto"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function CenterModal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div
+      onClick={onClose}
+      className={`fixed inset-0 ${MODAL_Z} bg-black/80 backdrop-blur-sm flex items-center justify-center px-4`}
+    >
+      <div onClick={e => e.stopPropagation()} className="bg-[#1a1a1a] border border-white/[0.08] rounded-2xl p-5 w-full max-w-xs">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function TournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -51,15 +87,18 @@ export default function TournamentDetailPage() {
 
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [userTeams, setUserTeams] = useState<UserTeam[]>([]);
   const [matches, setMatches] = useState<KnockoutMatch[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Add team form
+  // Add team dialog
   const [addOpen, setAddOpen] = useState(false);
   const [teamName, setTeamName] = useState("");
-  const [teamLogo, setTeamLogo] = useState("");
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [adding, setAdding] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   // Result dialog
   const [resultMatch, setResultMatch] = useState<KnockoutMatch | null>(null);
@@ -73,22 +112,23 @@ export default function TournamentDetailPage() {
   const [generating, setGenerating] = useState(false);
 
   const [copied, setCopied] = useState(false);
-  const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUserId(user?.id ?? null);
 
-    const [{ data: tr }, { data: tm }, { data: km }] = await Promise.all([
+    const [{ data: tr }, { data: tm }, { data: km }, { data: ut }] = await Promise.all([
       supabase.from("custom_tournaments").select("*").eq("id", id).single(),
       supabase.from("custom_teams").select("*").eq("tournament_id", id).order("created_at"),
       supabase.from("custom_matches").select("*").eq("tournament_id", id)
         .eq("match_phase", "knockout").order("knockout_round", { ascending: false }).order("knockout_slot"),
+      user ? supabase.from("user_teams").select("*").order("name") : Promise.resolve({ data: [] }),
     ]);
 
     setTournament(tr as Tournament);
     setTeams((tm ?? []) as Team[]);
     setMatches((km ?? []) as KnockoutMatch[]);
+    setUserTeams((ut ?? []) as UserTeam[]);
     setLoading(false);
   }, [id]);
 
@@ -96,19 +136,60 @@ export default function TournamentDetailPage() {
 
   const isAdmin = tournament?.admin_id === userId;
 
-  async function addTeam() {
+  // Filter user library to exclude teams already in this tournament
+  const existingNames = new Set(teams.map(t => t.name.toLowerCase()));
+  const libraryTeams = userTeams.filter(t => !existingNames.has(t.name.toLowerCase()));
+
+  function openAdd() {
+    setTeamName(""); setLogoPreview(null); setLogoFile(null);
+    setAddOpen(true);
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFile(file);
+    const reader = new FileReader();
+    reader.onload = ev => setLogoPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  async function uploadLogo(file: File): Promise<string | null> {
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `tournament-logos/${id}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("team-logos").upload(path, file, { upsert: true });
+    if (error) return null;
+    return supabase.storage.from("team-logos").getPublicUrl(path).data.publicUrl;
+  }
+
+  async function addTeamNew() {
     if (!teamName.trim()) return;
     setAdding(true);
+    let logoUrl: string | null = null;
+    if (logoFile) logoUrl = await uploadLogo(logoFile);
     const { error } = await supabase.from("custom_teams").insert({
-      tournament_id: id,
-      name: teamName.trim(),
-      logo_url: teamLogo.trim() || null,
+      tournament_id: id, name: teamName.trim(), logo_url: logoUrl,
     });
     if (!error) {
-      setTeamName(""); setTeamLogo(""); setAddOpen(false);
+      // Save to user library
+      await supabase.from("user_teams").upsert(
+        { user_id: userId, name: teamName.trim(), logo_url: logoUrl },
+        { onConflict: "user_id,name", ignoreDuplicates: true }
+      );
+      setAddOpen(false);
       await load();
     }
     setAdding(false);
+  }
+
+  async function addFromLibrary(ut: UserTeam) {
+    setAdding(true);
+    await supabase.from("custom_teams").insert({
+      tournament_id: id, name: ut.name, logo_url: ut.logo_url,
+    });
+    setAdding(false);
+    await load();
+    // keep dialog open so user can add more
   }
 
   async function deleteTeam(teamId: string) {
@@ -116,88 +197,64 @@ export default function TournamentDetailPage() {
     await load();
   }
 
-  function openSeeding() {
-    setSeedOrder([...teams]);
-    setSeedingOpen(true);
-  }
+  function openSeeding() { setSeedOrder([...teams]); setSeedingOpen(true); }
 
   async function generateRandom() {
     setGenerating(true);
     const shuffled = [...teams].sort(() => Math.random() - 0.5);
     await generateKnockout(shuffled);
-    setGenerating(false);
-    setSeedingOpen(false);
+    setGenerating(false); setSeedingOpen(false);
   }
 
   async function generateManual() {
     setGenerating(true);
     await generateKnockout(seedOrder);
-    setGenerating(false);
-    setSeedingOpen(false);
+    setGenerating(false); setSeedingOpen(false);
   }
 
   async function generateKnockout(ordered: Team[]) {
-    // Delete existing knockout matches
     await supabase.from("custom_matches").delete().eq("tournament_id", id).eq("match_phase", "knockout");
-
     const n = ordered.length;
     if (n < 2) return;
-
     let slots = 1;
     while (slots < n) slots *= 2;
-
     const seeded: (Team | null)[] = Array(slots).fill(null);
     for (let i = 0; i < n; i++) seeded[i] = ordered[i];
-
-    const baseTime = new Date(Date.now() + 86400000).toISOString();
     const roundNames: Record<number, string> = { 1: "Finał", 2: "Półfinał", 4: "Ćwierćfinał", 8: "1/8 finału" };
     const firstRoundMatches = slots / 2;
     const byeTeams: Record<number, Team> = {};
 
     for (let i = 0; i < firstRoundMatches; i++) {
-      const home = seeded[i];
-      const away = seeded[slots - 1 - i];
+      const home = seeded[i]; const away = seeded[slots - 1 - i];
       if (!home && !away) continue;
-      if (!home || !away) {
-        byeTeams[i] = (home ?? away)!;
-        continue;
-      }
-      const rn = roundNames[firstRoundMatches] ?? "Faza pucharowa";
+      if (!home || !away) { byeTeams[i] = (home ?? away)!; continue; }
       const mt = new Date(Date.now() + 86400000 + i * 7200000).toISOString();
       await supabase.from("custom_matches").insert({
-        tournament_id: id,
-        home_team_id: home.id, away_team_id: away.id,
+        tournament_id: id, home_team_id: home.id, away_team_id: away.id,
         home_team_name: home.name, away_team_name: away.name,
         home_team_logo: home.logo_url, away_team_logo: away.logo_url,
-        match_time: mt, round_name: rn,
+        match_time: mt, round_name: roundNames[firstRoundMatches] ?? "Faza pucharowa",
         match_phase: "knockout", knockout_round: firstRoundMatches, knockout_slot: i,
       });
     }
 
-    let currentRound = firstRoundMatches / 2;
-    let dayOffset = 7;
+    let currentRound = firstRoundMatches / 2, dayOffset = 7;
     let prevByes = { ...byeTeams };
-
     while (currentRound >= 1) {
       const rn = roundNames[currentRound] ?? "Faza pucharowa";
       for (let i = 0; i < currentRound; i++) {
-        const preHome = prevByes[i * 2];
-        const preAway = prevByes[i * 2 + 1];
-        const mt = new Date(Date.now() + dayOffset * 86400000 + i * 7200000).toISOString();
+        const preHome = prevByes[i * 2], preAway = prevByes[i * 2 + 1];
         await supabase.from("custom_matches").insert({
           tournament_id: id,
           home_team_id: preHome?.id ?? null, away_team_id: preAway?.id ?? null,
           home_team_name: preHome?.name ?? "TBD", away_team_name: preAway?.name ?? "TBD",
           home_team_logo: preHome?.logo_url ?? null, away_team_logo: preAway?.logo_url ?? null,
-          match_time: mt, round_name: rn,
-          match_phase: "knockout", knockout_round: currentRound, knockout_slot: i,
+          match_time: new Date(Date.now() + dayOffset * 86400000 + i * 7200000).toISOString(),
+          round_name: rn, match_phase: "knockout", knockout_round: currentRound, knockout_slot: i,
         });
       }
-      currentRound = Math.floor(currentRound / 2);
-      dayOffset += 7;
-      prevByes = {};
+      currentRound = Math.floor(currentRound / 2); dayOffset += 7; prevByes = {};
     }
-
     await load();
   }
 
@@ -206,59 +263,38 @@ export default function TournamentDetailPage() {
     setSavingResult(true);
     const h = parseInt(scoreH), a = parseInt(scoreA);
     if (isNaN(h) || isNaN(a)) { setSavingResult(false); return; }
-
-    await supabase.from("custom_matches").update({
-      home_score: h, away_score: a, status: "FT",
-    }).eq("id", resultMatch.id);
-
-    // Advance winner to next round
-    const slot = resultMatch.knockout_slot;
-    const round = resultMatch.knockout_round;
+    await supabase.from("custom_matches").update({ home_score: h, away_score: a, status: "FT" }).eq("id", resultMatch.id);
+    const slot = resultMatch.knockout_slot, round = resultMatch.knockout_round;
     if (round > 1) {
-      const nextRound = Math.floor(round / 2);
-      const nextSlot = Math.floor(slot / 2);
-      const isHome = slot % 2 === 0;
+      const nextRound = Math.floor(round / 2), nextSlot = Math.floor(slot / 2), isHome = slot % 2 === 0;
       const winnerIsHome = h >= a;
       const winnerName = winnerIsHome ? resultMatch.home_team_name : resultMatch.away_team_name;
       const winnerLogo = winnerIsHome ? resultMatch.home_team_logo : resultMatch.away_team_logo;
-
-      const { data: nextMatch } = await supabase.from("custom_matches").select("id")
-        .eq("tournament_id", id).eq("match_phase", "knockout")
-        .eq("knockout_round", nextRound).eq("knockout_slot", nextSlot).maybeSingle();
-
-      if (nextMatch) {
-        await supabase.from("custom_matches").update(
-          isHome ? { home_team_name: winnerName, home_team_logo: winnerLogo }
-                 : { away_team_name: winnerName, away_team_logo: winnerLogo }
-        ).eq("id", (nextMatch as { id: string }).id);
-      }
+      const { data: nxt } = await supabase.from("custom_matches").select("id")
+        .eq("tournament_id", id).eq("match_phase", "knockout").eq("knockout_round", nextRound).eq("knockout_slot", nextSlot).maybeSingle();
+      if (nxt) await supabase.from("custom_matches").update(
+        isHome ? { home_team_name: winnerName, home_team_logo: winnerLogo }
+               : { away_team_name: winnerName, away_team_logo: winnerLogo }
+      ).eq("id", (nxt as { id: string }).id);
     }
-
-    setResultMatch(null); setScoreH(""); setScoreA("");
-    setSavingResult(false);
+    setResultMatch(null); setScoreH(""); setScoreA(""); setSavingResult(false);
     await load();
   }
 
   function copyCode() {
     navigator.clipboard.writeText(tournament?.invite_code ?? "");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied(true); setTimeout(() => setCopied(false), 2000);
   }
 
-  // Group matches by round for display
   const rounds = matches.reduce<Record<number, KnockoutMatch[]>>((acc, m) => {
     if (!acc[m.knockout_round]) acc[m.knockout_round] = [];
-    acc[m.knockout_round].push(m);
-    return acc;
+    acc[m.knockout_round].push(m); return acc;
   }, {});
   const sortedRounds = Object.keys(rounds).map(Number).sort((a, b) => b - a);
 
-  // Calculate bye count for seeding display
   const byeCount = (() => {
     if (teams.length < 2) return 0;
-    let slots = 1;
-    while (slots < teams.length) slots *= 2;
-    return slots - teams.length;
+    let slots = 1; while (slots < teams.length) slots *= 2; return slots - teams.length;
   })();
 
   if (loading) return (
@@ -266,10 +302,7 @@ export default function TournamentDetailPage() {
       <div className="w-8 h-8 border-2 border-[#F5C400] border-t-transparent rounded-full animate-spin" />
     </div>
   );
-
-  if (!tournament) return (
-    <div className="flex justify-center pt-20 text-white/40">Turniej nie istnieje</div>
-  );
+  if (!tournament) return <div className="flex justify-center pt-20 text-white/40">Turniej nie istnieje</div>;
 
   return (
     <div className="flex flex-col min-h-screen pb-24 fade-in">
@@ -278,7 +311,6 @@ export default function TournamentDetailPage() {
         <button onClick={() => router.back()} className="text-white/40 mb-4 flex items-center gap-1 text-sm">
           <ArrowLeft size={18} /> Wstecz
         </button>
-
         <div className="rounded-2xl bg-gradient-to-br from-purple-900/40 to-purple-900/10 border border-purple-500/20 p-4">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
@@ -287,9 +319,7 @@ export default function TournamentDetailPage() {
             <div className="flex-1 min-w-0">
               <h1 className="text-white font-black text-xl font-archivo truncate">{tournament.name}</h1>
               {tournament.prize_description && (
-                <p className="flex items-center gap-1 text-white/50 text-sm mt-0.5">
-                  <Gift size={13} /> {tournament.prize_description}
-                </p>
+                <p className="flex items-center gap-1 text-white/50 text-sm mt-0.5"><Gift size={13} /> {tournament.prize_description}</p>
               )}
               <button onClick={copyCode} className="flex items-center gap-1.5 mt-2 text-white/40 text-xs hover:text-[#F5C400] transition">
                 {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
@@ -308,8 +338,7 @@ export default function TournamentDetailPage() {
             <Users size={12} /> Drużyny ({teams.length})
           </h2>
           {isAdmin && (
-            <button onClick={() => setAddOpen(true)}
-              className="flex items-center gap-1 text-[#F5C400] text-xs font-bold">
+            <button onClick={openAdd} className="flex items-center gap-1 text-[#F5C400] text-xs font-bold">
               <Plus size={14} /> Dodaj
             </button>
           )}
@@ -319,10 +348,7 @@ export default function TournamentDetailPage() {
           <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] px-4 py-8 text-center">
             <p className="text-white/40 text-sm">Brak drużyn</p>
             {isAdmin && (
-              <button onClick={() => setAddOpen(true)}
-                className="mt-3 text-[#F5C400] text-sm font-bold">
-                + Dodaj pierwszą drużynę
-              </button>
+              <button onClick={openAdd} className="mt-3 text-[#F5C400] text-sm font-bold">+ Dodaj pierwszą drużynę</button>
             )}
           </div>
         ) : (
@@ -342,7 +368,6 @@ export default function TournamentDetailPage() {
           </div>
         )}
 
-        {/* Generate bracket button */}
         {isAdmin && teams.length >= 2 && matches.length === 0 && (
           <button onClick={openSeeding}
             className="mt-4 w-full bg-purple-600 text-white font-black py-4 rounded-2xl active:scale-95 transition flex items-center justify-center gap-2">
@@ -371,48 +396,27 @@ export default function TournamentDetailPage() {
                 </p>
                 <div className="flex flex-col gap-2">
                   {rounds[roundNum].map(m => (
-                    <div key={m.id}
-                      className={`rounded-2xl border overflow-hidden ${m.status === "FT" ? "border-white/10 bg-[#111]" : "border-white/[0.06] bg-[#0d0d0d]"}`}>
-                      {/* Home */}
+                    <div key={m.id} className={`rounded-2xl border overflow-hidden ${m.status === "FT" ? "border-white/10 bg-[#111]" : "border-white/[0.06] bg-[#0d0d0d]"}`}>
                       <div className={`flex items-center gap-3 px-4 py-2.5 ${m.status === "FT" && (m.home_score ?? 0) > (m.away_score ?? 0) ? "bg-[#F5C400]/5" : ""}`}>
                         <TeamAvatar url={m.home_team_logo} name={m.home_team_name} size={7} />
-                        <span className={`flex-1 text-sm font-semibold truncate ${m.home_team_name === "TBD" ? "text-white/30" : "text-white"}`}>
-                          {m.home_team_name}
-                        </span>
-                        {m.status === "FT" && (
-                          <span className={`font-black text-lg tabular-nums ${(m.home_score ?? 0) > (m.away_score ?? 0) ? "text-[#F5C400]" : "text-white/40"}`}>
-                            {m.home_score}
-                          </span>
-                        )}
+                        <span className={`flex-1 text-sm font-semibold truncate ${m.home_team_name === "TBD" ? "text-white/30" : "text-white"}`}>{m.home_team_name}</span>
+                        {m.status === "FT" && <span className={`font-black text-lg tabular-nums ${(m.home_score ?? 0) > (m.away_score ?? 0) ? "text-[#F5C400]" : "text-white/40"}`}>{m.home_score}</span>}
                       </div>
-                      {/* Divider */}
                       <div className="h-px bg-white/[0.06] mx-4" />
-                      {/* Away */}
                       <div className={`flex items-center gap-3 px-4 py-2.5 ${m.status === "FT" && (m.away_score ?? 0) > (m.home_score ?? 0) ? "bg-[#F5C400]/5" : ""}`}>
                         <TeamAvatar url={m.away_team_logo} name={m.away_team_name} size={7} />
-                        <span className={`flex-1 text-sm font-semibold truncate ${m.away_team_name === "TBD" ? "text-white/30" : "text-white"}`}>
-                          {m.away_team_name}
-                        </span>
-                        {m.status === "FT" && (
-                          <span className={`font-black text-lg tabular-nums ${(m.away_score ?? 0) > (m.home_score ?? 0) ? "text-[#F5C400]" : "text-white/40"}`}>
-                            {m.away_score}
-                          </span>
-                        )}
+                        <span className={`flex-1 text-sm font-semibold truncate ${m.away_team_name === "TBD" ? "text-white/30" : "text-white"}`}>{m.away_team_name}</span>
+                        {m.status === "FT" && <span className={`font-black text-lg tabular-nums ${(m.away_score ?? 0) > (m.home_score ?? 0) ? "text-[#F5C400]" : "text-white/40"}`}>{m.away_score}</span>}
                       </div>
-                      {/* Set result button for admin */}
                       {isAdmin && m.home_team_name !== "TBD" && m.away_team_name !== "TBD" && m.status !== "FT" && (
-                        <button
-                          onClick={() => { setResultMatch(m); setScoreH(""); setScoreA(""); }}
-                          className="w-full border-t border-white/[0.06] text-white/40 text-xs font-semibold py-2 hover:text-[#F5C400] transition"
-                        >
+                        <button onClick={() => { setResultMatch(m); setScoreH(""); setScoreA(""); }}
+                          className="w-full border-t border-white/[0.06] text-white/40 text-xs font-semibold py-2 hover:text-[#F5C400] transition">
                           Wpisz wynik
                         </button>
                       )}
                       {m.status === "FT" && isAdmin && (
-                        <button
-                          onClick={() => { setResultMatch(m); setScoreH(String(m.home_score ?? "")); setScoreA(String(m.away_score ?? "")); }}
-                          className="w-full border-t border-white/[0.06] text-white/25 text-[11px] py-1.5"
-                        >
+                        <button onClick={() => { setResultMatch(m); setScoreH(String(m.home_score ?? "")); setScoreA(String(m.away_score ?? "")); }}
+                          className="w-full border-t border-white/[0.06] text-white/25 text-[11px] py-1.5">
                           Zmień wynik
                         </button>
                       )}
@@ -425,47 +429,101 @@ export default function TournamentDetailPage() {
         </div>
       )}
 
-      {/* Add team dialog */}
+      {/* ── ADD TEAM SHEET ── */}
       {addOpen && (
-        <div onClick={() => setAddOpen(false)} className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-end justify-center p-4">
-          <div onClick={e => e.stopPropagation()} className="bg-[#1a1a1a] border border-white/[0.08] rounded-2xl p-5 w-full max-w-sm">
+        <Sheet onClose={() => setAddOpen(false)}>
+          <div className="px-5 pt-5 pb-3">
             <h3 className="text-white font-black text-lg mb-4">Dodaj drużynę</h3>
-            <input value={teamName} onChange={e => setTeamName(e.target.value)}
-              placeholder="Nazwa drużyny" autoFocus
-              className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white text-sm mb-3 focus:border-[#F5C400]/40 focus:outline-none"
-            />
-            <input value={teamLogo} onChange={e => setTeamLogo(e.target.value)}
-              placeholder="URL logo (opcjonalnie)"
-              className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white text-sm mb-4 focus:border-[#F5C400]/40 focus:outline-none"
-            />
-            <div className="flex gap-3">
+
+            {/* Library chips */}
+            {libraryTeams.length > 0 && (
+              <>
+                <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Twoje drużyny</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {libraryTeams.map(ut => (
+                    <button
+                      key={ut.name}
+                      disabled={adding}
+                      onClick={() => addFromLibrary(ut)}
+                      className="flex items-center gap-1.5 bg-white/[0.06] border border-white/10 rounded-full px-3 py-1.5 active:scale-95 transition disabled:opacity-40"
+                    >
+                      {ut.logo_url ? (
+                        <Image src={ut.logo_url} alt={ut.name} width={18} height={18} className="rounded-full object-cover" unoptimized />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full bg-[#F5C400]/30 flex items-center justify-center text-[8px] font-black text-[#F5C400]">
+                          {ut.name[0]?.toUpperCase()}
+                        </div>
+                      )}
+                      <span className="text-white text-xs font-semibold">{ut.name}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex-1 h-px bg-white/[0.07]" />
+                  <span className="text-white/30 text-xs">lub nowa</span>
+                  <div className="flex-1 h-px bg-white/[0.07]" />
+                </div>
+              </>
+            )}
+
+            {/* Logo picker */}
+            <div className="flex gap-4 items-start mb-4">
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="w-16 h-16 rounded-2xl border-2 border-dashed border-[#F5C400]/40 bg-[#F5C400]/5 flex flex-col items-center justify-center flex-shrink-0 active:scale-95 transition overflow-hidden"
+              >
+                {logoPreview ? (
+                  <Image src={logoPreview} alt="logo" fill className="object-cover rounded-2xl" unoptimized />
+                ) : (
+                  <>
+                    <Camera size={20} className="text-[#F5C400]/60" />
+                    <span className="text-[#F5C400]/50 text-[10px] mt-1">Logo</span>
+                  </>
+                )}
+              </button>
+              <div className="flex-1">
+                <input
+                  value={teamName}
+                  onChange={e => setTeamName(e.target.value)}
+                  placeholder="Nazwa drużyny"
+                  autoFocus
+                  className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-[#F5C400]/40 focus:outline-none"
+                  onKeyDown={e => { if (e.key === "Enter" && teamName.trim()) addTeamNew(); }}
+                />
+                <p className="text-white/20 text-[11px] mt-1.5 pl-1">Zdjęcie z galerii lub URL</p>
+              </div>
+            </div>
+
+            {/* Hidden file input */}
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+
+            <div className="flex gap-3 pb-1">
               <button onClick={() => setAddOpen(false)}
-                className="flex-1 bg-white/5 border border-white/10 text-white/60 font-bold py-3 rounded-xl">
+                className="flex-1 bg-white/5 border border-white/10 text-white/60 font-bold py-3.5 rounded-xl">
                 Anuluj
               </button>
-              <button onClick={addTeam} disabled={adding || !teamName.trim()}
-                className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl disabled:opacity-40">
+              <button onClick={addTeamNew} disabled={adding || !teamName.trim()}
+                className="flex-1 bg-[#F5C400] text-black font-black py-3.5 rounded-xl disabled:opacity-40 active:scale-95 transition">
                 {adding ? "Dodawanie..." : "Dodaj"}
               </button>
             </div>
           </div>
-        </div>
+        </Sheet>
       )}
 
-      {/* Seeding dialog */}
+      {/* ── SEEDING SHEET ── */}
       {seedingOpen && (
-        <div onClick={() => setSeedingOpen(false)} className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-end justify-center p-4">
-          <div onClick={e => e.stopPropagation()} className="bg-[#1a1a1a] border border-white/[0.08] rounded-2xl p-5 w-full max-w-sm max-h-[80vh] flex flex-col">
-            <h3 className="text-white font-black text-lg mb-1">Generuj drabinkę</h3>
+        <Sheet onClose={() => setSeedingOpen(false)}>
+          <div className="px-5 pt-5 flex flex-col" style={{ maxHeight: "75vh" }}>
+            <h3 className="text-white font-black text-lg mb-1 flex-shrink-0">Generuj drabinkę</h3>
             {byeCount > 0 && (
-              <p className="text-white/40 text-xs mb-4">
-                Pierwsze <span className="text-[#F5C400] font-bold">{byeCount}</span> drużyny w kolejności dostają wolny los (awansują bez meczu)
+              <p className="text-white/40 text-xs mb-3 flex-shrink-0">
+                Pierwsze <span className="text-[#F5C400] font-bold">{byeCount}</span> miejsc dostaje wolny los (awans bez meczu)
               </p>
             )}
-            {!byeCount && <div className="mb-4" />}
+            {!byeCount && <div className="mb-3 flex-shrink-0" />}
 
-            {/* Order list (drag not supported on web easily — show numbered + swap buttons) */}
-            <div className="flex-1 overflow-y-auto flex flex-col gap-2 mb-4">
+            <div className="flex-1 overflow-y-auto flex flex-col gap-2 mb-4 min-h-0">
               {seedOrder.map((team, i) => (
                 <div key={team.id} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border ${i < byeCount ? "border-[#F5C400]/30 bg-[#F5C400]/5" : "border-white/[0.06] bg-white/[0.03]"}`}>
                   <span className={`text-xs font-black w-5 ${i < byeCount ? "text-[#F5C400]" : "text-white/30"}`}>{i + 1}</span>
@@ -484,49 +542,45 @@ export default function TournamentDetailPage() {
               ))}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 pb-1 flex-shrink-0">
               <button onClick={() => setSeedingOpen(false)}
-                className="flex-1 bg-white/5 border border-white/10 text-white/60 font-bold py-3 rounded-xl text-sm">
+                className="flex-1 bg-white/5 border border-white/10 text-white/60 font-bold py-3.5 rounded-xl text-sm">
                 Anuluj
               </button>
               <button onClick={generateRandom} disabled={generating}
-                className="flex-1 bg-purple-600/80 text-white font-bold py-3 rounded-xl disabled:opacity-40 text-sm flex items-center justify-center gap-1.5">
+                className="flex-1 bg-purple-600/80 text-white font-bold py-3.5 rounded-xl disabled:opacity-40 text-sm flex items-center justify-center gap-1.5">
                 <Shuffle size={14} /> Losuj
               </button>
               <button onClick={generateManual} disabled={generating}
-                className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl disabled:opacity-40 text-sm flex items-center justify-center gap-1.5">
+                className="flex-1 bg-[#F5C400] text-black font-black py-3.5 rounded-xl disabled:opacity-40 text-sm flex items-center justify-center gap-1.5">
                 <ListOrdered size={14} /> Generuj
               </button>
             </div>
           </div>
-        </div>
+        </Sheet>
       )}
 
-      {/* Result dialog */}
+      {/* ── RESULT MODAL ── */}
       {resultMatch && (
-        <div onClick={() => setResultMatch(null)} className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div onClick={e => e.stopPropagation()} className="bg-[#1a1a1a] border border-white/[0.08] rounded-2xl p-5 w-full max-w-xs">
-            <h3 className="text-white font-black text-base mb-1">Wpisz wynik</h3>
-            <p className="text-white/40 text-xs mb-4 truncate">{resultMatch.home_team_name} vs {resultMatch.away_team_name}</p>
-            <div className="flex items-center gap-3 mb-4">
-              <input value={scoreH} onChange={e => setScoreH(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
-                className="flex-1 bg-[#111] border border-white/10 rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
-              <span className="text-white/20 font-black">:</span>
-              <input value={scoreA} onChange={e => setScoreA(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
-                className="flex-1 bg-[#111] border border-white/10 rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => setResultMatch(null)}
-                className="flex-1 bg-white/5 border border-white/10 text-white/60 font-bold py-3 rounded-xl">
-                Anuluj
-              </button>
-              <button onClick={saveResult} disabled={savingResult}
-                className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl disabled:opacity-40">
-                {savingResult ? "Zapisuję..." : "Zapisz"}
-              </button>
-            </div>
+        <CenterModal onClose={() => setResultMatch(null)}>
+          <h3 className="text-white font-black text-base mb-1">Wpisz wynik</h3>
+          <p className="text-white/40 text-xs mb-4 truncate">{resultMatch.home_team_name} vs {resultMatch.away_team_name}</p>
+          <div className="flex items-center gap-3 mb-4">
+            <input value={scoreH} onChange={e => setScoreH(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
+              className="flex-1 bg-[#111] border border-white/10 rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
+            <span className="text-white/20 font-black">:</span>
+            <input value={scoreA} onChange={e => setScoreA(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
+              className="flex-1 bg-[#111] border border-white/10 rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
           </div>
-        </div>
+          <div className="flex gap-3">
+            <button onClick={() => setResultMatch(null)}
+              className="flex-1 bg-white/5 border border-white/10 text-white/60 font-bold py-3 rounded-xl">Anuluj</button>
+            <button onClick={saveResult} disabled={savingResult}
+              className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl disabled:opacity-40">
+              {savingResult ? "Zapisuję..." : "Zapisz"}
+            </button>
+          </div>
+        </CenterModal>
       )}
     </div>
   );
