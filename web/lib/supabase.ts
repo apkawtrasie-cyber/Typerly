@@ -134,11 +134,18 @@ export function formatMatchTime(isoString: string) {
   return d.toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-export function competitionLabel(comp: string | null, sport: string) {
+// Opcjonalny tłumacz — gdy podany, lokalizuje CL/WC oraz fallback piłki nożnej.
+export function competitionLabel(
+  comp: string | null,
+  sport: string,
+  t?: (key: "comp.cl" | "comp.wc" | "comp.football") => string,
+) {
   const map: Record<string, string> = {
     PL: "Premier League", BL1: "Bundesliga", SA: "Serie A",
-    PD: "La Liga", FL1: "Ligue 1", CL: "Liga Mistrzów",
-    EC: "Euro", WC: "MŚ",
+    PD: "La Liga", FL1: "Ligue 1",
+    CL: t ? t("comp.cl") : "Liga Mistrzów",
+    EC: "Euro",
+    WC: t ? t("comp.wc") : "MŚ",
   };
-  return comp ? (map[comp] ?? comp) : sport === "football" ? "Piłka nożna" : sport;
+  return comp ? (map[comp] ?? comp) : sport === "football" ? (t ? t("comp.football") : "Piłka nożna") : sport;
 }

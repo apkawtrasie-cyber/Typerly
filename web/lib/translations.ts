@@ -106,7 +106,11 @@ export type TranslationKey =
   // Match detail extra
   | "match.predictions_group" | "match.already_predicted" | "match.save_error"
   // Profile messages
-  | "profile.email_changed" | "profile.pass_changed" | "profile.error_prefix";
+  | "profile.email_changed" | "profile.pass_changed" | "profile.error_prefix"
+  // Competitions
+  | "comp.cl" | "comp.wc" | "comp.football"
+  // Badge names (by badge id)
+  | "badge.exact_score" | "badge.goal_diff" | "badge.tendency" | "badge.consolation";
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -250,6 +254,8 @@ const en: Translations = {
   "profile.trophies": "Trophies", "profile.stars": "Stars",
   "match.predictions_group": "Group predictions", "match.already_predicted": "You already predicted this match — only one prediction allowed.", "match.save_error": "Could not save prediction",
   "profile.email_changed": "Email changed — check your inbox.", "profile.pass_changed": "Password has been changed.", "profile.error_prefix": "Error",
+  "comp.cl": "Champions League", "comp.wc": "World Cup", "comp.football": "Football",
+  "badge.exact_score": "Sniper", "badge.goal_diff": "Strategist", "badge.tendency": "Analyst", "badge.consolation": "Shield",
 };
 
 const pl: Translations = {
@@ -378,6 +384,8 @@ const pl: Translations = {
   "profile.trophies": "Puchary", "profile.stars": "Gwiazdki",
   "match.predictions_group": "Typy w grupie", "match.already_predicted": "Już dodałeś typ do tego meczu — typować można tylko raz.", "match.save_error": "Nie udało się zapisać typu",
   "profile.email_changed": "Email zmieniony — sprawdź skrzynkę.", "profile.pass_changed": "Hasło zostało zmienione.", "profile.error_prefix": "Błąd",
+  "comp.cl": "Liga Mistrzów", "comp.wc": "MŚ", "comp.football": "Piłka nożna",
+  "badge.exact_score": "Snajper", "badge.goal_diff": "Strateg", "badge.tendency": "Analityk", "badge.consolation": "Tarcza",
 };
 
 const de: Translations = {
@@ -506,6 +514,8 @@ const de: Translations = {
   "profile.trophies": "Pokale", "profile.stars": "Sterne",
   "match.predictions_group": "Gruppen-Tipps", "match.already_predicted": "Du hast für dieses Spiel bereits getippt — nur ein Tipp erlaubt.", "match.save_error": "Tipp konnte nicht gespeichert werden",
   "profile.email_changed": "E-Mail geändert — überprüfe dein Postfach.", "profile.pass_changed": "Passwort wurde geändert.", "profile.error_prefix": "Fehler",
+  "comp.cl": "Champions League", "comp.wc": "WM", "comp.football": "Fußball",
+  "badge.exact_score": "Scharfschütze", "badge.goal_diff": "Stratege", "badge.tendency": "Analyst", "badge.consolation": "Schild",
 };
 
 const fr: Translations = {
@@ -634,6 +644,8 @@ const fr: Translations = {
   "profile.trophies": "Trophées", "profile.stars": "Étoiles",
   "match.predictions_group": "Pronostics du groupe", "match.already_predicted": "Tu as déjà pronostiqué ce match — un seul pronostic autorisé.", "match.save_error": "Impossible d'enregistrer le pronostic",
   "profile.email_changed": "E-mail modifié — vérifie ta boîte de réception.", "profile.pass_changed": "Le mot de passe a été modifié.", "profile.error_prefix": "Erreur",
+  "comp.cl": "Ligue des Champions", "comp.wc": "CM", "comp.football": "Football",
+  "badge.exact_score": "Sniper", "badge.goal_diff": "Stratège", "badge.tendency": "Analyste", "badge.consolation": "Bouclier",
 };
 
 const es: Translations = {
@@ -762,6 +774,8 @@ const es: Translations = {
   "profile.trophies": "Trofeos", "profile.stars": "Estrellas",
   "match.predictions_group": "Predicciones del grupo", "match.already_predicted": "Ya hiciste una predicción para este partido — solo se permite una.", "match.save_error": "No se pudo guardar la predicción",
   "profile.email_changed": "Correo cambiado — revisa tu bandeja.", "profile.pass_changed": "La contraseña ha sido cambiada.", "profile.error_prefix": "Error",
+  "comp.cl": "Liga de Campeones", "comp.wc": "Mundial", "comp.football": "Fútbol",
+  "badge.exact_score": "Francotirador", "badge.goal_diff": "Estratega", "badge.tendency": "Analista", "badge.consolation": "Escudo",
 };
 
 const it: Translations = {
@@ -890,6 +904,8 @@ const it: Translations = {
   "profile.trophies": "Trofei", "profile.stars": "Stelle",
   "match.predictions_group": "Pronostici del gruppo", "match.already_predicted": "Hai già pronosticato questa partita — è consentito un solo pronostico.", "match.save_error": "Impossibile salvare il pronostico",
   "profile.email_changed": "Email cambiata — controlla la casella.", "profile.pass_changed": "La password è stata cambiata.", "profile.error_prefix": "Errore",
+  "comp.cl": "Champions League", "comp.wc": "Mondiali", "comp.football": "Calcio",
+  "badge.exact_score": "Cecchino", "badge.goal_diff": "Stratega", "badge.tendency": "Analista", "badge.consolation": "Scudo",
 };
 
 export const translations: Record<Locale, Translations> = { en, pl, de, fr, es, it };

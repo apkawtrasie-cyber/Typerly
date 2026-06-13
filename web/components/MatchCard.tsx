@@ -23,7 +23,7 @@ export default function MatchCard({ match, myPrediction, index = 0 }: Props) {
         {/* Górna belka */}
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
           <span className="text-white/30 text-[10px] font-bold uppercase tracking-wider">
-            {competitionLabel(match.competition, match.sport_type)}
+            {competitionLabel(match.competition, match.sport_type, t)}
           </span>
           {live ? (
             <span className="flex items-center gap-1.5 text-red-400 text-[10px] font-black uppercase">

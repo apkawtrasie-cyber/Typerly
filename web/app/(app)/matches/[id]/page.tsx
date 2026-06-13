@@ -179,7 +179,7 @@ export default function MatchDetailPage() {
 
         <div className="relative overflow-hidden rounded-2xl bg-[#111] border border-white/[0.06] p-5">
           <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest text-center mb-4">
-            {competitionLabel(match.competition, match.sport_type)}
+            {competitionLabel(match.competition, match.sport_type, t)}
           </p>
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1 flex flex-col items-center gap-2">

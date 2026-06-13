@@ -76,6 +76,9 @@ export default function PredictionResultOverlay({
   const accent = accentColor(points);
   const badge = badgeFor(points);
   const badgeColor = RARITY_COLOR[badge.rarity];
+  // Nazwa odznaki tłumaczona po id; fallback do nazwy z scorera
+  const badgeKey = `badge.${badge.id}` as TranslationKey;
+  const badgeName = t(badgeKey) === badgeKey ? badge.name : t(badgeKey);
   const closed = useRef(false);
 
   useEffect(() => {
@@ -134,7 +137,7 @@ export default function PredictionResultOverlay({
             style={{ backgroundColor: accent + "20", border: `1.5px solid ${accent}99` }}
           >
             <p className="font-black text-4xl font-archivo leading-none" style={{ color: accent }}>
-              +{points} {points === 1 ? "punkt" : "punkty"}
+              +{points} {points === 1 ? t("overlay.point") : t("overlay.points")}
             </p>
             <p className="text-white/60 text-xs font-bold tracking-widest mt-1">{t(pointsLabelKey(points)).toUpperCase()}</p>
           </div>
@@ -148,7 +151,7 @@ export default function PredictionResultOverlay({
             accent={accent}
           />
 
-          <BadgeChip name={`${badge.name} ${badge.icon}`} rarity={badge.rarity} color={badgeColor} subtitle={t("overlay.badge_earned")} />
+          <BadgeChip name={`${badgeName} ${badge.icon}`} rarity={badge.rarity} color={badgeColor} subtitle={t("overlay.badge_earned")} />
         </div>
       ) : (
         /* ===== PUDŁO ===== */
@@ -173,7 +176,7 @@ export default function PredictionResultOverlay({
             accent={accent}
           />
 
-          <BadgeChip name={`${badge.name} ${badge.icon}`} rarity={badge.rarity} color={badgeColor} subtitle={t("overlay.badge_earned")} />
+          <BadgeChip name={`${badgeName} ${badge.icon}`} rarity={badge.rarity} color={badgeColor} subtitle={t("overlay.badge_earned")} />
         </div>
       )}
 

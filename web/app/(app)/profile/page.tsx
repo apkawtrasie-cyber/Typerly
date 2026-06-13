@@ -234,12 +234,15 @@ export default function ProfilePage() {
               const def = getBadgeDef(b);
               const rarity = def?.rarity ?? "common";
               const color = RARITY_COLOR[rarity];
+              // Nazwa odznaki tłumaczona po badge_id; fallback do nazwy z bazy
+              const badgeKey = `badge.${b.badge_id}` as TranslationKey;
+              const badgeName = t(badgeKey) === badgeKey ? (def?.name ?? "") : t(badgeKey);
               return (
                 <div key={b.badge_id}
                   style={{ borderColor: color + "50", backgroundColor: color + "12", boxShadow: `0 0 12px ${color}20` }}
                   className="flex items-center gap-2 px-3 py-2 rounded-full border">
                   <span className="text-base">{def?.icon}</span>
-                  <span style={{ color }} className="text-xs font-black">{def?.name}</span>
+                  <span style={{ color }} className="text-xs font-black">{badgeName}</span>
                   <span style={{ color, backgroundColor: color + "25" }} className="text-[8px] font-black px-1.5 py-0.5 rounded">
                     {t(`rarity.${rarity}` as TranslationKey)}
                   </span>
