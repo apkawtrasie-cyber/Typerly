@@ -277,7 +277,7 @@ export default function LeaguesPage() {
 
       {/* Dialogi */}
       {dialog && (
-        <div onClick={closeDialog} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+        <div onClick={closeDialog} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm mb-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-white font-black text-lg font-archivo">
@@ -337,7 +337,7 @@ export default function LeaguesPage() {
 
       {/* Potwierdzenie usunięcia turnieju */}
       {delTournament && (
-        <div onClick={() => setDelTournament(null)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+        <div onClick={() => setDelTournament(null)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm text-center mb-4">
             <div className="text-4xl mb-3">🗑️</div>
             <h2 className="text-white font-black text-lg mb-1">Usunąć turniej?</h2>

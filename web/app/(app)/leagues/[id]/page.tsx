@@ -212,7 +212,7 @@ export default function LeagueDetailPage() {
 
       {/* Dialog: edycja nazwy */}
       {editing && (
-        <div onClick={() => setEditing(false)} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+        <div onClick={() => setEditing(false)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-white font-black text-lg font-archivo">Edytuj nazwę</h2>
@@ -230,7 +230,7 @@ export default function LeagueDetailPage() {
 
       {/* Dialog: potwierdź usunięcie */}
       {confirmDelete && (
-        <div onClick={() => setConfirmDelete(false)} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+        <div onClick={() => setConfirmDelete(false)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm text-center">
             <div className="text-4xl mb-3">🗑️</div>
             <h2 className="text-white font-black text-lg mb-1">Usunąć ligę?</h2>
@@ -247,7 +247,7 @@ export default function LeagueDetailPage() {
 
       {/* Dialog: potwierdź opuszczenie */}
       {confirmLeave && (
-        <div onClick={() => setConfirmLeave(false)} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+        <div onClick={() => setConfirmLeave(false)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm text-center">
             <div className="text-4xl mb-3">👋</div>
             <h2 className="text-white font-black text-lg mb-1">Opuścić grupę?</h2>

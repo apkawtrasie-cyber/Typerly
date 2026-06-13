@@ -131,7 +131,7 @@ export default function ChatPage() {
 
       {/* Dialog */}
       {dialog && (
-        <div onClick={() => setDialog(null)} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+        <div onClick={() => setDialog(null)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-white font-black text-lg font-archivo">{dialog === "create" ? "Nowa grupa" : "Dołącz do grupy"}</h2>

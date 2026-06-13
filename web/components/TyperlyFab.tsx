@@ -72,7 +72,7 @@ export default function TyperlyFab() {
       {open && (
         <div
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end fade-in"
+          className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-end fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
