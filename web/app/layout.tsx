@@ -14,7 +14,13 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Typerly",
   },
-  icons: { apple: "/icons/icon-192.png" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/icons/icon-192.png",
+  },
 };
 
 export const viewport: Viewport = {
