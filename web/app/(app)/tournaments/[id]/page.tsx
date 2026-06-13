@@ -59,7 +59,7 @@ function Sheet({ onClose, children }: { onClose: () => void; children: React.Rea
       <div
         onClick={e => e.stopPropagation()}
         className="bg-[#1a1a1a] border-t border-white/[0.08] rounded-t-3xl w-full max-w-lg mx-auto"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
+        style={{ paddingBottom: "calc(5.5rem + env(safe-area-inset-bottom, 0px))" }}
       >
         {children}
       </div>
@@ -514,7 +514,7 @@ export default function TournamentDetailPage() {
       {/* ── SEEDING SHEET ── */}
       {seedingOpen && (
         <Sheet onClose={() => setSeedingOpen(false)}>
-          <div className="px-5 pt-5 flex flex-col" style={{ maxHeight: "75vh" }}>
+          <div className="px-5 pt-5 flex flex-col" style={{ maxHeight: "calc(85vh - 5.5rem - env(safe-area-inset-bottom, 0px))" }}>
             <h3 className="text-white font-black text-lg mb-1 flex-shrink-0">Generuj drabinkę</h3>
             {byeCount > 0 && (
               <p className="text-white/40 text-xs mb-3 flex-shrink-0">

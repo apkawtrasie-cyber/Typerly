@@ -16,6 +16,10 @@
   box-sizing: border-box;
 }
 
+html {
+  font-size: 18px;
+}
+
 html, body {
   background: #080808;
   color: #ffffff;
