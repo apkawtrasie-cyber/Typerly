@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase, League, generateInviteCode } from "@/lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Users, Crown, Copy, Check, X, Trophy, Gift, Trash2, Pencil, HelpCircle } from "lucide-react";
+import { Users, Crown, Copy, Check, X, Trophy, Gift, Trash2, Pencil, HelpCircle, UserPlus } from "lucide-react";
 import { useLang } from "@/contexts/LangContext";
 import TournamentRulesModal from "@/components/TournamentRulesModal";
 
@@ -203,13 +203,22 @@ export default function LeaguesPage() {
     <div className="px-4 pt-6 fade-in">
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-white font-black text-2xl font-archivo">{tr("leagues.title_full")}</h1>
-        <button
-          onClick={() => setRulesOpen(true)}
-          className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/50 active:scale-90 transition"
-          title={tr("rules.title")}
-        >
-          <HelpCircle size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setCode(""); setError(""); setDialog("join"); }}
+            className="flex items-center gap-1.5 bg-[#F5C400]/10 border border-[#F5C400]/30 text-[#F5C400] font-bold text-sm px-3 py-1.5 rounded-xl active:scale-95 transition"
+          >
+            <UserPlus size={14} />
+            Dołącz
+          </button>
+          <button
+            onClick={() => setRulesOpen(true)}
+            className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/50 active:scale-90 transition"
+            title={tr("rules.title")}
+          >
+            <HelpCircle size={18} />
+          </button>
+        </div>
       </div>
       <TournamentRulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} />
 
