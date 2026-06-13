@@ -33,7 +33,11 @@ export default function MatchDetailPage() {
   const [predAway, setPredAway] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [overlay, setOverlay] = useState<null | { points: number; ph: number; pa: number; ah: number; aa: number }>(null);
+  const [overlay, setOverlay] = useState<null | {
+    points: number; ph: number; pa: number; ah: number; aa: number;
+    homeTeam: string; awayTeam: string;
+    homeLogo: string | null; awayLogo: string | null;
+  }>(null);
 
   // Pokaż overlay po zakończonym, obstawionym meczu. Znacznik "potwierdzone"
   // zapisujemy dopiero po kliknięciu Sprawdź/Zamknij — dzięki temu nakładka
@@ -62,6 +66,8 @@ export default function MatchDetailPage() {
         points,
         ph: own.predicted_home_score, pa: own.predicted_away_score,
         ah: m.home_score!, aa: m.away_score!,
+        homeTeam: m.home_team_name, awayTeam: m.away_team_name,
+        homeLogo: m.home_team_logo_url ?? null, awayLogo: m.away_team_logo_url ?? null,
       });
     }, 600);
   }, [overlayKey]);
@@ -267,11 +273,14 @@ export default function MatchDetailPage() {
           predictedAway={overlay.pa}
           actualHome={overlay.ah}
           actualAway={overlay.aa}
+          homeTeam={overlay.homeTeam}
+          awayTeam={overlay.awayTeam}
+          homeLogo={overlay.homeLogo}
+          awayLogo={overlay.awayLogo}
           onClose={() => { markOverlaySeen(); setOverlay(null); }}
           onCheck={() => {
             markOverlaySeen();
             setOverlay(null);
-            // Tabela wyników: ranking grupy (gdy w lidze) lub ogólne statystyki w profilu
             router.push(leagueId ? `/leagues/${leagueId}` : "/profile");
           }}
         />
