@@ -109,15 +109,15 @@ export default function MatchDetailPage() {
     existsQuery = leagueId ? existsQuery.eq("league_id", leagueId) : existsQuery.is("league_id", null);
     const { data: existing } = await existsQuery.maybeSingle();
 
-    let error;
+    // Typ po zapisaniu jest zablokowany — nie pozwalamy nadpisać istniejącego
     if (existing) {
-      ({ error } = await supabase.from("predictions")
-        .update({ predicted_home_score: h, predicted_away_score: a })
-        .eq("id", existing.id));
-    } else {
-      ({ error } = await supabase.from("predictions")
-        .insert({ user_id: userId, match_id: id, predicted_home_score: h, predicted_away_score: a, league_id: leagueId }));
+      setSaveError("Typ został już zapisany i nie można go zmienić.");
+      setSaving(false);
+      return;
     }
+
+    const { error } = await supabase.from("predictions")
+      .insert({ user_id: userId, match_id: id, predicted_home_score: h, predicted_away_score: a, league_id: leagueId });
     if (error) {
       setSaveError("Nie udało się zapisać typu: " + error.message);
       setSaving(false);
@@ -181,34 +181,37 @@ export default function MatchDetailPage() {
         )}
       </div>
 
-      {/* Mój typ */}
-      {canPredict ? (
+      {/* Mój typ — po zapisaniu zablokowany (nie można zmienić) */}
+      {myPred ? (
         <div className="px-4 mb-5">
           <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">Twój typ</h3>
-          <div className="flex items-center gap-3">
-            <input value={predHome} onChange={e => setPredHome(e.target.value)} type="number" min="0" placeholder="0"
-              className="flex-1 bg-[#111] border border-white/[0.06] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
-            <span className="text-white/20 font-black text-xl">:</span>
-            <input value={predAway} onChange={e => setPredAway(e.target.value)} type="number" min="0" placeholder="0"
-              className="flex-1 bg-[#111] border border-white/[0.06] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
-            <button onClick={submitPrediction} disabled={saving}
-              className="bg-[#F5C400] text-black font-black px-5 py-3 rounded-xl disabled:opacity-50 active:scale-95 transition">
-              {saving ? "..." : myPred ? "Zmień" : "Typuj"}
-            </button>
-          </div>
-          {saveError && <p className="text-red-400 text-sm mt-2">{saveError}</p>}
-        </div>
-      ) : myPred ? (
-        <div className="px-4 mb-5">
           <div className={`rounded-xl px-4 py-3 flex items-center justify-between ${myPred.points_earned != null && myPred.points_earned > 0 ? "bg-green-500/10 border border-green-500/20" : "bg-[#111] border border-white/[0.06]"}`}>
-            <span className="text-white/40 text-xs font-semibold">Twój typ</span>
-            <span className="text-[#F5C400] font-black">{myPred.predicted_home_score}:{myPred.predicted_away_score}</span>
-            {myPred.points_earned != null && (
+            <span className="text-[#F5C400] font-black text-xl tabular-nums">{myPred.predicted_home_score}:{myPred.predicted_away_score}</span>
+            {myPred.points_earned != null ? (
               <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${myPred.points_earned > 0 ? "bg-green-500/20 text-green-400" : "bg-white/10 text-white/40"}`}>
                 +{myPred.points_earned} pkt
               </span>
+            ) : (
+              <span className="text-white/30 text-xs font-semibold">🔒 Typ zapisany — nie można zmienić</span>
             )}
           </div>
+        </div>
+      ) : canPredict ? (
+        <div className="px-4 mb-5">
+          <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">Twój typ</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <input value={predHome} onChange={e => setPredHome(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
+              className="flex-1 min-w-0 bg-[#111] border border-white/[0.06] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
+            <span className="text-white/20 font-black text-xl flex-shrink-0">:</span>
+            <input value={predAway} onChange={e => setPredAway(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
+              className="flex-1 min-w-0 bg-[#111] border border-white/[0.06] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
+          </div>
+          <button onClick={submitPrediction} disabled={saving || predHome === "" || predAway === ""}
+            className="w-full bg-[#F5C400] text-black font-black py-3.5 rounded-xl disabled:opacity-50 active:scale-95 transition">
+            {saving ? "Zapisywanie..." : "Zapisz typ"}
+          </button>
+          <p className="text-white/25 text-[11px] text-center mt-2">Po zapisaniu typu nie można go już zmienić</p>
+          {saveError && <p className="text-red-400 text-sm mt-2 text-center">{saveError}</p>}
         </div>
       ) : null}
 

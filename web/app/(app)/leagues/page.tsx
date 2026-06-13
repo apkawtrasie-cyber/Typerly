@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback } from "react";
 import { supabase, League, generateInviteCode } from "@/lib/supabase";
 import Link from "next/link";
-import { Users, Crown, Copy, Check, X, Trophy, Gift, Trash2 } from "lucide-react";
+import { Users, Crown, Copy, Check, X, Trophy, Gift, Trash2, Pencil } from "lucide-react";
 
 type LeagueWithCount = League & { memberCount: number; isAdmin: boolean };
 type Tournament = {
@@ -30,6 +30,7 @@ export default function LeaguesPage() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
   const [delTournament, setDelTournament] = useState<Tournament | null>(null);
+  const [editTournamentId, setEditTournamentId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -117,9 +118,21 @@ export default function LeaguesPage() {
     load();
   }
 
-  async function createTournament() {
+  async function saveTournament() {
     if (!userId || !name.trim()) return;
     setBusy(true); setError("");
+
+    // Edycja istniejącego turnieju (twórca może edytować)
+    if (editTournamentId) {
+      const { error } = await supabase.from("custom_tournaments")
+        .update({ name: name.trim(), prize_description: prize.trim() || null })
+        .eq("id", editTournamentId);
+      setBusy(false);
+      if (error) { setError("Nie udało się zapisać zmian: " + error.message); return; }
+      closeDialog(); load(); return;
+    }
+
+    // Nowy turniej
     const invite = generateInviteCode();
     const { data: t, error: e1 } = await supabase
       .from("custom_tournaments")
@@ -127,8 +140,12 @@ export default function LeaguesPage() {
       .select().single();
     if (e1 || !t) { setError("Nie udało się utworzyć turnieju: " + (e1?.message ?? "")); setBusy(false); return; }
     await supabase.from("tournament_members").insert({ tournament_id: t.id, user_id: userId });
-    setBusy(false); setDialog(null); setName(""); setPrize("");
+    setBusy(false); closeDialog();
     load();
+  }
+
+  function closeDialog() {
+    setDialog(null); setName(""); setFee("0"); setPrize(""); setCode(""); setError(""); setEditTournamentId(null);
   }
 
   async function deleteTournament() {
@@ -241,10 +258,16 @@ export default function LeaguesPage() {
                   </button>
                 </div>
                 {t.isAdmin && (
-                  <button onClick={() => setDelTournament(t)}
-                    className="text-white/30 hover:text-red-400 p-2 rounded-lg transition flex-shrink-0" aria-label="Usuń turniej">
-                    <Trash2 size={17} />
-                  </button>
+                  <div className="flex items-center flex-shrink-0">
+                    <button onClick={() => { setName(t.name); setPrize(t.prize_description ?? ""); setEditTournamentId(t.id); setDialog("tournament"); }}
+                      className="text-white/30 hover:text-[#F5C400] p-2 rounded-lg transition" aria-label="Edytuj turniej">
+                      <Pencil size={16} />
+                    </button>
+                    <button onClick={() => setDelTournament(t)}
+                      className="text-white/30 hover:text-red-400 p-2 rounded-lg transition" aria-label="Usuń turniej">
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -254,13 +277,13 @@ export default function LeaguesPage() {
 
       {/* Dialogi */}
       {dialog && (
-        <div onClick={() => setDialog(null)} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+        <div onClick={closeDialog} className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
           <div onClick={e => e.stopPropagation()} className="bg-[#141414] border border-white/10 rounded-3xl p-5 w-full max-w-sm mb-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-white font-black text-lg font-archivo">
-                {dialog === "create" ? "Nowa liga" : dialog === "tournament" ? "Nowy turniej" : "Dołącz kodem"}
+                {dialog === "create" ? "Nowa liga" : dialog === "tournament" ? (editTournamentId ? "Edytuj turniej" : "Nowy turniej") : "Dołącz kodem"}
               </h2>
-              <button onClick={() => setDialog(null)} className="text-white/40"><X size={20} /></button>
+              <button onClick={closeDialog} className="text-white/40"><X size={20} /></button>
             </div>
 
             {dialog === "create" && (
@@ -290,9 +313,9 @@ export default function LeaguesPage() {
                     className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40" />
                 </div>
                 {error && <p className="text-red-400 text-sm">{error}</p>}
-                <button onClick={createTournament} disabled={busy || !name.trim()}
+                <button onClick={saveTournament} disabled={busy || !name.trim()}
                   className="bg-[#F5C400] text-black font-black py-3 rounded-xl mt-1 disabled:opacity-40 active:scale-95 transition">
-                  {busy ? "Tworzenie..." : "Stwórz turniej"}
+                  {busy ? "Zapisywanie..." : editTournamentId ? "Zapisz zmiany" : "Stwórz turniej"}
                 </button>
               </div>
             )}
