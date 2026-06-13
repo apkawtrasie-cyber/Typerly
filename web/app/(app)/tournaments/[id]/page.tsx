@@ -98,6 +98,7 @@ export default function TournamentDetailPage() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [adding, setAdding] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Result dialog
@@ -141,25 +142,62 @@ export default function TournamentDetailPage() {
   const libraryTeams = userTeams.filter(t => !existingNames.has(t.name.toLowerCase()));
 
   function openAdd() {
-    setTeamName(""); setLogoPreview(null); setLogoFile(null);
+    setTeamName(""); setLogoPreview(null); setLogoFile(null); setUploadError("");
     setAddOpen(true);
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setLogoFile(file);
+    setUploadError("");
+    // Show preview immediately from original file
     const reader = new FileReader();
     reader.onload = ev => setLogoPreview(ev.target?.result as string);
     reader.readAsDataURL(file);
+    setLogoFile(file);
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
+  }
+
+  // Compress + resize to WebP, max 512×512, quality 0.85
+  async function compressToWebP(file: File): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const MAX = 512;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
+          else { width = Math.round((width * MAX) / height); height = MAX; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("canvas")); return; }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob);
+          else reject(new Error("toBlob failed"));
+        }, "image/webp", 0.85);
+      };
+      img.onerror = () => reject(new Error("load"));
+      img.src = URL.createObjectURL(file);
+    });
   }
 
   async function uploadLogo(file: File): Promise<string | null> {
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const path = `tournament-logos/${id}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("team-logos").upload(path, file, { upsert: true });
-    if (error) return null;
-    return supabase.storage.from("team-logos").getPublicUrl(path).data.publicUrl;
+    try {
+      const compressed = await compressToWebP(file);
+      const path = `tournament-logos/${id}/${Date.now()}.webp`;
+      const { error } = await supabase.storage
+        .from("team-logos")
+        .upload(path, compressed, { contentType: "image/webp", upsert: true });
+      if (error) { setUploadError("Błąd uploadu: " + error.message); return null; }
+      return supabase.storage.from("team-logos").getPublicUrl(path).data.publicUrl;
+    } catch (err) {
+      setUploadError("Nie udało się przetworzyć zdjęcia");
+      return null;
+    }
   }
 
   async function addTeamNew() {
@@ -469,15 +507,17 @@ export default function TournamentDetailPage() {
             {/* Logo picker */}
             <div className="flex gap-4 items-start mb-4">
               <button
+                type="button"
                 onClick={() => fileRef.current?.click()}
-                className="w-16 h-16 rounded-2xl border-2 border-dashed border-[#F5C400]/40 bg-[#F5C400]/5 flex flex-col items-center justify-center flex-shrink-0 active:scale-95 transition overflow-hidden"
+                className="relative w-20 h-20 rounded-2xl border-2 border-dashed border-[#F5C400]/40 bg-[#F5C400]/5 flex flex-col items-center justify-center flex-shrink-0 active:scale-95 transition overflow-hidden"
               >
                 {logoPreview ? (
-                  <Image src={logoPreview} alt="logo" fill className="object-cover rounded-2xl" unoptimized />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoPreview} alt="logo" className="absolute inset-0 w-full h-full object-cover" />
                 ) : (
                   <>
-                    <Camera size={20} className="text-[#F5C400]/60" />
-                    <span className="text-[#F5C400]/50 text-[10px] mt-1">Logo</span>
+                    <Camera size={22} className="text-[#F5C400]/60" />
+                    <span className="text-[#F5C400]/50 text-[10px] mt-1 font-semibold">Logo</span>
                   </>
                 )}
               </button>
@@ -490,12 +530,15 @@ export default function TournamentDetailPage() {
                   className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-[#F5C400]/40 focus:outline-none"
                   onKeyDown={e => { if (e.key === "Enter" && teamName.trim()) addTeamNew(); }}
                 />
-                <p className="text-white/20 text-[11px] mt-1.5 pl-1">Zdjęcie z galerii lub URL</p>
+                <p className="text-white/20 text-[11px] mt-1.5 pl-1">
+                  Kliknij kwadrat aby wybrać zdjęcie • WebP auto
+                </p>
+                {uploadError && <p className="text-red-400 text-[11px] mt-1 pl-1">{uploadError}</p>}
               </div>
             </div>
 
             {/* Hidden file input */}
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+            <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
 
             <div className="flex gap-3 pb-1">
               <button onClick={() => setAddOpen(false)}
