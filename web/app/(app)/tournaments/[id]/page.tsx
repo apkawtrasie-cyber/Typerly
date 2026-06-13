@@ -562,25 +562,56 @@ export default function TournamentDetailPage() {
 
       {/* ── RESULT MODAL ── */}
       {resultMatch && (
-        <CenterModal onClose={() => setResultMatch(null)}>
-          <h3 className="text-white font-black text-base mb-1">Wpisz wynik</h3>
-          <p className="text-white/40 text-xs mb-4 truncate">{resultMatch.home_team_name} vs {resultMatch.away_team_name}</p>
-          <div className="flex items-center gap-3 mb-4">
-            <input value={scoreH} onChange={e => setScoreH(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
-              className="flex-1 bg-[#111] border border-white/10 rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
-            <span className="text-white/20 font-black">:</span>
-            <input value={scoreA} onChange={e => setScoreA(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
-              className="flex-1 bg-[#111] border border-white/10 rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
+        <Sheet onClose={() => setResultMatch(null)}>
+          <div className="px-5 pt-5 pb-2">
+            <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-4">Wpisz wynik</p>
+
+            {/* Drużyna gospodarz */}
+            <div className="flex items-center gap-3 mb-3">
+              <TeamAvatar url={resultMatch.home_team_logo} name={resultMatch.home_team_name} size={10} />
+              <span className="text-white font-bold text-base flex-1 truncate">{resultMatch.home_team_name}</span>
+              <input
+                value={scoreH}
+                onChange={e => setScoreH(e.target.value)}
+                type="number" min="0" inputMode="numeric" placeholder="0"
+                autoFocus
+                className="w-20 h-16 bg-[#111] border-2 border-white/10 rounded-2xl text-white text-center text-4xl font-black focus:border-[#F5C400] focus:outline-none tabular-nums"
+              />
+            </div>
+
+            {/* Separator */}
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 flex-shrink-0" />
+              <div className="flex-1 h-px bg-white/[0.06]" />
+              <div className="w-20 flex items-center justify-center">
+                <span className="text-white/20 font-black text-2xl">:</span>
+              </div>
+            </div>
+
+            {/* Drużyna gość */}
+            <div className="flex items-center gap-3 mb-6">
+              <TeamAvatar url={resultMatch.away_team_logo} name={resultMatch.away_team_name} size={10} />
+              <span className="text-white font-bold text-base flex-1 truncate">{resultMatch.away_team_name}</span>
+              <input
+                value={scoreA}
+                onChange={e => setScoreA(e.target.value)}
+                type="number" min="0" inputMode="numeric" placeholder="0"
+                className="w-20 h-16 bg-[#111] border-2 border-white/10 rounded-2xl text-white text-center text-4xl font-black focus:border-[#F5C400] focus:outline-none tabular-nums"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setResultMatch(null)}
+                className="flex-1 bg-white/5 border border-white/10 text-white/60 font-bold py-4 rounded-2xl text-base">
+                Anuluj
+              </button>
+              <button onClick={saveResult} disabled={savingResult || scoreH === "" || scoreA === ""}
+                className="flex-1 bg-[#F5C400] text-black font-black py-4 rounded-2xl text-base disabled:opacity-40 active:scale-95 transition">
+                {savingResult ? "Zapisuję..." : "Zapisz wynik"}
+              </button>
+            </div>
           </div>
-          <div className="flex gap-3">
-            <button onClick={() => setResultMatch(null)}
-              className="flex-1 bg-white/5 border border-white/10 text-white/60 font-bold py-3 rounded-xl">Anuluj</button>
-            <button onClick={saveResult} disabled={savingResult}
-              className="flex-1 bg-[#F5C400] text-black font-black py-3 rounded-xl disabled:opacity-40">
-              {savingResult ? "Zapisuję..." : "Zapisz"}
-            </button>
-          </div>
-        </CenterModal>
+        </Sheet>
       )}
     </div>
   );
