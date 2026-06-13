@@ -109,9 +109,18 @@ export default function MatchDetailPage() {
     existsQuery = leagueId ? existsQuery.eq("league_id", leagueId) : existsQuery.is("league_id", null);
     const { data: existing } = await existsQuery.maybeSingle();
 
-    // Typ po zapisaniu jest zablokowany — nie pozwalamy nadpisać istniejącego
+    // odświeżenie listy w bieżącym kontekście ligi (po zapisie lub blokadzie)
+    async function refresh() {
+      let q = supabase.from("predictions").select("*, profiles(username)").eq("match_id", id);
+      q = leagueId ? q.eq("league_id", leagueId) : q.is("league_id", null);
+      const { data } = await q.order("points_earned", { ascending: false, nullsFirst: false });
+      setPredictions(data ?? []);
+    }
+
+    // Typ po zapisaniu jest zablokowany — nie pozwalamy dodać drugiego
     if (existing) {
-      setSaveError("Typ został już zapisany i nie można go zmienić.");
+      setSaveError("Już dodałeś typ do tego meczu — typować można tylko raz.");
+      await refresh();
       setSaving(false);
       return;
     }
@@ -119,15 +128,17 @@ export default function MatchDetailPage() {
     const { error } = await supabase.from("predictions")
       .insert({ user_id: userId, match_id: id, predicted_home_score: h, predicted_away_score: a, league_id: leagueId });
     if (error) {
-      setSaveError("Nie udało się zapisać typu: " + error.message);
+      // 23505 = naruszenie unikalności (ktoś zdążył dodać typ równolegle)
+      if ((error as { code?: string }).code === "23505") {
+        setSaveError("Już dodałeś typ do tego meczu — typować można tylko raz.");
+      } else {
+        setSaveError("Nie udało się zapisać typu: " + error.message);
+      }
+      await refresh();
       setSaving(false);
       return;
     }
-    // odśwież listę (ten sam kontekst ligi)
-    let refreshQuery = supabase.from("predictions").select("*, profiles(username)").eq("match_id", id);
-    refreshQuery = leagueId ? refreshQuery.eq("league_id", leagueId) : refreshQuery.is("league_id", null);
-    const { data: preds } = await refreshQuery.order("points_earned", { ascending: false, nullsFirst: false });
-    setPredictions(preds ?? []);
+    await refresh();
     setSaving(false);
   }
 
