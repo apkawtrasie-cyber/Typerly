@@ -39,22 +39,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-[100dvh] bg-[#0A0A0A] flex flex-col items-center px-6 py-10 overflow-y-auto">
       <div className="w-full max-w-sm m-auto">
-        {/* Przełącznik języka — góra ekranu */}
-        <div className="flex justify-end mb-6">
-          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
-            {LOCALES.map(loc => (
-              <button
-                key={loc.code}
-                onClick={() => setLocale(loc.code as Locale)}
-                title={loc.nativeName}
-                className={`px-2 py-1 rounded-lg text-sm transition ${locale === loc.code ? "bg-[#F5C400] text-black font-bold" : "text-white/40 hover:text-white/70"}`}
-              >
-                {loc.flag}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
           <div className="relative mb-5">
@@ -101,6 +85,22 @@ export default function LoginPage() {
         <div className="flex items-center justify-center gap-2 mt-6">
           <span className="text-white/40 text-sm">{t("auth.no_account")}</span>
           <a href="/register" className="text-[#F5C400] font-bold text-sm">{t("auth.register")}</a>
+        </div>
+      </div>
+
+      {/* Przełącznik języka — dół ekranu */}
+      <div className="flex justify-center pt-8 pb-2">
+        <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
+          {LOCALES.map(loc => (
+            <button
+              key={loc.code}
+              onClick={() => setLocale(loc.code as Locale)}
+              title={loc.nativeName}
+              className={`px-2 py-1 rounded-lg text-sm transition ${locale === loc.code ? "bg-[#F5C400] text-black font-bold" : "text-white/40 hover:text-white/70"}`}
+            >
+              {loc.flag}
+            </button>
+          ))}
         </div>
       </div>
     </div>
