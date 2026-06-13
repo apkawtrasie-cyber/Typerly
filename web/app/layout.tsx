@@ -14,13 +14,6 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Typerly",
   },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-    ],
-    apple: "/icons/icon-192.png",
-  },
 };
 
 export const viewport: Viewport = {
@@ -38,7 +31,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body className="bg-[#0A0A0A] text-white min-h-screen font-manrope antialiased">
         {children}
