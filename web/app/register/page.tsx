@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
+import GoogleAuthButton from "@/components/GoogleAuthButton";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -84,6 +85,15 @@ export default function RegisterPage() {
             {loading ? "Rejestracja..." : "Zarejestruj się"}
           </button>
         </form>
+
+        {/* Separator */}
+        <div className="flex items-center gap-3 mt-6 mb-4">
+          <div className="flex-1 h-px bg-white/10" />
+          <span className="text-white/25 text-xs font-semibold">lub</span>
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
+
+        <GoogleAuthButton label="Zarejestruj przez Google" />
 
         <div className="flex items-center justify-center gap-2 mt-6">
           <span className="text-white/40 text-sm">Masz już konto?</span>
