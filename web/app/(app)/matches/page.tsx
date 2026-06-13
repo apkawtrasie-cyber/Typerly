@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = 'force-dynamic';
 import { useEffect, useState } from "react";
 import { supabase, Match, isLive, isFinished } from "@/lib/supabase";
 import MatchCard from "@/components/MatchCard";

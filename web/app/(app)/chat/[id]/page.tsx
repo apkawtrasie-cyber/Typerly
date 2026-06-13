@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = 'force-dynamic';
 import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase, ChatMessage, ChatRoom } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
