@@ -3,9 +3,11 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Plus, Trash2, Trophy, Gift, Copy, Check, Users, Crown, Shuffle, ListOrdered, Camera, GripVertical, Info } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Trophy, Gift, Copy, Check, Users, Crown, Shuffle, ListOrdered, Camera, GripVertical, Info, QrCode, UserPlus, Download } from "lucide-react";
 import Image from "next/image";
 import { useLang } from "@/contexts/LangContext";
+import nextDynamic from "next/dynamic";
+const QRCodeSVG = nextDynamic(() => import("qrcode.react").then(m => m.QRCodeSVG), { ssr: false });
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor,
   useSensor, useSensors, DragEndEvent,
@@ -196,6 +198,9 @@ export default function TournamentDetailPage() {
   const [generating, setGenerating] = useState(false);
 
   const [copied, setCopied] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   // dnd-kit sensors: mouse/pointer + touch (250ms long press)
   const sensors = useSensors(
@@ -215,18 +220,21 @@ export default function TournamentDetailPage() {
     const { data: { user } } = await supabase.auth.getUser();
     setUserId(user?.id ?? null);
 
-    const [{ data: tr }, { data: tm }, { data: km }, { data: ut }] = await Promise.all([
+    const [{ data: tr }, { data: tm }, { data: km }, { data: ut }, { data: mem }] = await Promise.all([
       supabase.from("custom_tournaments").select("*").eq("id", id).single(),
       supabase.from("custom_teams").select("*").eq("tournament_id", id).order("created_at"),
       supabase.from("custom_matches").select("*").eq("tournament_id", id)
         .eq("match_phase", "knockout").order("knockout_round", { ascending: false }).order("knockout_slot"),
       user ? supabase.from("user_teams").select("*").order("name") : Promise.resolve({ data: [] }),
+      user ? supabase.from("tournament_members").select("id").eq("tournament_id", id).eq("user_id", user.id).maybeSingle()
+           : Promise.resolve({ data: null }),
     ]);
 
     setTournament(tr as Tournament);
     setTeams((tm ?? []) as Team[]);
     setMatches((km ?? []) as KnockoutMatch[]);
     setUserTeams((ut ?? []) as UserTeam[]);
+    setIsMember(!!mem);
     setLoading(false);
   }, [id]);
 
@@ -237,6 +245,18 @@ export default function TournamentDetailPage() {
   // Filter user library to exclude teams already in this tournament
   const existingNames = new Set(teams.map(t => t.name.toLowerCase()));
   const libraryTeams = userTeams.filter(t => !existingNames.has(t.name.toLowerCase()));
+
+  async function joinTournament() {
+    if (!userId || !tournament) return;
+    setJoining(true);
+    await supabase.from("tournament_members").insert({ tournament_id: tournament.id, user_id: userId });
+    setIsMember(true);
+    setJoining(false);
+  }
+
+  const joinUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/join?code=${tournament?.invite_code ?? ""}`
+    : "";
 
   function openAdd() {
     setTeamName(""); setLogoPreview(null); setLogoFile(null); setUploadError("");
@@ -461,9 +481,29 @@ export default function TournamentDetailPage() {
                 <span className="font-mono tracking-wider">{tournament.invite_code}</span>
               </button>
             </div>
-            {isAdmin && <Crown size={16} className="text-[#F5C400] flex-shrink-0 mt-1" />}
+            <div className="flex flex-col gap-2 items-end flex-shrink-0">
+              {isAdmin && <Crown size={16} className="text-[#F5C400]" />}
+              {isAdmin && (
+                <button onClick={() => setQrOpen(true)}
+                  className="flex items-center gap-1 text-purple-300 text-[11px] font-bold bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded-lg">
+                  <QrCode size={12} /> QR
+                </button>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Dołącz — dla nie-członków */}
+        {!isMember && !isAdmin && (
+          <button
+            onClick={joinTournament}
+            disabled={joining}
+            className="mt-3 w-full bg-purple-600 text-white font-black py-4 rounded-2xl active:scale-95 transition flex items-center justify-center gap-2 text-lg disabled:opacity-50"
+          >
+            <UserPlus size={20} />
+            {joining ? "Dołączanie..." : "Dołącz do turnieju"}
+          </button>
+        )}
       </div>
 
       {/* Teams */}
@@ -763,6 +803,46 @@ export default function TournamentDetailPage() {
             </div>
           </div>
         </Sheet>
+      )}
+
+      {/* ── QR CODE MODAL ── */}
+      {qrOpen && (
+        <CenterModal onClose={() => setQrOpen(false)}>
+          <h3 className="text-white font-black text-base mb-1 text-center">Zaproś do turnieju</h3>
+          <p className="text-white/40 text-xs text-center mb-4">Zeskanuj kod lub udostępnij link</p>
+
+          {/* QR code */}
+          <div className="flex justify-center mb-4">
+            <div className="bg-white p-4 rounded-2xl">
+              <QRCodeSVG
+                value={joinUrl}
+                size={200}
+                level="M"
+                includeMargin={false}
+              />
+            </div>
+          </div>
+
+          {/* Invite code */}
+          <div className="bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-center mb-3">
+            <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">Kod zaproszenia</p>
+            <p className="text-white font-black text-2xl tracking-[0.3em] font-mono">{tournament.invite_code}</p>
+          </div>
+
+          {/* Copy link */}
+          <button
+            onClick={() => { navigator.clipboard.writeText(joinUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            className="w-full flex items-center justify-center gap-2 bg-white/[0.06] border border-white/10 text-white/70 font-bold py-3 rounded-xl mb-3 text-sm"
+          >
+            {copied ? <Check size={15} className="text-green-400" /> : <Copy size={15} />}
+            {copied ? "Skopiowano!" : "Kopiuj link zaproszenia"}
+          </button>
+
+          <button onClick={() => setQrOpen(false)}
+            className="w-full bg-[#F5C400] text-black font-black py-3.5 rounded-xl">
+            Zamknij
+          </button>
+        </CenterModal>
       )}
     </div>
   );
