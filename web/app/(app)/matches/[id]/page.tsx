@@ -35,16 +35,21 @@ export default function MatchDetailPage() {
   const [saveError, setSaveError] = useState("");
   const [overlay, setOverlay] = useState<null | { points: number; ph: number; pa: number; ah: number; aa: number }>(null);
 
-  // Pokaż overlay raz na mecz (per użytkownik) — zapamiętane w localStorage
+  // Pokaż overlay po zakończonym, obstawionym meczu. Znacznik "potwierdzone"
+  // zapisujemy dopiero po kliknięciu Sprawdź/Zamknij — dzięki temu nakładka
+  // pojawia się przy każdym otwarciu aż użytkownik ją potwierdzi.
+  const overlayKey = useCallback(
+    (uid: string, matchId: string) => `typerly_overlay_seen_${uid}_${matchId}`,
+    [],
+  );
+
   const maybeShowOverlay = useCallback((m: Match, own: Prediction, uid: string) => {
     if (!isFinished(m.status) || m.home_score == null || m.away_score == null) return;
-    const key = `typerly_overlay_${uid}_${m.id}`;
-    if (localStorage.getItem(key)) return;
+    if (localStorage.getItem(overlayKey(uid, m.id))) return;
 
     const points = own.points_earned ?? calculatePoints(
       own.predicted_home_score, own.predicted_away_score, m.home_score, m.away_score,
     );
-    localStorage.setItem(key, "1");
 
     // Przyznaj odznakę w bazie (wygrana LUB pocieszenia) — raz na odznakę dzięki unique(user_id, badge_id)
     const badge = badgeFor(points);
@@ -59,7 +64,12 @@ export default function MatchDetailPage() {
         ah: m.home_score!, aa: m.away_score!,
       });
     }, 600);
-  }, []);
+  }, [overlayKey]);
+
+  // Zapamiętaj, że nakładka została potwierdzona (nie pokazuj ponownie)
+  const markOverlaySeen = useCallback(() => {
+    if (userId && match) localStorage.setItem(overlayKey(userId, match.id), "1");
+  }, [userId, match, overlayKey]);
 
   useEffect(() => {
     async function load() {
@@ -257,7 +267,13 @@ export default function MatchDetailPage() {
           predictedAway={overlay.pa}
           actualHome={overlay.ah}
           actualAway={overlay.aa}
-          onClose={() => setOverlay(null)}
+          onClose={() => { markOverlaySeen(); setOverlay(null); }}
+          onCheck={() => {
+            markOverlaySeen();
+            setOverlay(null);
+            // Tabela wyników: ranking grupy (gdy w lidze) lub ogólne statystyki w profilu
+            router.push(leagueId ? `/leagues/${leagueId}` : "/profile");
+          }}
         />
       )}
     </div>

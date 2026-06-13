@@ -11,6 +11,7 @@ type Props = {
   actualHome: number;
   actualAway: number;
   onClose: () => void;
+  onCheck: () => void;
 };
 
 const RARITY_COLOR: Record<string, string> = {
@@ -30,7 +31,7 @@ function accentColor(points: number): string {
 }
 
 export default function PredictionResultOverlay({
-  username, points, predictedHome, predictedAway, actualHome, actualAway, onClose,
+  username, points, predictedHome, predictedAway, actualHome, actualAway, onClose, onCheck,
 }: Props) {
   const won = points > 0;
   const accent = accentColor(points);
@@ -64,10 +65,7 @@ export default function PredictionResultOverlay({
       confetti({ particleCount: won ? 12 : 8, angle: 120, spread: 55, origin: { x: 1, y: 0.6 }, colors, shapes: ["star", "circle"] });
     }, 200);
 
-    // Auto-zamknięcie po 5.5s
-    const autoClose = setTimeout(() => handleClose(), 5500);
-
-    return () => { clearInterval(interval); clearTimeout(autoClose); };
+    return () => { clearInterval(interval); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -75,6 +73,12 @@ export default function PredictionResultOverlay({
     if (closed.current) return;
     closed.current = true;
     onClose();
+  }
+
+  function handleCheck() {
+    if (closed.current) return;
+    closed.current = true;
+    onCheck();
   }
 
   return (
@@ -137,7 +141,23 @@ export default function PredictionResultOverlay({
         </div>
       )}
 
-      <p className="absolute bottom-12 text-white/30 text-xs">Dotknij aby zamknąć</p>
+      {/* Przycisk na dole ekranu — przejście do tabeli wyników */}
+      <div
+        className="absolute left-0 right-0 px-6"
+        style={{ bottom: "calc(2rem + env(safe-area-inset-bottom))" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={handleCheck}
+          className="w-full font-black text-black text-lg py-4 rounded-2xl active:scale-95 transition"
+          style={{ backgroundColor: accent, boxShadow: `0 6px 24px ${accent}66` }}
+        >
+          Sprawdź
+        </button>
+        <button onClick={handleClose} className="w-full text-white/40 text-sm font-semibold py-3 mt-1">
+          Zamknij
+        </button>
+      </div>
     </div>
   );
 }
