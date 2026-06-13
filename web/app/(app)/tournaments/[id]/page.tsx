@@ -3,9 +3,18 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Plus, Trash2, Trophy, Gift, Copy, Check, Users, Crown, Shuffle, ListOrdered, Camera } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Trophy, Gift, Copy, Check, Users, Crown, Shuffle, ListOrdered, Camera, GripVertical, Info } from "lucide-react";
 import Image from "next/image";
 import { useLang } from "@/contexts/LangContext";
+import {
+  DndContext, closestCenter, PointerSensor, TouchSensor,
+  useSensor, useSensors, DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, verticalListSortingStrategy,
+  useSortable, arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Team = { id: string; name: string; logo_url: string | null; tournament_id: string };
 type UserTeam = { id?: string; name: string; logo_url: string | null };
@@ -80,6 +89,80 @@ function CenterModal({ onClose, children }: { onClose: () => void; children: Rea
   );
 }
 
+// BYE badge z tooltipem — klikalny, wyświetla wyjaśnienie
+function ByeBadge({ byeCount, rank }: { byeCount: number; rank: number }) {
+  const [open, setOpen] = useState(false);
+  if (rank >= byeCount) return null;
+  return (
+    <div className="relative flex-shrink-0">
+      <button
+        onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
+        className="flex items-center gap-1 text-[9px] font-black text-[#F5C400] bg-[#F5C400]/10 border border-[#F5C400]/30 px-1.5 py-0.5 rounded"
+      >
+        BYE <Info size={9} />
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 bottom-full mb-2 w-56 bg-[#2a2a2a] border border-white/10 rounded-xl p-3 z-10 shadow-xl"
+          onClick={e => e.stopPropagation()}
+        >
+          <p className="text-white font-bold text-xs mb-1">Wolny los 🎖️</p>
+          <p className="text-white/50 text-[11px] leading-relaxed">
+            Ta drużyna automatycznie przechodzi do następnej rundy bez grania meczu — bo liczba drużyn nie jest potęgą 2.
+          </p>
+          <p className="text-[#F5C400]/70 text-[11px] mt-1.5 leading-relaxed">
+            Zmień kolejność przytrzymując i przeciągając ≡ aby wybrać kto dostaje wolny los.
+          </p>
+          <button onClick={() => setOpen(false)} className="mt-2 text-white/30 text-[11px] font-bold">Zamknij</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Pojedynczy wiersz drużyny z drag handle
+function SortableTeamRow({
+  team, rank, byeCount, isAdmin, onDelete,
+}: {
+  team: Team; rank: number; byeCount: number; isAdmin: boolean; onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: team.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border ${
+        rank < byeCount ? "border-[#F5C400]/25 bg-[#F5C400]/5" : "bg-[#111] border-white/[0.06]"
+      }`}
+    >
+      {/* Drag handle — long press on mobile */}
+      {isAdmin && (
+        <button
+          {...attributes}
+          {...listeners}
+          className="text-white/20 touch-none cursor-grab active:cursor-grabbing p-0.5 -ml-1 flex-shrink-0"
+          aria-label="Przeciągnij"
+        >
+          <GripVertical size={16} />
+        </button>
+      )}
+      <span className={`text-xs font-black w-4 flex-shrink-0 ${rank < byeCount ? "text-[#F5C400]" : "text-white/20"}`}>
+        {rank + 1}
+      </span>
+      <TeamAvatar url={team.logo_url} name={team.name} size={8} />
+      <span className="text-white font-semibold text-sm flex-1 truncate">{team.name}</span>
+      <ByeBadge byeCount={byeCount} rank={rank} />
+      {isAdmin && (
+        <button onClick={onDelete} className="text-white/20 hover:text-red-400 transition p-1 flex-shrink-0">
+          <Trash2 size={14} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function TournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -113,6 +196,20 @@ export default function TournamentDetailPage() {
   const [generating, setGenerating] = useState(false);
 
   const [copied, setCopied] = useState(false);
+
+  // dnd-kit sensors: mouse/pointer + touch (250ms long press)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = teams.findIndex(t => t.id === active.id);
+    const newIdx = teams.findIndex(t => t.id === over.id);
+    setTeams(prev => arrayMove(prev, oldIdx, newIdx));
+  }
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -390,32 +487,43 @@ export default function TournamentDetailPage() {
             )}
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
-            {teams.map((team, i) => (
-              <div key={team.id} className="flex items-center gap-3 bg-[#111] border border-white/[0.06] rounded-xl px-3 py-2.5">
-                <span className="text-white/20 text-xs font-black w-4">{i + 1}</span>
-                <TeamAvatar url={team.logo_url} name={team.name} size={8} />
-                <span className="text-white font-semibold text-sm flex-1 truncate">{team.name}</span>
-                {isAdmin && (
-                  <button onClick={() => deleteTeam(team.id)} className="text-white/20 hover:text-red-400 transition p-1">
-                    <Trash2 size={14} />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+          <>
+            {isAdmin && (
+              <p className="text-white/25 text-[11px] mb-2 flex items-center gap-1">
+                <GripVertical size={11} /> Przytrzymaj i przeciągnij aby ustawić kolejność w drabince
+              </p>
+            )}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={teams.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                <div className="flex flex-col gap-2">
+                  {teams.map((team, i) => (
+                    <SortableTeamRow
+                      key={team.id}
+                      team={team}
+                      rank={i}
+                      byeCount={byeCount}
+                      isAdmin={isAdmin}
+                      onDelete={() => deleteTeam(team.id)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </>
         )}
 
         {isAdmin && teams.length >= 2 && matches.length === 0 && (
-          <button onClick={openSeeding}
-            className="mt-4 w-full bg-purple-600 text-white font-black py-4 rounded-2xl active:scale-95 transition flex items-center justify-center gap-2">
-            <Trophy size={18} /> Generuj drabinkę
+          <button onClick={() => generateKnockout(teams)}
+            disabled={generating}
+            className="mt-4 w-full bg-purple-600 text-white font-black py-4 rounded-2xl active:scale-95 transition flex items-center justify-center gap-2 disabled:opacity-50">
+            {generating ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Generowanie...</> : <><Trophy size={18} /> Generuj drabinkę</>}
           </button>
         )}
         {isAdmin && teams.length >= 2 && matches.length > 0 && (
-          <button onClick={openSeeding}
-            className="mt-3 w-full bg-white/[0.05] border border-white/10 text-white/50 font-bold py-3 rounded-xl active:scale-95 transition text-sm">
-            Regeneruj drabinkę
+          <button onClick={() => generateKnockout(teams)}
+            disabled={generating}
+            className="mt-3 w-full bg-white/[0.05] border border-white/10 text-white/50 font-bold py-3 rounded-xl active:scale-95 transition text-sm disabled:opacity-40">
+            {generating ? "Generowanie..." : "Regeneruj drabinkę (aktualna kolejność)"}
           </button>
         )}
       </div>

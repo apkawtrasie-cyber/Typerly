@@ -147,10 +147,11 @@ export default function ProfilePage() {
     </div>
   );
 
-  const trophies = badges.filter(b => ["rare","epic","legendary"].includes(getBadgeDef(b)?.rarity ?? ""));
-  const stars = badges.filter(b => getBadgeDef(b)?.rarity === "common");
   const s = stats!;
   const streak = s.streak;
+  // Trofea = dokładne trafienia (3 pkt), gwiazdki = pudła (0 pkt) — liczone z typów
+  const trophyCount = s.exact;
+  const starCount = s.miss;
 
   return (
     <div className="px-4 pt-6 pb-6 fade-in">
@@ -207,14 +208,14 @@ export default function ProfilePage() {
         <div className="flex-1 bg-[#111] border border-white/[0.06] rounded-2xl p-4 flex items-center gap-3">
           <span className="text-3xl">🏆</span>
           <div>
-            <p className="text-white font-black text-xl">{trophies.length}</p>
+            <p className="text-white font-black text-xl">{trophyCount}</p>
             <p className="text-white/30 text-xs">{t("profile.trophies")}</p>
           </div>
         </div>
         <div className="flex-1 bg-[#111] border border-white/[0.06] rounded-2xl p-4 flex items-center gap-3">
           <span className="text-3xl">⭐</span>
           <div>
-            <p className="text-white font-black text-xl">{stars.length}</p>
+            <p className="text-white font-black text-xl">{starCount}</p>
             <p className="text-white/30 text-xs">{t("profile.stars")}</p>
           </div>
         </div>
