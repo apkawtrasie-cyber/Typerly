@@ -1,12 +1,11 @@
 "use client";
 export const dynamic = 'force-dynamic';
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase, Match, Prediction, isLive, isFinished, isUpcoming, competitionLabel, ensureProfile } from "@/lib/supabase";
 import MatchCard from "@/components/MatchCard";
-import { Search, ChevronRight, Zap, Clock, TrendingUp, X, Star, Trophy, ChevronDown } from "lucide-react";
+import { Search, ChevronRight, Zap, Clock, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useLang } from "@/contexts/LangContext";
-import confetti from "canvas-confetti";
 
 type RankingEntry = { user_id: string; username: string; total_points: number; predictions_count: number };
 type PredWithMatch = Prediction & { match?: Match };
@@ -52,8 +51,6 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const confettiFired = useRef(false);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -127,20 +124,6 @@ export default function HomePage() {
       .then(({ data }) => setSearchResults(data ?? []));
   }, [search]);
 
-  function openHistory() {
-    setHistoryOpen(true);
-    if (confettiFired.current) return;
-    confettiFired.current = true;
-    const hasTrophy = recentPreds.some(p => (p.points_earned ?? 0) >= 1);
-    setTimeout(() => {
-      if (hasTrophy) {
-        confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 }, colors: ["#F5C400", "#fff", "#FFD700"] });
-      } else {
-        confetti({ particleCount: 30, spread: 50, origin: { y: 0.4 }, colors: ["#ffffff44", "#aaaaaa"] });
-      }
-    }, 150);
-  }
-
   const greetHour = new Date().getHours();
   const greeting = greetHour < 12 ? t("home.greeting_morning") : greetHour < 18 ? t("home.greeting_afternoon") : t("home.greeting_evening");
   const numLocale: Record<string, string> = { en: "en-GB", pl: "pl-PL", de: "de-DE", fr: "fr-FR", es: "es-ES", it: "it-IT" };
@@ -170,39 +153,33 @@ export default function HomePage() {
         </p>
       </div>
 
-      {/* Widget: Ostatnie typy */}
-      {recentPreds.length > 0 && (
-        <button onClick={openHistory} className="w-full mb-6 text-left">
-          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-4 active:scale-[0.98] transition-transform">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Trophy size={14} className="text-[#F5C400]" />
-                <span className="text-white font-black text-sm uppercase tracking-wider">Twoje typy</span>
-                <span className="text-white/30 text-xs font-semibold">({recentPreds.length})</span>
+      {/* Baner: Ostatni typ */}
+      {recentPreds.length > 0 && (() => {
+        const last = recentPreds[0];
+        const b = pointsBadge(last.points_earned ?? 0);
+        const totalCalc = recentPreds.reduce((s, p) => s + (p.points_earned ?? 0), 0);
+        return (
+          <Link href="/profile" className="block mb-6">
+            <div className={`relative overflow-hidden border rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-[0.98] transition-transform ${b?.bg}`}>
+              {/* Ikona */}
+              <div className="text-4xl leading-none flex-shrink-0">{b?.icon}</div>
+              {/* Treść */}
+              <div className="flex-1 min-w-0">
+                <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-0.5">Ostatni typ</p>
+                <p className="text-white font-black text-base leading-tight truncate">
+                  {last.match?.home_team_name} – {last.match?.away_team_name}
+                </p>
+                <p className="text-white/40 text-xs font-mono mt-0.5">
+                  {last.predicted_home_score}:{last.predicted_away_score}
+                  {last.match?.home_score != null && <> · <span className="text-white/60">{last.match.home_score}:{last.match.away_score}</span></>}
+                </p>
+                <p className={`text-sm font-black mt-1.5 ${b?.color}`}>{b?.label} · łącznie {totalCalc} pkt z {recentPreds.length} meczów</p>
               </div>
-              <ChevronRight size={15} className="text-white/30" />
+              <ChevronRight size={16} className="text-white/20 flex-shrink-0" />
             </div>
-            {/* Miniaturki — ostatnie 4 */}
-            <div className="flex gap-2 flex-wrap">
-              {recentPreds.slice(0, 4).map(p => {
-                const b = pointsBadge(p.points_earned ?? 0);
-                return (
-                  <div key={p.id} className={`flex-1 min-w-[calc(50%-4px)] border rounded-xl px-3 py-2 ${b?.bg}`}>
-                    <p className="text-white/50 text-[10px] font-semibold truncate leading-tight">
-                      {p.match?.home_team_name?.split(" ").slice(-1)[0]} – {p.match?.away_team_name?.split(" ").slice(-1)[0]}
-                    </p>
-                    <p className="text-white/70 text-[10px] font-mono mt-0.5">
-                      Typ: {p.predicted_home_score}:{p.predicted_away_score}
-                      {p.match?.home_score != null && <span className="text-white/30"> · {p.match.home_score}:{p.match.away_score}</span>}
-                    </p>
-                    <p className={`text-xs font-black mt-1 ${b?.color}`}>{b?.icon} {b?.label}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </button>
-      )}
+          </Link>
+        );
+      })()}
 
       {/* Wyszukiwarka */}
       <div className="relative mb-6">
@@ -289,68 +266,7 @@ export default function HomePage() {
         </>
       )}
 
-      {/* Modal: Historia typowań */}
-      {historyOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex flex-col justify-end">
-          <div
-            className="bg-[#111] border-t border-white/[0.08] rounded-t-3xl flex flex-col"
-            style={{ maxHeight: "calc(90vh - env(safe-area-inset-bottom, 0px))" }}
-          >
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-white/10" />
-            </div>
-            <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.06]">
-              <div>
-                <h2 className="text-white font-black text-lg">Historia typowań</h2>
-                <p className="text-white/30 text-xs">{recentPreds.length} zakończonych meczów</p>
-              </div>
-              <button onClick={() => setHistoryOpen(false)} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center">
-                <X size={16} className="text-white/50" />
-              </button>
-            </div>
-            <div className="flex gap-3 px-5 py-3 border-b border-white/[0.04]">
-              {[
-                { icon: "⭐", label: "Dokładne", count: recentPreds.filter(p => (p.points_earned ?? 0) >= 3).length, color: "text-yellow-300" },
-                { icon: "🏆", label: "Trafione", count: recentPreds.filter(p => (p.points_earned ?? 0) >= 1 && (p.points_earned ?? 0) < 3).length, color: "text-orange-300" },
-                { icon: "💀", label: "Pudło", count: recentPreds.filter(p => (p.points_earned ?? 0) === 0).length, color: "text-white/30" },
-              ].map(s => (
-                <div key={s.label} className="flex-1 bg-white/[0.03] rounded-xl py-2 text-center">
-                  <p className={`font-black text-xl ${s.color}`}>{s.icon} {s.count}</p>
-                  <p className="text-white/30 text-[10px] font-semibold mt-0.5">{s.label}</p>
-                </div>
-              ))}
-            </div>
-            <div className="overflow-y-auto flex-1 px-4 py-3" style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}>
-              <div className="flex flex-col gap-2">
-                {recentPreds.map(p => {
-                  const b = pointsBadge(p.points_earned ?? 0);
-                  const d = p.match ? new Date(p.match.match_time).toLocaleDateString("pl-PL", { day: "numeric", month: "short" }) : "";
-                  return (
-                    <div key={p.id} className={`flex items-center gap-3 border rounded-2xl px-4 py-3 ${b?.bg}`}>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-bold text-sm truncate">
-                          {p.match?.home_team_name} – {p.match?.away_team_name}
-                        </p>
-                        <p className="text-white/30 text-xs mt-0.5">{competitionLabel(p.match?.competition ?? null, "football")} · {d}</p>
-                        <p className="text-white/50 text-xs mt-1 font-mono">
-                          Typ: <span className="text-white font-bold">{p.predicted_home_score}:{p.predicted_away_score}</span>
-                          {p.match?.home_score != null && (
-                            <span className="text-white/30"> · Wynik: {p.match.home_score}:{p.match.away_score}</span>
-                          )}
-                        </p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-lg leading-none">{b?.icon}</p>
-                        <p className={`text-xs font-black mt-1 ${b?.color}`}>{b?.label}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
