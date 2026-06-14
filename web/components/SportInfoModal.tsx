@@ -48,13 +48,14 @@ export const SPORT_INFO: Record<string, SportInfo> = {
   f1: {
     emoji: "🏎️",
     title: "Formuła 1",
-    howTo: "Przeglądaj kalendarz wyścigów, wyniki i tabelę kierowców. Typowanie wyścigów F1 już wkrótce!",
+    howTo: "Wejdź w wyścig z listy i wybierz kierowcę który Twoim zdaniem wygra Grand Prix.",
     rules: [
       { icon: "📅", text: "Kalendarz — wszystkie wyścigi sezonu 2026" },
-      { icon: "🏁", text: "Wyniki — podium każdego Grand Prix" },
-      { icon: "🏆", text: "Tabela — klasyfikacja kierowców z punktami" },
-      { icon: "🔜", text: "Typowanie wyścigów (kto wygra GP) — wkrótce" },
+      { icon: "🏁", text: "Kliknij wyścig → wybierz kierowcę → zatwierdź" },
+      { icon: "🏆", text: "Tabela — klasyfikacja kierowców z punktami ESPN" },
+      { icon: "🎯", text: "Trafiony zwycięzca = 3 pkt (punktacja jak w piłce)" },
     ],
+    example: { home: "Kto wygra?", away: "", score: "🥇", explanation: "Wybierz kierowcę zanim wyścig się zacznie" },
   },
 };
 

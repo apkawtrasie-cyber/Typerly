@@ -64,6 +64,7 @@ export default function F1RacePage() {
   const [selected, setSelected] = useState<Driver | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -107,18 +108,28 @@ export default function F1RacePage() {
   async function savePrediction() {
     if (!selected || !userId || !race) return;
     setSaving(true);
+    setSaveError("");
     const payload = {
       user_id: userId, race_id: raceId, race_name: race.fullName, race_date: race.date,
       predicted_driver: selected.name, predicted_driver_flag: selected.flag,
     };
+    let err: any = null;
     if (predId) {
-      await supabase.from("f1_predictions").update(payload).eq("id", predId);
+      const res = await supabase.from("f1_predictions").update(payload).eq("id", predId);
+      err = res.error;
     } else {
-      const { data } = await supabase.from("f1_predictions").insert(payload).select("id").single();
-      if (data) setPredId(data.id);
+      const res = await supabase.from("f1_predictions").insert(payload).select("id").single();
+      err = res.error;
+      if (!err && res.data) setPredId(res.data.id);
+    }
+    setSaving(false);
+    if (err) {
+      setSaveError(err.code === "42P01"
+        ? "Tabela f1_predictions nie istnieje — uruchom SQL w Supabase."
+        : `Błąd zapisu: ${err.message}`);
+      return;
     }
     setMyPrediction(selected.name);
-    setSaving(false);
     setSaved(true);
     setSelected(null);
     setTimeout(() => setSaved(false), 2500);
@@ -247,6 +258,12 @@ export default function F1RacePage() {
               );
             })}
           </div>
+
+          {saveError && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl px-4 py-3 mb-3">
+              <p className="text-red-400 text-sm">{saveError}</p>
+            </div>
+          )}
 
           {selected && (
             <div className="sticky bottom-24 pb-2">

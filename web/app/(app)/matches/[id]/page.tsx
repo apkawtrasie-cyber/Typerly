@@ -3,11 +3,12 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback } from "react";
 import { supabase, Match, isLive, isFinished, competitionLabel, formatMatchTime, ensureProfile } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import { TeamLogo } from "@/components/MatchCard";
 import { calculatePoints, badgeFor } from "@/lib/scorer";
 import PredictionResultOverlay from "@/components/PredictionResultOverlay";
 import SquadsSection from "@/components/SquadsSection";
+import SportInfoModal from "@/components/SportInfoModal";
 import { useLang } from "@/contexts/LangContext";
 
 type Prediction = {
@@ -36,6 +37,7 @@ export default function MatchDetailPage() {
   const [predAway, setPredAway] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [showInfo, setShowInfo] = useState(false);
   const [overlay, setOverlay] = useState<null | {
     points: number; ph: number; pa: number; ah: number; aa: number;
     homeTeam: string; awayTeam: string;
@@ -211,6 +213,8 @@ export default function MatchDetailPage() {
         )}
       </div>
 
+      {showInfo && <SportInfoModal sport={match.sport_type ?? "football"} onClose={() => setShowInfo(false)} />}
+
       {/* Mój typ — po zapisaniu zablokowany (nie można zmienić) */}
       {myPred ? (
         <div className="px-4 mb-5">
@@ -228,7 +232,12 @@ export default function MatchDetailPage() {
         </div>
       ) : canPredict ? (
         <div className="px-4 mb-5">
-          <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">{t("match.your_prediction")}</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest">{t("match.your_prediction")}</h3>
+            <button onClick={() => setShowInfo(true)} className="flex items-center gap-1 text-white/30 text-[10px] font-semibold active:text-white/60 transition">
+              <Info size={13} /> Jak typować?
+            </button>
+          </div>
           <div className="flex items-center gap-3 mb-3">
             <input value={predHome} onChange={e => setPredHome(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
               className="flex-1 min-w-0 bg-[#1e1e1e] border border-white/[0.12] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
