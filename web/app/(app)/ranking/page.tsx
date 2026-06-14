@@ -46,7 +46,6 @@ export default function RankingPage() {
       user ? supabase.from("predictions")
         .select("points_earned, predicted_home_score, predicted_away_score, is_calculated, matches(home_team_name, away_team_name, home_score, away_score, match_time)")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
         .limit(100) : Promise.resolve({ data: [] }),
     ]);
 
