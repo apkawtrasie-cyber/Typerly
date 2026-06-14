@@ -5,18 +5,18 @@ import { useRouter } from "next/navigation";
 import { supabase, Match, isLive, isFinished } from "@/lib/supabase";
 import MatchCard from "@/components/MatchCard";
 import SportInfoModal from "@/components/SportInfoModal";
-
-const DATE_LOCALE = "pl-PL";
+import { useLang } from "@/contexts/LangContext";
+import type { TranslationKey } from "@/lib/translations";
 
 function SkeletonCard() {
   return <div className="skeleton h-28 rounded-2xl" />;
 }
 
-const TABS = [
-  { label: "Nadchodzące", key: "upcoming" },
-  { label: "🔴 Na żywo", key: "live" },
-  { label: "Ostatnie", key: "finished" },
-  { label: "🏆 Tabela", key: "standings" },
+const TABS: { labelKey: TranslationKey; key: string; emoji?: string }[] = [
+  { labelKey: "matches.upcoming", key: "upcoming" },
+  { labelKey: "matches.live", key: "live", emoji: "🔴" },
+  { labelKey: "matches.finished", key: "finished" },
+  { labelKey: "matches.standings", key: "standings" },
 ];
 
 // Oblicza tabelę ligową z wyników meczów (W/D/L + bramki/sety)
@@ -61,7 +61,7 @@ function computeStandings(matches: Match[], isVolleyball: boolean): Record<strin
   return result;
 }
 
-function StandingsSection({ matches, sportType }: { matches: Match[]; sportType: string }) {
+function StandingsSection({ matches, sportType, t }: { matches: Match[]; sportType: string; t: (k: TranslationKey) => string }) {
   const isVolleyball = sportType === "volleyball";
   const tables = computeStandings(matches, isVolleyball);
   const comps = Object.keys(tables);
@@ -70,7 +70,7 @@ function StandingsSection({ matches, sportType }: { matches: Match[]; sportType:
     return (
       <div className="text-center py-16">
         <p className="text-4xl mb-3">{isVolleyball ? "🏐" : "🤾"}</p>
-        <p className="text-white/30 font-semibold">Brak danych do tabeli — wyniki meczów pojawią się po ich zakończeniu</p>
+        <p className="text-white/30 font-semibold">{t("matches.no_standings")}</p>
       </div>
     );
   }
@@ -83,13 +83,13 @@ function StandingsSection({ matches, sportType }: { matches: Match[]; sportType:
           <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl overflow-hidden">
             <div className="flex items-center px-3 py-2 text-white/30 text-[10px] font-bold uppercase border-b border-white/[0.04]">
               <span className="w-6 text-center">#</span>
-              <span className="flex-1 pl-1">Drużyna</span>
-              <span className="w-6 text-center">M</span>
-              <span className="w-6 text-center">W</span>
-              <span className="w-6 text-center">R</span>
-              <span className="w-6 text-center">P</span>
+              <span className="flex-1 pl-1">{t("wc.team")}</span>
+              <span className="w-6 text-center">{t("wc.col_played")}</span>
+              <span className="w-6 text-center">{t("wc.col_won")}</span>
+              <span className="w-6 text-center">{t("wc.col_draw")}</span>
+              <span className="w-6 text-center">{t("wc.col_lost")}</span>
               <span className="w-9 text-center">+/-</span>
-              <span className="w-8 text-center text-[#F5C400]">PKT</span>
+              <span className="w-8 text-center text-[#F5C400]">{t("wc.col_pts")}</span>
             </div>
             {tables[comp].map((r, i) => {
               const diff = r.goalsFor - r.goalsAgainst;
@@ -123,6 +123,7 @@ interface Props {
 
 export default function SportMatchesPage({ sportType, title, emoji }: Props) {
   const router = useRouter();
+  const { t, locale } = useLang();
   const [matches, setMatches] = useState<Match[]>([]);
   const [tab, setTab] = useState("upcoming");
   const [loading, setLoading] = useState(true);
@@ -153,7 +154,7 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
   });
 
   const grouped = filtered.reduce<Record<string, Match[]>>((acc, m) => {
-    const key = new Date(m.match_time).toLocaleDateString(DATE_LOCALE, { weekday: "long", day: "numeric", month: "long" });
+    const key = new Date(m.match_time).toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
     if (!acc[key]) acc[key] = [];
     acc[key].push(m);
     return acc;
@@ -161,13 +162,18 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
 
   const liveCount = matches.filter(m => isLive(m.status)).length;
 
+  // Tytuł z tłumaczeń wg dyscypliny; gdy brak klucza — użyj przekazanego title
+  const sportTitle = sportType === "volleyball" ? t("sport.volleyball")
+    : sportType === "handball" ? t("sport.handball")
+    : title;
+
   return (
     <div className="px-4 pt-6 pb-6 fade-in">
       <div className="flex items-center gap-3 mb-5">
         <button onClick={() => router.back()} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition flex-shrink-0">
           <ArrowLeft size={16} className="text-white/60" />
         </button>
-        <h1 className="text-white font-black text-2xl font-archivo flex-1">{emoji} {title}</h1>
+        <h1 className="text-white font-black text-2xl font-archivo flex-1">{emoji} {sportTitle}</h1>
         <button onClick={() => setShowInfo(true)} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition flex-shrink-0">
           <Info size={18} className="text-white/40" />
         </button>
@@ -175,15 +181,15 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
       {showInfo && <SportInfoModal sport={sportType} onClose={() => setShowInfo(false)} />}
 
       <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
+        {TABS.map(tabItem => (
+          <button key={tabItem.key} onClick={() => setTab(tabItem.key)}
             className={`relative flex-shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-all ${
-              tab === t.key
+              tab === tabItem.key
                 ? "bg-[#F5C400] text-black"
                 : "bg-[#1e1e1e] border border-white/[0.12] text-white/50 hover:text-white/70"
             }`}>
-            {t.label}
-            {t.key === "live" && liveCount > 0 && (
+            {tabItem.emoji ? `${tabItem.emoji} ` : ""}{t(tabItem.labelKey)}
+            {tabItem.key === "live" && liveCount > 0 && (
               <span className="ml-1.5 bg-red-500 text-white text-[9px] font-black rounded-full px-1.5 py-0.5">{liveCount}</span>
             )}
           </button>
@@ -193,13 +199,13 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
       {tab === "standings" ? (
         loading
           ? <div className="flex flex-col gap-2">{[0,1,2].map(i => <div key={i} className="skeleton h-40 rounded-2xl" />)}</div>
-          : <StandingsSection matches={matches} sportType={sportType} />
+          : <StandingsSection matches={matches} sportType={sportType} t={t} />
       ) : loading ? (
         <div className="flex flex-col gap-3">{[0,1,2,3].map(i => <SkeletonCard key={i} />)}</div>
       ) : Object.keys(grouped).length === 0 ? (
         <div className="text-center py-16">
           <p className="text-4xl mb-3">{emoji}</p>
-          <p className="text-white/30 font-semibold">Brak meczów w tej kategorii</p>
+          <p className="text-white/30 font-semibold">{t("matches.no_in_category")}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-6">

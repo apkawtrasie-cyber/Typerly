@@ -5,6 +5,8 @@ import { Flag, Clock, ArrowLeft, Info, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import SportInfoModal from "@/components/SportInfoModal";
+import { useLang } from "@/contexts/LangContext";
+import type { TranslationKey } from "@/lib/translations";
 
 const ESPN_F1 = "https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard?dates=2026";
 const ESPN_F1_STANDINGS = "https://site.api.espn.com/apis/v2/sports/racing/f1/standings";
@@ -70,19 +72,19 @@ function parseStandings(json: any): StandingEntry[] {
   });
 }
 
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleString("pl-PL", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+function fmtDate(iso: string, locale: string) {
+  return new Date(iso).toLocaleString(locale, { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 }
 
 const MEDAL = ["🥇", "🥈", "🥉"];
-const TABS = [
-  { key: "upcoming", label: "Nadchodzące" },
-  { key: "live", label: "🔴 Na żywo" },
-  { key: "finished", label: "Ostatnie" },
-  { key: "standings", label: "🏆 Tabela" },
+const TABS: { key: string; labelKey: TranslationKey; emoji?: string }[] = [
+  { key: "upcoming", labelKey: "matches.upcoming" },
+  { key: "live", labelKey: "matches.live", emoji: "🔴" },
+  { key: "finished", labelKey: "matches.finished" },
+  { key: "standings", labelKey: "matches.standings" },
 ];
 
-function RaceCard({ r, next }: { r: Race; next: boolean }) {
+function RaceCard({ r, next, t, locale }: { r: Race; next: boolean; t: (k: TranslationKey) => string; locale: string }) {
   const finished = r.state === "post";
   const live = r.state === "in";
   const podium = r.allDrivers.slice(0, 3);
@@ -100,13 +102,13 @@ function RaceCard({ r, next }: { r: Race; next: boolean }) {
             <p className="text-white font-black text-sm truncate">{r.name}</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {live && <span className="flex items-center gap-1 text-red-400 text-[10px] font-black"><span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />NA ŻYWO</span>}
-            {next && !live && <span className="text-[#F5C400] text-[10px] font-black uppercase tracking-wide">Następny</span>}
+            {live && <span className="flex items-center gap-1 text-red-400 text-[10px] font-black"><span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />{t("match.live_badge")}</span>}
+            {next && !live && <span className="text-[#F5C400] text-[10px] font-black uppercase tracking-wide">{t("f1.next")}</span>}
             <ChevronRight size={14} className="text-white/25" />
           </div>
         </div>
-        <p className="text-white/40 text-xs flex items-center gap-1.5 mb-2"><Clock size={11} /> {fmtDate(r.date)}</p>
-        {!finished && !live && <p className="text-white/25 text-[10px]">Kliknij aby zobaczyć szczegóły i typować</p>}
+        <p className="text-white/40 text-xs flex items-center gap-1.5 mb-2"><Clock size={11} /> {fmtDate(r.date, locale)}</p>
+        {!finished && !live && <p className="text-white/25 text-[10px]">{t("f1.click_details")}</p>}
         {finished && podium.length > 0 && (
           <div className="flex gap-3 mt-1">
             {podium.map((d) => (
@@ -123,12 +125,12 @@ function RaceCard({ r, next }: { r: Race; next: boolean }) {
   );
 }
 
-function StandingsTable({ entries }: { entries: StandingEntry[] }) {
+function StandingsTable({ entries, t }: { entries: StandingEntry[]; t: (k: TranslationKey) => string }) {
   if (entries.length === 0) {
     return (
       <div className="text-center py-16">
         <p className="text-4xl mb-3">🏎️</p>
-        <p className="text-white/30 font-semibold">Tabela niedostępna</p>
+        <p className="text-white/30 font-semibold">{t("f1.standings_unavailable")}</p>
       </div>
     );
   }
@@ -136,9 +138,9 @@ function StandingsTable({ entries }: { entries: StandingEntry[] }) {
     <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl overflow-hidden card-glow">
       <div className="flex items-center px-3 py-2 text-white/30 text-[10px] font-bold uppercase border-b border-white/[0.04]">
         <span className="w-7 text-center">#</span>
-        <span className="flex-1 pl-1">Kierowca</span>
-        <span className="w-24 text-right text-white/20 pr-2">Zespół</span>
-        <span className="w-12 text-center text-[#F5C400]">PKT</span>
+        <span className="flex-1 pl-1">{t("f1.driver")}</span>
+        <span className="w-24 text-right text-white/20 pr-2">{t("f1.team")}</span>
+        <span className="w-12 text-center text-[#F5C400]">{t("wc.col_pts")}</span>
       </div>
       {entries.map((e, i) => (
         <div key={e.name} className={`flex items-center px-3 py-3 gap-1 ${i < entries.length - 1 ? "border-b border-white/[0.03]" : ""}`}>
@@ -161,6 +163,7 @@ function StandingsTable({ entries }: { entries: StandingEntry[] }) {
 
 export default function F1Page() {
   const router = useRouter();
+  const { t, locale } = useLang();
   const [races, setRaces] = useState<Race[]>([]);
   const [standings, setStandings] = useState<StandingEntry[]>([]);
   const [tab, setTab] = useState("upcoming");
@@ -214,22 +217,22 @@ export default function F1Page() {
         <button onClick={() => router.back()} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition flex-shrink-0">
           <ArrowLeft size={16} className="text-white/60" />
         </button>
-        <h1 className="text-white font-black text-2xl font-archivo flex-1">🏎️ Formuła 1</h1>
+        <h1 className="text-white font-black text-2xl font-archivo flex-1">🏎️ {t("sport.f1")}</h1>
         <button onClick={() => setShowInfo(true)} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition flex-shrink-0">
           <Info size={18} className="text-white/40" />
         </button>
       </div>
-      <p className="text-white/30 text-xs mb-5 pl-12">Sezon 2026 · dane: ESPN · kliknij wyścig po szczegóły</p>
+      <p className="text-white/30 text-xs mb-5 pl-12">{t("f1.subtitle")}</p>
       {showInfo && <SportInfoModal sport="f1" onClose={() => setShowInfo(false)} />}
 
       <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
+        {TABS.map(tabItem => (
+          <button key={tabItem.key} onClick={() => setTab(tabItem.key)}
             className={`relative flex-shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-all ${
-              tab === t.key ? "bg-[#F5C400] text-black" : "bg-[#1e1e1e] border border-white/[0.12] text-white/40"
+              tab === tabItem.key ? "bg-[#F5C400] text-black" : "bg-[#1e1e1e] border border-white/[0.12] text-white/40"
             }`}>
-            {t.label}
-            {t.key === "live" && liveRaces.length > 0 && (
+            {tabItem.emoji ? `${tabItem.emoji} ` : ""}{t(tabItem.labelKey)}
+            {tabItem.key === "live" && liveRaces.length > 0 && (
               <span className="ml-1.5 bg-red-500 text-white text-[9px] font-black rounded-full px-1.5 py-0.5">{liveRaces.length}</span>
             )}
           </button>
@@ -241,21 +244,21 @@ export default function F1Page() {
       ) : error ? (
         <div className="text-center py-16">
           <p className="text-4xl mb-3">📡</p>
-          <p className="text-white/40 font-bold">Nie udało się pobrać danych F1</p>
+          <p className="text-white/40 font-bold">{t("error.load")}</p>
         </div>
       ) : tab === "standings" ? (
         standingsLoading
           ? <div className="flex flex-col gap-2">{[0,1,2,3,4].map(i => <div key={i} className="skeleton h-14 rounded-2xl" />)}</div>
-          : <StandingsTable entries={standings} />
+          : <StandingsTable entries={standings} t={t} />
       ) : (
         <div className="flex flex-col gap-2">
           {tabRaces().length === 0 ? (
             <div className="text-center py-16">
               <p className="text-4xl mb-3">🏎️</p>
-              <p className="text-white/30 font-semibold">Brak wyścigów w tej kategorii</p>
+              <p className="text-white/30 font-semibold">{t("f1.no_races")}</p>
             </div>
           ) : (
-            tabRaces().map(r => <RaceCard key={r.id} r={r} next={r.id === nextId} />)
+            tabRaces().map(r => <RaceCard key={r.id} r={r} next={r.id === nextId} t={t} locale={locale} />)
           )}
         </div>
       )}

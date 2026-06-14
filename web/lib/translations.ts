@@ -35,6 +35,7 @@ export type TranslationKey =
   // Match detail
   | "match.back" | "match.your_prediction" | "match.save" | "match.saving"
   | "match.locked" | "match.once_only" | "match.predictions_list"
+  | "match.volleyball_invalid" | "match.volleyball_hint"
   | "match.no_predictions" | "match.live_badge" | "match.predicting_in_league"
   // Leagues
   | "leagues.title" | "leagues.my" | "leagues.tournaments" | "leagues.joined"
@@ -126,7 +127,13 @@ export type TranslationKey =
   // Error / system messages
   | "error.save" | "error.load" | "error.auth_required"
   | "pred.saved" | "pred.saving" | "pred.pick_driver" | "pred.confirm_prefix"
-  | "pred.race_finished" | "pred.race_live" | "pred.your_pick" | "pred.updated";
+  | "pred.race_finished" | "pred.race_live" | "pred.your_pick" | "pred.updated"
+  // Sport tabs + standings + match detail
+  | "matches.standings" | "matches.no_standings" | "match.how_to_predict"
+  // F1 page
+  | "f1.next" | "f1.click_details" | "f1.standings_unavailable" | "f1.subtitle"
+  | "f1.no_races" | "f1.race_not_found" | "f1.predict_winner_below" | "f1.change_below"
+  | "f1.race_results" | "f1.pick_leader" | "f1.who_wins" | "f1.driver" | "f1.team";
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -176,6 +183,8 @@ const en: Translations = {
   "match.save": "Save prediction", "match.saving": "Saving...",
   "match.locked": "🔒 Prediction saved — cannot be changed",
   "match.once_only": "After saving, the prediction cannot be changed",
+  "match.volleyball_invalid": "Invalid volleyball score. The winner must have exactly 3 sets (3:0, 3:1 or 3:2).",
+  "match.volleyball_hint": "Volleyball: enter sets — 3:0, 3:1, 3:2 (or reverse)",
   "match.predictions_list": "Players' predictions",
   "match.no_predictions": "No predictions yet",
   "match.live_badge": "LIVE", "match.predicting_in_league": "Predicting in league:",
@@ -271,6 +280,12 @@ const en: Translations = {
   "home.check_recent": "Check recent picks", "home.pts_total": "pts total", "home.pts_short": "pts",
   "pred.saved": "✓ Saved!", "pred.saving": "Saving...", "pred.pick_driver": "Pick a driver to make your prediction", "pred.confirm_prefix": "My pick:",
   "pred.race_finished": "Race finished", "pred.race_live": "LIVE NOW", "pred.your_pick": "Your pick", "pred.updated": "✓ Updated!",
+  "matches.standings": "🏆 Table", "matches.no_standings": "No table data yet — results appear after matches finish",
+  "match.how_to_predict": "How to predict?",
+  "f1.next": "Next", "f1.click_details": "Tap to see details and predict", "f1.standings_unavailable": "Standings unavailable",
+  "f1.subtitle": "2026 Season · data: ESPN · tap a race for details", "f1.no_races": "No races in this category",
+  "f1.race_not_found": "Race not found", "f1.predict_winner_below": "Predict the winner below ↓", "f1.change_below": "Change below",
+  "f1.race_results": "Race results", "f1.pick_leader": "Pick the leader", "f1.who_wins": "Who wins the race?", "f1.driver": "Driver", "f1.team": "Team",
   "league.player_fallback": "Player",
   "wc.no_data": "No WC table data", "wc.swipe_hint": "Swipe or use arrows · 3 pts win · 1 pt draw",
   "wc.group": "Group", "wc.team": "Team",
@@ -324,6 +339,8 @@ const pl: Translations = {
   "match.save": "Zapisz typ", "match.saving": "Zapisywanie...",
   "match.locked": "🔒 Typ zapisany — nie można zmienić",
   "match.once_only": "Po zapisaniu typu nie można go już zmienić",
+  "match.volleyball_invalid": "Błędny wynik siatkówki. Zwycięzca musi mieć dokładnie 3 sety (3:0, 3:1 lub 3:2).",
+  "match.volleyball_hint": "Siatkówka: wpisz sety — 3:0, 3:1, 3:2 (lub odwrotnie)",
   "match.predictions_list": "Typy graczy",
   "match.no_predictions": "Nikt jeszcze nie typował",
   "match.live_badge": "NA ŻYWO", "match.predicting_in_league": "Typujesz w lidze:",
@@ -411,6 +428,12 @@ const pl: Translations = {
   "home.check_recent": "Sprawdź ostatnie typy", "home.pts_total": "pkt łącznie", "home.pts_short": "pkt",
   "pred.saved": "✓ Zapisano!", "pred.saving": "Zapisuję...", "pred.pick_driver": "Wybierz kierowcę żeby postawić typ", "pred.confirm_prefix": "Typuję:",
   "pred.race_finished": "Wyścig zakończony", "pred.race_live": "TRWA NA ŻYWO", "pred.your_pick": "Twój typ", "pred.updated": "✓ Zaktualizowano!",
+  "matches.standings": "🏆 Tabela", "matches.no_standings": "Brak danych do tabeli — wyniki meczów pojawią się po ich zakończeniu",
+  "match.how_to_predict": "Jak typować?",
+  "f1.next": "Następny", "f1.click_details": "Kliknij aby zobaczyć szczegóły i typować", "f1.standings_unavailable": "Tabela niedostępna",
+  "f1.subtitle": "Sezon 2026 · dane: ESPN · kliknij wyścig po szczegóły", "f1.no_races": "Brak wyścigów w tej kategorii",
+  "f1.race_not_found": "Nie znaleziono wyścigu", "f1.predict_winner_below": "Typuj zwycięzcę poniżej ↓", "f1.change_below": "Zmień poniżej",
+  "f1.race_results": "Wyniki wyścigu", "f1.pick_leader": "Wybierz lidera", "f1.who_wins": "Kto wygra wyścig?", "f1.driver": "Kierowca", "f1.team": "Zespół",
   "league.player_fallback": "Gracz",
   "wc.no_data": "Brak danych tabeli MŚ", "wc.swipe_hint": "Przesuń palcem lub użyj strzałek · 3 pkt zwycięstwo · 1 pkt remis",
   "wc.group": "Grupa", "wc.team": "Drużyna",
@@ -464,6 +487,8 @@ const de: Translations = {
   "match.save": "Tipp speichern", "match.saving": "Speichern...",
   "match.locked": "🔒 Tipp gespeichert — nicht änderbar",
   "match.once_only": "Nach dem Speichern kann der Tipp nicht mehr geändert werden",
+  "match.volleyball_invalid": "Ungültiges Volleyball-Ergebnis. Der Sieger muss genau 3 Sätze haben (3:0, 3:1 oder 3:2).",
+  "match.volleyball_hint": "Volleyball: Sätze eingeben — 3:0, 3:1, 3:2 (oder umgekehrt)",
   "match.predictions_list": "Tipps der Spieler",
   "match.no_predictions": "Noch keine Tipps",
   "match.live_badge": "LIVE", "match.predicting_in_league": "Du tippst in der Liga:",
@@ -551,6 +576,12 @@ const de: Translations = {
   "home.check_recent": "Letzte Tipps prüfen", "home.pts_total": "Pkt gesamt", "home.pts_short": "Pkt",
   "pred.saved": "✓ Gespeichert!", "pred.saving": "Speichert...", "pred.pick_driver": "Fahrer wählen um zu tippen", "pred.confirm_prefix": "Ich tippe:",
   "pred.race_finished": "Rennen beendet", "pred.race_live": "LIVE JETZT", "pred.your_pick": "Dein Tipp", "pred.updated": "✓ Aktualisiert!",
+  "matches.standings": "🏆 Tabelle", "matches.no_standings": "Noch keine Tabellendaten — Ergebnisse erscheinen nach Spielende",
+  "match.how_to_predict": "Wie tippen?",
+  "f1.next": "Nächster", "f1.click_details": "Tippe für Details und zum Tippen", "f1.standings_unavailable": "Tabelle nicht verfügbar",
+  "f1.subtitle": "Saison 2026 · Daten: ESPN · Rennen für Details antippen", "f1.no_races": "Keine Rennen in dieser Kategorie",
+  "f1.race_not_found": "Rennen nicht gefunden", "f1.predict_winner_below": "Sieger unten tippen ↓", "f1.change_below": "Unten ändern",
+  "f1.race_results": "Rennergebnisse", "f1.pick_leader": "Führenden wählen", "f1.who_wins": "Wer gewinnt das Rennen?", "f1.driver": "Fahrer", "f1.team": "Team",
   "league.player_fallback": "Spieler",
   "wc.no_data": "Keine WM-Tabellendaten", "wc.swipe_hint": "Wischen oder Pfeile nutzen · 3 Pkt Sieg · 1 Pkt Unentschieden",
   "wc.group": "Gruppe", "wc.team": "Team",
@@ -604,6 +635,8 @@ const fr: Translations = {
   "match.save": "Enregistrer", "match.saving": "Enregistrement...",
   "match.locked": "🔒 Pronostic enregistré — non modifiable",
   "match.once_only": "Une fois enregistré, le pronostic ne peut plus être modifié",
+  "match.volleyball_invalid": "Score de volley invalide. Le gagnant doit avoir exactement 3 sets (3:0, 3:1 ou 3:2).",
+  "match.volleyball_hint": "Volley: entre les sets — 3:0, 3:1, 3:2 (ou inverse)",
   "match.predictions_list": "Pronostics des joueurs",
   "match.no_predictions": "Pas encore de pronostics",
   "match.live_badge": "EN DIRECT", "match.predicting_in_league": "Tu pronostiques dans la ligue :",
@@ -691,6 +724,12 @@ const fr: Translations = {
   "home.check_recent": "Voir derniers pronostics", "home.pts_total": "pts au total", "home.pts_short": "pts",
   "pred.saved": "✓ Sauvegardé!", "pred.saving": "Sauvegarde...", "pred.pick_driver": "Choisir un pilote pour pronostiquer", "pred.confirm_prefix": "Je pronostique:",
   "pred.race_finished": "Course terminée", "pred.race_live": "EN DIRECT", "pred.your_pick": "Ton pronostic", "pred.updated": "✓ Mis à jour!",
+  "matches.standings": "🏆 Classement", "matches.no_standings": "Pas encore de données — les résultats apparaissent après les matchs",
+  "match.how_to_predict": "Comment pronostiquer?",
+  "f1.next": "Suivant", "f1.click_details": "Appuie pour voir les détails et pronostiquer", "f1.standings_unavailable": "Classement indisponible",
+  "f1.subtitle": "Saison 2026 · données: ESPN · appuie sur une course", "f1.no_races": "Aucune course dans cette catégorie",
+  "f1.race_not_found": "Course introuvable", "f1.predict_winner_below": "Pronostique le gagnant ci-dessous ↓", "f1.change_below": "Modifier ci-dessous",
+  "f1.race_results": "Résultats de la course", "f1.pick_leader": "Choisir le leader", "f1.who_wins": "Qui gagne la course?", "f1.driver": "Pilote", "f1.team": "Écurie",
   "league.player_fallback": "Joueur",
   "wc.no_data": "Aucune donnée de tableau CM", "wc.swipe_hint": "Glisse ou utilise les flèches · 3 pts victoire · 1 pt nul",
   "wc.group": "Groupe", "wc.team": "Équipe",
@@ -744,6 +783,8 @@ const es: Translations = {
   "match.save": "Guardar predicción", "match.saving": "Guardando...",
   "match.locked": "🔒 Predicción guardada — no se puede cambiar",
   "match.once_only": "Una vez guardada, la predicción no se puede cambiar",
+  "match.volleyball_invalid": "Marcador de voleibol no válido. El ganador debe tener exactamente 3 sets (3:0, 3:1 o 3:2).",
+  "match.volleyball_hint": "Voleibol: introduce sets — 3:0, 3:1, 3:2 (o al revés)",
   "match.predictions_list": "Predicciones de jugadores",
   "match.no_predictions": "Nadie ha predicho aún",
   "match.live_badge": "EN VIVO", "match.predicting_in_league": "Predices en la liga:",
@@ -831,6 +872,12 @@ const es: Translations = {
   "home.check_recent": "Ver últimos pronósticos", "home.pts_total": "pts en total", "home.pts_short": "pts",
   "pred.saved": "✓ ¡Guardado!", "pred.saving": "Guardando...", "pred.pick_driver": "Elige un piloto para pronosticar", "pred.confirm_prefix": "Mi pronóstico:",
   "pred.race_finished": "Carrera finalizada", "pred.race_live": "EN DIRECTO", "pred.your_pick": "Tu pronóstico", "pred.updated": "✓ ¡Actualizado!",
+  "matches.standings": "🏆 Tabla", "matches.no_standings": "Sin datos aún — los resultados aparecen al terminar los partidos",
+  "match.how_to_predict": "¿Cómo pronosticar?",
+  "f1.next": "Siguiente", "f1.click_details": "Toca para ver detalles y pronosticar", "f1.standings_unavailable": "Clasificación no disponible",
+  "f1.subtitle": "Temporada 2026 · datos: ESPN · toca una carrera", "f1.no_races": "Sin carreras en esta categoría",
+  "f1.race_not_found": "Carrera no encontrada", "f1.predict_winner_below": "Pronostica el ganador abajo ↓", "f1.change_below": "Cambiar abajo",
+  "f1.race_results": "Resultados de la carrera", "f1.pick_leader": "Elige al líder", "f1.who_wins": "¿Quién gana la carrera?", "f1.driver": "Piloto", "f1.team": "Equipo",
   "league.player_fallback": "Jugador",
   "wc.no_data": "Sin datos de tabla del Mundial", "wc.swipe_hint": "Desliza o usa las flechas · 3 pts victoria · 1 pt empate",
   "wc.group": "Grupo", "wc.team": "Equipo",
@@ -884,6 +931,8 @@ const it: Translations = {
   "match.save": "Salva pronostico", "match.saving": "Salvataggio...",
   "match.locked": "🔒 Pronostico salvato — non modificabile",
   "match.once_only": "Una volta salvato, il pronostico non può essere modificato",
+  "match.volleyball_invalid": "Punteggio pallavolo non valido. Il vincitore deve avere esattamente 3 set (3:0, 3:1 o 3:2).",
+  "match.volleyball_hint": "Pallavolo: inserisci i set — 3:0, 3:1, 3:2 (o viceversa)",
   "match.predictions_list": "Pronostici dei giocatori",
   "match.no_predictions": "Nessun pronostico ancora",
   "match.live_badge": "IN DIRETTA", "match.predicting_in_league": "Pronostichi nella lega:",
@@ -971,6 +1020,12 @@ const it: Translations = {
   "home.check_recent": "Vedi ultimi pronostici", "home.pts_total": "pti in totale", "home.pts_short": "pti",
   "pred.saved": "✓ Salvato!", "pred.saving": "Salvataggio...", "pred.pick_driver": "Scegli un pilota per pronosticare", "pred.confirm_prefix": "Pronostico:",
   "pred.race_finished": "Gara terminata", "pred.race_live": "IN DIRETTA", "pred.your_pick": "Il tuo pronostico", "pred.updated": "✓ Aggiornato!",
+  "matches.standings": "🏆 Classifica", "matches.no_standings": "Nessun dato ancora — i risultati appaiono dopo le partite",
+  "match.how_to_predict": "Come pronosticare?",
+  "f1.next": "Prossimo", "f1.click_details": "Tocca per dettagli e pronostico", "f1.standings_unavailable": "Classifica non disponibile",
+  "f1.subtitle": "Stagione 2026 · dati: ESPN · tocca una gara", "f1.no_races": "Nessuna gara in questa categoria",
+  "f1.race_not_found": "Gara non trovata", "f1.predict_winner_below": "Pronostica il vincitore sotto ↓", "f1.change_below": "Modifica sotto",
+  "f1.race_results": "Risultati della gara", "f1.pick_leader": "Scegli il leader", "f1.who_wins": "Chi vince la gara?", "f1.driver": "Pilota", "f1.team": "Squadra",
   "league.player_fallback": "Giocatore",
   "wc.no_data": "Nessun dato tabella Mondiali", "wc.swipe_hint": "Scorri o usa le frecce · 3 pti vittoria · 1 pt pareggio",
   "wc.group": "Gruppo", "wc.team": "Squadra",

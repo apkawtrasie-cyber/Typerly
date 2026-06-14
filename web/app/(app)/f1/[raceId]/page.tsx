@@ -47,8 +47,8 @@ function parseDriversFromStandings(json: any): Driver[] {
   })).filter(d => d.name !== "?");
 }
 
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleString("pl-PL", {
+function fmtDate(iso: string, locale: string) {
+  return new Date(iso).toLocaleString(locale, {
     weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit",
   });
 }
@@ -56,7 +56,7 @@ function fmtDate(iso: string) {
 export default function F1RacePage() {
   const router = useRouter();
   const { raceId } = useParams<{ raceId: string }>();
-  const { t } = useLang();
+  const { t, locale } = useLang();
 
   const [race, setRace] = useState<Race | null>(null);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -155,7 +155,7 @@ export default function F1RacePage() {
           <ArrowLeft size={16} className="text-white/60" />
         </button>
         <p className="text-4xl mb-3">🏎️</p>
-        <p className="text-white/40">Nie znaleziono wyścigu</p>
+        <p className="text-white/40">{t("f1.race_not_found")}</p>
       </div>
     );
   }
@@ -172,7 +172,7 @@ export default function F1RacePage() {
           <ArrowLeft size={16} className="text-white/60" />
         </button>
         <div className="flex-1 min-w-0">
-          <p className="text-white/40 text-xs">🏎️ Formuła 1</p>
+          <p className="text-white/40 text-xs">🏎️ {t("sport.f1")}</p>
           <h1 className="text-white font-black text-xl font-archivo leading-tight truncate">{race.name}</h1>
         </div>
       </div>
@@ -184,10 +184,10 @@ export default function F1RacePage() {
         : "border-[#F5C400]/30 bg-[#F5C400]/[0.05] card-glow-gold"
       }`}>
         <p className="text-white font-black">{race.fullName}</p>
-        <p className="text-white/50 text-sm mt-1">{fmtDate(race.date)}</p>
+        <p className="text-white/50 text-sm mt-1">{fmtDate(race.date, locale)}</p>
         {live && <p className="text-red-400 text-xs font-black mt-2 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />{t("pred.race_live")}</p>}
         {finished && <p className="text-white/30 text-xs mt-2">{t("pred.race_finished")}</p>}
-        {!finished && !live && <p className="text-[#F5C400]/80 text-xs font-semibold mt-2">Typuj zwycięzcę poniżej ↓</p>}
+        {!finished && !live && <p className="text-[#F5C400]/80 text-xs font-semibold mt-2">{t("f1.predict_winner_below")}</p>}
       </div>
 
       {/* Mój obecny typ */}
@@ -199,14 +199,14 @@ export default function F1RacePage() {
             <p className="text-white font-black">{myPrediction}</p>
           </div>
           {saved && <span className="text-green-400 text-xs font-black">{t("pred.updated")}</span>}
-          {!finished && !saved && <p className="text-white/30 text-xs">Zmień poniżej</p>}
+          {!finished && !saved && <p className="text-white/30 text-xs">{t("f1.change_below")}</p>}
         </div>
       )}
 
       {/* Wyniki zakończonego wyścigu */}
       {finished && drivers.length > 0 && (
         <div className="mb-5">
-          <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">Wyniki wyścigu</p>
+          <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{t("f1.race_results")}</p>
           <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl overflow-hidden card-glow">
             {drivers.map((d, i) => (
               <div key={d.order} className={`flex items-center px-4 py-3 gap-3 ${i < drivers.length - 1 ? "border-b border-white/[0.05]" : ""} ${
@@ -233,7 +233,7 @@ export default function F1RacePage() {
       {canPredict && drivers.length > 0 && (
         <div>
           <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">
-            {live ? "Wybierz lidera" : "Kto wygra wyścig?"}
+            {live ? t("f1.pick_leader") : t("f1.who_wins")}
           </p>
           <div className="flex flex-col gap-2 mb-4">
             {drivers.map((d, i) => {

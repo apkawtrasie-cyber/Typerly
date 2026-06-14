@@ -124,6 +124,14 @@ export default function MatchDetailPage() {
     await ensureProfile();
 
     const h = parseInt(predHome), a = parseInt(predAway);
+
+    // Siatkówka: wynik setów musi być poprawny (3:0, 3:1, 3:2 lub odwrotnie)
+    if (isVolleyball && !volleyballScoreValid(h, a)) {
+      setSaveError(t("match.volleyball_invalid"));
+      setSaving(false);
+      return;
+    }
+
     // Tabela predictions nie ma constraintu (user_id, match_id, league_id) — robimy ręcznie: update albo insert.
     // Filtr po league_id zapewnia osobny typ dla każdej zamkniętej grupy.
     let existsQuery = supabase.from("predictions").select("id").eq("user_id", userId).eq("match_id", id);
@@ -172,6 +180,22 @@ export default function MatchDetailPage() {
   const finished = isFinished(match.status);
   const canPredict = !live && !finished && new Date(match.match_time) > new Date();
 
+  // Siatkówka: mecz do 3 wygranych setów. Wynik = liczba setów (max 3 dla zwycięzcy).
+  const isVolleyball = match.sport_type === "volleyball";
+
+  // Ogranicza wpisany wynik dla siatkówki do zakresu 0–3
+  const handleScore = (value: string, setter: (v: string) => void) => {
+    if (isVolleyball && value !== "") {
+      const n = parseInt(value);
+      if (!isNaN(n) && n > 3) { setter("3"); return; }
+    }
+    setter(value);
+  };
+
+  // Czy wynik setów jest poprawny dla siatkówki (3:0/3:1/3:2 lub odwrotnie)
+  const volleyballScoreValid = (h: number, a: number) =>
+    Math.max(h, a) === 3 && Math.min(h, a) >= 0 && Math.min(h, a) <= 2 && h !== a;
+
   return (
     <div className="flex flex-col min-h-screen pb-6 fade-in">
       {/* Header */}
@@ -195,7 +219,7 @@ export default function MatchDetailPage() {
               ) : (
                 <span className="text-white/20 font-black text-2xl">vs</span>
               )}
-              {live && <span className="flex items-center gap-1 text-red-400 text-[10px] font-black mt-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400 pulse-live" />NA ŻYWO</span>}
+              {live && <span className="flex items-center gap-1 text-red-400 text-[10px] font-black mt-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400 pulse-live" />{t("match.live_badge")}</span>}
             </div>
             <div className="flex-1 flex flex-col items-center gap-2">
               <TeamLogo url={match.away_team_logo_url} name={match.away_team_name} />
@@ -236,14 +260,17 @@ export default function MatchDetailPage() {
             <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest">{t("match.your_prediction")}</h3>
             <button onClick={() => setShowInfo(true)} className="flex items-center gap-1.5 bg-white/[0.07] border border-white/[0.12] rounded-xl px-3 py-1.5 active:scale-95 transition">
               <Info size={14} className="text-[#F5C400]" />
-              <span className="text-white text-xs font-bold">Jak typować?</span>
+              <span className="text-white text-xs font-bold">{t("match.how_to_predict")}</span>
             </button>
           </div>
+          {isVolleyball && (
+            <p className="text-[#F5C400]/70 text-[11px] text-center mb-2 font-semibold">{t("match.volleyball_hint")}</p>
+          )}
           <div className="flex items-center gap-3 mb-3">
-            <input value={predHome} onChange={e => setPredHome(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
+            <input value={predHome} onChange={e => handleScore(e.target.value, setPredHome)} type="number" min="0" max={isVolleyball ? 3 : undefined} inputMode="numeric" placeholder="0"
               className="flex-1 min-w-0 bg-[#1e1e1e] border border-white/[0.12] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
             <span className="text-white/20 font-black text-xl flex-shrink-0">:</span>
-            <input value={predAway} onChange={e => setPredAway(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
+            <input value={predAway} onChange={e => handleScore(e.target.value, setPredAway)} type="number" min="0" max={isVolleyball ? 3 : undefined} inputMode="numeric" placeholder="0"
               className="flex-1 min-w-0 bg-[#1e1e1e] border border-white/[0.12] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
           </div>
           <button onClick={submitPrediction} disabled={saving || predHome === "" || predAway === ""}
