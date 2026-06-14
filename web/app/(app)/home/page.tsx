@@ -153,27 +153,25 @@ export default function HomePage() {
         </p>
       </div>
 
-      {/* Baner: Ostatni typ */}
+      {/* Baner: Sprawdź ostatnie typy */}
       {recentPreds.length > 0 && (() => {
         const last = recentPreds[0];
         const b = pointsBadge(last.points_earned ?? 0);
         const totalCalc = recentPreds.reduce((s, p) => s + (p.points_earned ?? 0), 0);
         return (
-          <Link href="/profile" className="block mb-6">
+          <Link href="/ranking" className="block mb-6">
             <div className={`relative overflow-hidden border rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-[0.98] transition-transform ${b?.bg}`}>
-              {/* Ikona */}
               <div className="text-4xl leading-none flex-shrink-0">{b?.icon}</div>
-              {/* Treść */}
               <div className="flex-1 min-w-0">
-                <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-0.5">Ostatni typ</p>
+                <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-0.5">Sprawdź ostatnie typy</p>
                 <p className="text-white font-black text-base leading-tight truncate">
                   {last.match?.home_team_name} – {last.match?.away_team_name}
                 </p>
                 <p className="text-white/40 text-xs font-mono mt-0.5">
-                  {last.predicted_home_score}:{last.predicted_away_score}
-                  {last.match?.home_score != null && <> · <span className="text-white/60">{last.match.home_score}:{last.match.away_score}</span></>}
+                  Typ: {last.predicted_home_score}:{last.predicted_away_score}
+                  {last.match?.home_score != null && <> · wynik: <span className="text-white/60">{last.match.home_score}:{last.match.away_score}</span></>}
                 </p>
-                <p className={`text-sm font-black mt-1.5 ${b?.color}`}>{b?.label} · łącznie {totalCalc} pkt z {recentPreds.length} meczów</p>
+                <p className={`text-sm font-black mt-1 ${b?.color}`}>{b?.label} · {totalCalc} pkt łącznie</p>
               </div>
               <ChevronRight size={16} className="text-white/20 flex-shrink-0" />
             </div>
