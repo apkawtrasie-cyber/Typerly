@@ -113,6 +113,13 @@ export type TranslationKey =
   | "badge.exact_score" | "badge.goal_diff" | "badge.tendency" | "badge.consolation"
   // Tournament rules modal
   | "rules.title" | "rules.close" | "rules.scroll_hint"
+  // Ranking page
+  | "ranking.title" | "ranking.global" | "ranking.my_picks"
+  | "ranking.no_picks" | "ranking.bet_matches" | "ranking.predictions_count"
+  // Prediction status labels
+  | "pred.before_start" | "pred.in_progress" | "pred.pick_label" | "pred.result_label"
+  // Home banner + points
+  | "home.check_recent" | "home.pts_total" | "home.pts_short"
   // Sport names & home chips
   | "sport.all" | "sport.football" | "sport.volleyball" | "sport.handball" | "sport.f1"
   | "home.sport_upcoming" | "home.f1_subtitle"
@@ -258,6 +265,10 @@ const en: Translations = {
   "sport.all": "All", "sport.football": "Football", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formula 1",
   "home.sport_upcoming": "Upcoming matches", "home.f1_subtitle": "2026 Season Calendar",
   "error.save": "Could not save — try again", "error.load": "Could not load data", "error.auth_required": "Sign in to make predictions",
+  "ranking.title": "Ranking", "ranking.global": "🌍 Global", "ranking.my_picks": "📋 My picks",
+  "ranking.no_picks": "No picks yet", "ranking.bet_matches": "Bet on matches", "ranking.predictions_count": "picks",
+  "pred.before_start": "before start", "pred.in_progress": "in progress", "pred.pick_label": "Pick:", "pred.result_label": "result:",
+  "home.check_recent": "Check recent picks", "home.pts_total": "pts total", "home.pts_short": "pts",
   "pred.saved": "✓ Saved!", "pred.saving": "Saving...", "pred.pick_driver": "Pick a driver to make your prediction", "pred.confirm_prefix": "My pick:",
   "pred.race_finished": "Race finished", "pred.race_live": "LIVE NOW", "pred.your_pick": "Your pick", "pred.updated": "✓ Updated!",
   "league.player_fallback": "Player",
@@ -394,6 +405,10 @@ const pl: Translations = {
   "sport.all": "Wszystkie", "sport.football": "Piłka nożna", "sport.volleyball": "Siatkówka", "sport.handball": "Piłka ręczna", "sport.f1": "Formuła 1",
   "home.sport_upcoming": "Nadchodzące mecze", "home.f1_subtitle": "Kalendarz sezonu 2026",
   "error.save": "Nie udało się zapisać — spróbuj ponownie", "error.load": "Nie udało się pobrać danych", "error.auth_required": "Zaloguj się żeby typować",
+  "ranking.title": "Ranking", "ranking.global": "🌍 Globalny", "ranking.my_picks": "📋 Moje typy",
+  "ranking.no_picks": "Brak typów", "ranking.bet_matches": "Obstaw mecze", "ranking.predictions_count": "typów",
+  "pred.before_start": "przed startem", "pred.in_progress": "w trakcie", "pred.pick_label": "Typ:", "pred.result_label": "wynik:",
+  "home.check_recent": "Sprawdź ostatnie typy", "home.pts_total": "pkt łącznie", "home.pts_short": "pkt",
   "pred.saved": "✓ Zapisano!", "pred.saving": "Zapisuję...", "pred.pick_driver": "Wybierz kierowcę żeby postawić typ", "pred.confirm_prefix": "Typuję:",
   "pred.race_finished": "Wyścig zakończony", "pred.race_live": "TRWA NA ŻYWO", "pred.your_pick": "Twój typ", "pred.updated": "✓ Zaktualizowano!",
   "league.player_fallback": "Gracz",
@@ -530,6 +545,10 @@ const de: Translations = {
   "sport.all": "Alle", "sport.football": "Fußball", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formel 1",
   "home.sport_upcoming": "Nächste Spiele", "home.f1_subtitle": "Kalender Saison 2026",
   "error.save": "Speichern fehlgeschlagen — nochmal versuchen", "error.load": "Daten konnten nicht geladen werden", "error.auth_required": "Einloggen zum Tippen",
+  "ranking.title": "Rangliste", "ranking.global": "🌍 Global", "ranking.my_picks": "📋 Meine Tipps",
+  "ranking.no_picks": "Noch keine Tipps", "ranking.bet_matches": "Spiele tippen", "ranking.predictions_count": "Tipps",
+  "pred.before_start": "vor dem Start", "pred.in_progress": "läuft", "pred.pick_label": "Tipp:", "pred.result_label": "Ergebnis:",
+  "home.check_recent": "Letzte Tipps prüfen", "home.pts_total": "Pkt gesamt", "home.pts_short": "Pkt",
   "pred.saved": "✓ Gespeichert!", "pred.saving": "Speichert...", "pred.pick_driver": "Fahrer wählen um zu tippen", "pred.confirm_prefix": "Ich tippe:",
   "pred.race_finished": "Rennen beendet", "pred.race_live": "LIVE JETZT", "pred.your_pick": "Dein Tipp", "pred.updated": "✓ Aktualisiert!",
   "league.player_fallback": "Spieler",
@@ -666,6 +685,10 @@ const fr: Translations = {
   "sport.all": "Tout", "sport.football": "Football", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formule 1",
   "home.sport_upcoming": "Prochains matchs", "home.f1_subtitle": "Calendrier saison 2026",
   "error.save": "Sauvegarde échouée — réessaie", "error.load": "Impossible de charger les données", "error.auth_required": "Connecte-toi pour pronostiquer",
+  "ranking.title": "Classement", "ranking.global": "🌍 Global", "ranking.my_picks": "📋 Mes pronostics",
+  "ranking.no_picks": "Aucun pronostic", "ranking.bet_matches": "Parier sur des matchs", "ranking.predictions_count": "pronostics",
+  "pred.before_start": "avant le début", "pred.in_progress": "en cours", "pred.pick_label": "Pronostic:", "pred.result_label": "résultat:",
+  "home.check_recent": "Voir derniers pronostics", "home.pts_total": "pts au total", "home.pts_short": "pts",
   "pred.saved": "✓ Sauvegardé!", "pred.saving": "Sauvegarde...", "pred.pick_driver": "Choisir un pilote pour pronostiquer", "pred.confirm_prefix": "Je pronostique:",
   "pred.race_finished": "Course terminée", "pred.race_live": "EN DIRECT", "pred.your_pick": "Ton pronostic", "pred.updated": "✓ Mis à jour!",
   "league.player_fallback": "Joueur",
@@ -802,6 +825,10 @@ const es: Translations = {
   "sport.all": "Todo", "sport.football": "Fútbol", "sport.volleyball": "Voleibol", "sport.handball": "Balonmano", "sport.f1": "Fórmula 1",
   "home.sport_upcoming": "Próximos partidos", "home.f1_subtitle": "Calendario temporada 2026",
   "error.save": "No se pudo guardar — inténtalo de nuevo", "error.load": "No se pudieron cargar los datos", "error.auth_required": "Inicia sesión para pronosticar",
+  "ranking.title": "Clasificación", "ranking.global": "🌍 Global", "ranking.my_picks": "📋 Mis pronósticos",
+  "ranking.no_picks": "Sin pronósticos", "ranking.bet_matches": "Apostar en partidos", "ranking.predictions_count": "pronósticos",
+  "pred.before_start": "antes del inicio", "pred.in_progress": "en curso", "pred.pick_label": "Pronóstico:", "pred.result_label": "resultado:",
+  "home.check_recent": "Ver últimos pronósticos", "home.pts_total": "pts en total", "home.pts_short": "pts",
   "pred.saved": "✓ ¡Guardado!", "pred.saving": "Guardando...", "pred.pick_driver": "Elige un piloto para pronosticar", "pred.confirm_prefix": "Mi pronóstico:",
   "pred.race_finished": "Carrera finalizada", "pred.race_live": "EN DIRECTO", "pred.your_pick": "Tu pronóstico", "pred.updated": "✓ ¡Actualizado!",
   "league.player_fallback": "Jugador",
@@ -938,6 +965,10 @@ const it: Translations = {
   "sport.all": "Tutti", "sport.football": "Calcio", "sport.volleyball": "Pallavolo", "sport.handball": "Pallamano", "sport.f1": "Formula 1",
   "home.sport_upcoming": "Prossime partite", "home.f1_subtitle": "Calendario stagione 2026",
   "error.save": "Salvataggio fallito — riprova", "error.load": "Impossibile caricare i dati", "error.auth_required": "Accedi per pronosticare",
+  "ranking.title": "Classifica", "ranking.global": "🌍 Globale", "ranking.my_picks": "📋 I miei pronostici",
+  "ranking.no_picks": "Nessun pronostico", "ranking.bet_matches": "Scommetti sulle partite", "ranking.predictions_count": "pronostici",
+  "pred.before_start": "prima dell'inizio", "pred.in_progress": "in corso", "pred.pick_label": "Pronostico:", "pred.result_label": "risultato:",
+  "home.check_recent": "Vedi ultimi pronostici", "home.pts_total": "pti in totale", "home.pts_short": "pti",
   "pred.saved": "✓ Salvato!", "pred.saving": "Salvataggio...", "pred.pick_driver": "Scegli un pilota per pronosticare", "pred.confirm_prefix": "Pronostico:",
   "pred.race_finished": "Gara terminata", "pred.race_live": "IN DIRETTA", "pred.your_pick": "Il tuo pronostico", "pred.updated": "✓ Aggiornato!",
   "league.player_fallback": "Giocatore",

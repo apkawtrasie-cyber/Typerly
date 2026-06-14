@@ -202,15 +202,15 @@ export default function HomePage() {
                 style={{ boxShadow: "inset 0 0 0 1px rgba(245,196,0,0.2)", animation: "pulse-live 2s ease-in-out infinite" }} />
               {/* Tekst */}
               <div className="flex-1 min-w-0">
-                <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-0.5">Sprawdź ostatnie typy</p>
+                <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-0.5">{t("home.check_recent")}</p>
                 <p className="text-white font-black text-base leading-tight truncate">
                   {last.match?.home_team_name} – {last.match?.away_team_name}
                 </p>
                 <p className="text-white/40 text-xs font-mono mt-0.5">
-                  Typ: {last.predicted_home_score}:{last.predicted_away_score}
-                  {last.match?.home_score != null && <> · wynik: <span className="text-white/60">{last.match.home_score}:{last.match.away_score}</span></>}
+                  {t("pred.pick_label")} {last.predicted_home_score}:{last.predicted_away_score}
+                  {last.match?.home_score != null && <> · {t("pred.result_label")} <span className="text-white/60">{last.match.home_score}:{last.match.away_score}</span></>}
                 </p>
-                <p className={`text-sm font-black mt-1 ${hasPts ? "text-[#F5C400]" : "text-white/30"}`}>{totalCalc} pkt łącznie</p>
+                <p className={`text-sm font-black mt-1 ${hasPts ? "text-[#F5C400]" : "text-white/30"}`}>{totalCalc} {t("home.pts_total")}</p>
               </div>
               {/* Ikona po prawej — puchar lub gwiazdka */}
               <div className="flex-shrink-0 text-5xl leading-none">

@@ -3,9 +3,10 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import confetti from "canvas-confetti";
-import { ArrowLeft, Trophy, Star, Crown } from "lucide-react";
+import { ArrowLeft, Crown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useLang } from "@/contexts/LangContext";
 
 type GlobalEntry = { user_id: string; username: string; total_points: number; predictions_count: number };
 type PredSummary = { points_earned: number; is_calculated: boolean; match_home: string; match_away: string; predicted_h: number; predicted_a: number; real_h: number | null; real_a: number | null; match_time: string | null };
@@ -17,14 +18,15 @@ function medal(pos: number) {
   return null;
 }
 
-function pointIcon(pts: number) {
-  if (pts >= 3) return { icon: "⭐", color: "text-yellow-300", label: `${pts} pkt` };
-  if (pts >= 1) return { icon: "🏆", color: "text-orange-300", label: `${pts} pkt` };
-  return { icon: null, color: "text-white/30", label: "0 pkt" };
+function pointIcon(pts: number, ptsShort: string) {
+  if (pts >= 3) return { icon: "⭐", color: "text-yellow-300", label: `${pts} ${ptsShort}` };
+  if (pts >= 1) return { icon: "🏆", color: "text-orange-300", label: `${pts} ${ptsShort}` };
+  return { icon: null, color: "text-white/30", label: `0 ${ptsShort}` };
 }
 
 export default function RankingPage() {
   const router = useRouter();
+  const { t, locale } = useLang();
   const [ranking, setRanking] = useState<GlobalEntry[]>([]);
   const [myId, setMyId] = useState<string | null>(null);
   const [myPreds, setMyPreds] = useState<PredSummary[]>([]);
@@ -140,21 +142,21 @@ export default function RankingPage() {
         <button onClick={() => router.back()} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center">
           <ArrowLeft size={16} className="text-white/60" />
         </button>
-        <h1 className="text-white font-black text-2xl font-archivo flex-1">Ranking</h1>
+        <h1 className="text-white font-black text-2xl font-archivo flex-1">{t("ranking.title")}</h1>
         {myEntry && (
           <div className="bg-[#F5C400]/10 border border-[#F5C400]/30 rounded-xl px-3 py-1.5 text-right">
             <p className="text-[#F5C400] font-black text-sm">#{myPosition + 1}</p>
-            <p className="text-white/40 text-[10px]">{myEntry.total_points} pkt</p>
+            <p className="text-white/40 text-[10px]">{myEntry.total_points} {t("home.pts_short")}</p>
           </div>
         )}
       </div>
 
       {/* Tabs */}
       <div className="flex bg-[#1e1e1e] border border-white/[0.12] rounded-2xl p-1 mb-5">
-        {(["global", "moje"] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 py-2 rounded-xl text-sm font-black transition ${tab === t ? "bg-[#F5C400] text-black" : "text-white/40"}`}>
-            {t === "global" ? "🌍 Globalny" : "📋 Moje typy"}
+        {(["global", "moje"] as const).map(tabKey => (
+          <button key={tabKey} onClick={() => setTab(tabKey)}
+            className={`flex-1 py-2 rounded-xl text-sm font-black transition ${tab === tabKey ? "bg-[#F5C400] text-black" : "text-white/40"}`}>
+            {tabKey === "global" ? t("ranking.global") : t("ranking.my_picks")}
           </button>
         ))}
       </div>
@@ -204,9 +206,9 @@ export default function RankingPage() {
                       <p className={`font-bold text-sm ${isMe ? "text-[#F5C400]" : "text-white"} truncate`}>{r.username}</p>
                       {isMe && <Crown size={11} className="text-[#F5C400] flex-shrink-0" />}
                     </div>
-                    <p className="text-white/30 text-[10px]">{r.predictions_count} typów</p>
+                    <p className="text-white/30 text-[10px]">{r.predictions_count} {t("ranking.predictions_count")}</p>
                   </div>
-                  <span className={`font-black text-sm ${isMe ? "text-[#F5C400]" : "text-white/70"}`}>{r.total_points} pkt</span>
+                  <span className={`font-black text-sm ${isMe ? "text-[#F5C400]" : "text-white/70"}`}>{r.total_points} {t("home.pts_short")}</span>
                 </div>
               );
             })}
@@ -217,9 +219,9 @@ export default function RankingPage() {
         myPreds.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-5xl mb-3">🎯</p>
-            <p className="text-white/40 font-bold">Brak typów</p>
+            <p className="text-white/40 font-bold">{t("ranking.no_picks")}</p>
             <Link href="/matches" className="inline-block mt-4 bg-[#F5C400] text-black font-black px-6 py-3 rounded-xl">
-              Obstaw mecze
+              {t("ranking.bet_matches")}
             </Link>
           </div>
         ) : (
@@ -229,11 +231,11 @@ export default function RankingPage() {
               const calculated = p.is_calculated;
               let pi: { icon: string | null; color: string; label: string };
               if (!started) {
-                pi = { icon: "🔒", color: "text-white/20", label: "przed startem" };
+                pi = { icon: "🔒", color: "text-white/20", label: t("pred.before_start") };
               } else if (!calculated) {
-                pi = { icon: "⏳", color: "text-white/30", label: "w trakcie" };
+                pi = { icon: "⏳", color: "text-white/30", label: t("pred.in_progress") };
               } else {
-                pi = pointIcon(p.points_earned);
+                pi = pointIcon(p.points_earned, t("home.pts_short"));
               }
               return (
                 <div key={i} className={`border rounded-2xl px-4 py-3 flex items-center gap-3 ${
@@ -245,9 +247,9 @@ export default function RankingPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-bold text-sm truncate">{p.match_home} – {p.match_away}</p>
                     <p className="text-white/40 text-xs font-mono mt-0.5">
-                      Typ: <span className="text-white/70">{p.predicted_h}:{p.predicted_a}</span>
-                      {started && p.real_h != null && <span className="text-white/30"> · wynik: {p.real_h}:{p.real_a}</span>}
-                      {!started && p.match_time && <span className="text-white/20"> · {new Date(p.match_time).toLocaleString("pl-PL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>}
+                      {t("pred.pick_label")} <span className="text-white/70">{p.predicted_h}:{p.predicted_a}</span>
+                      {started && p.real_h != null && <span className="text-white/30"> · {t("pred.result_label")} {p.real_h}:{p.real_a}</span>}
+                      {!started && p.match_time && <span className="text-white/20"> · {new Date(p.match_time).toLocaleString(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>}
                     </p>
                   </div>
                   <p className={`font-black text-sm flex-shrink-0 ${pi.color}`}>{pi.label}</p>
