@@ -177,10 +177,14 @@ export default function HomePage() {
 
   return (
     <div className="px-4 pt-6 pb-6 fade-in">
+      {/* Ambient glow w tle */}
+      <div className="fixed inset-0 pointer-events-none z-0"
+        style={{ background: "radial-gradient(ellipse 80% 40% at 50% -10%, rgba(245,196,0,0.07) 0%, transparent 70%)" }} />
+
       {/* Header */}
-      <div className="flex items-start justify-between mb-5">
+      <div className="relative flex items-start justify-between mb-5">
         <div>
-          <p className="text-white/30 text-sm">{greeting},</p>
+          <p className="text-white/40 text-sm">{greeting},</p>
           <h1 className="text-white font-black text-2xl font-archivo">{username || t("home.player_fallback")} 👋</h1>
         </div>
         <Link href="/profile">
@@ -226,11 +230,11 @@ export default function HomePage() {
 
       {/* Wyszukiwarka */}
       <div className="relative mb-6">
-        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />
+        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
         <input
           value={search} onChange={e => setSearch(e.target.value)}
           placeholder={t("home.search_placeholder")}
-          className="w-full bg-[#111] border border-white/[0.06] rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/30 transition"
+          className="w-full bg-[#181818] border border-white/[0.10] rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F5C400]/40 transition"
         />
       </div>
 
@@ -257,7 +261,7 @@ export default function HomePage() {
             { href: "/handball", emoji: "🤾", label: "Piłka ręczna", sub: "Nadchodzące mecze" },
           ].map(({ href, emoji, label, sub }) => (
             <Link key={href} href={href} className="flex-shrink-0 w-40">
-              <div className="flex flex-col gap-2 rounded-2xl border border-white/[0.06] bg-[#111] px-4 py-3 active:scale-[0.97] transition-transform h-full">
+              <div className="flex flex-col gap-2 rounded-2xl border border-white/[0.10] bg-[#181818] px-4 py-3 active:scale-[0.97] transition-transform h-full card-glow">
                 <span className="text-3xl leading-none">{emoji}</span>
                 <div>
                   <p className="text-white font-black text-sm leading-tight">{label}</p>
@@ -334,15 +338,15 @@ export default function HomePage() {
           {ranking.length > 0 && (
             <div className="mb-6">
               <SectionHeader title={t("home.week_ranking")} icon={<TrendingUp size={14} className="text-[#F5C400]" />} />
-              <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+              <div className="bg-[#181818] border border-white/[0.10] rounded-2xl overflow-hidden card-glow">
                 {ranking.slice(0, 5).map((r, i) => (
-                  <div key={r.user_id} className={`flex items-center px-4 py-3 gap-3 ${i < ranking.length - 1 ? "border-b border-white/[0.04]" : ""}`}>
-                    <span className={`w-7 text-center font-black text-sm ${i === 0 ? "text-[#F5C400]" : i === 1 ? "text-white/50" : i === 2 ? "text-orange-400/70" : "text-white/20"}`}>
+                  <div key={r.user_id} className={`flex items-center px-4 py-3 gap-3 ${i < ranking.length - 1 ? "border-b border-white/[0.06]" : ""}`}>
+                    <span className={`w-7 text-center font-black text-sm ${i === 0 ? "text-[#F5C400]" : i === 1 ? "text-white/60" : i === 2 ? "text-orange-400/80" : "text-white/30"}`}>
                       {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`}
                     </span>
                     <div className="flex-1">
                       <p className="text-white font-semibold text-sm">{r.username}</p>
-                      <p className="text-white/30 text-[10px]">{r.predictions_count} {t("home.predictions_short")}</p>
+                      <p className="text-white/40 text-[10px]">{r.predictions_count} {t("home.predictions_short")}</p>
                     </div>
                     <span className="text-[#F5C400] font-black">{r.total_points} {t("home.points")}</span>
                   </div>

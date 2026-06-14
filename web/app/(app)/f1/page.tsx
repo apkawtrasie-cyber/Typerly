@@ -1,21 +1,22 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
-import { Flag, Clock, Trophy, Info } from "lucide-react";
+import { Flag, Clock, ArrowLeft, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { useRouter } from "next/navigation";
 import SportInfoModal from "@/components/SportInfoModal";
 
 const ESPN_F1 = "https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard?dates=2026";
 const ESPN_F1_STANDINGS = "https://site.api.espn.com/apis/v2/sports/racing/f1/standings";
 
-type Driver = { name: string; flag: string | null; order: number };
+type Driver = { name: string; flag: string | null; order: number; team?: string };
 type Race = {
   id: string;
   name: string;
+  fullName: string;
   date: string;
   state: "pre" | "in" | "post";
   completed: boolean;
-  statusLabel: string;
-  podium: Driver[];
+  allDrivers: Driver[];
 };
 
 type StandingEntry = {
@@ -32,23 +33,23 @@ function parseRaces(json: any): Race[] {
     const comp = e?.competitions?.[0] ?? {};
     const type = comp?.status?.type ?? {};
     const competitors: any[] = comp?.competitors ?? [];
-    const podium: Driver[] = competitors
+    const allDrivers: Driver[] = competitors
       .filter((c) => typeof c.order === "number")
       .sort((a, b) => a.order - b.order)
-      .slice(0, 3)
       .map((c) => ({
         name: c?.athlete?.displayName ?? "?",
         flag: c?.athlete?.flag?.href ?? null,
         order: c.order,
+        team: c?.team?.shortDisplayName ?? c?.team?.displayName ?? undefined,
       }));
     return {
       id: String(e.id),
       name: e.shortName ?? e.name ?? "Grand Prix",
+      fullName: e.name ?? e.shortName ?? "Grand Prix",
       date: e.date,
       state: (type.state ?? "pre") as Race["state"],
       completed: !!type.completed,
-      statusLabel: type.description ?? "",
-      podium,
+      allDrivers,
     };
   });
 }
@@ -59,17 +60,17 @@ function parseStandings(json: any): StandingEntry[] {
     const stats: any[] = e?.stats ?? [];
     const pts = stats.find((s: any) => s.name === "points" || s.abbreviation === "PTS");
     return {
-      pos: e?.type === "athlete" ? (e?.athlete?.rank ?? i + 1) : i + 1,
+      pos: i + 1,
       name: e?.athlete?.displayName ?? e?.team?.displayName ?? "?",
       team: e?.team?.shortDisplayName ?? "",
       flag: e?.athlete?.flag?.href ?? null,
       points: pts ? Number(pts.value) : 0,
     };
-  }).sort((a, b) => a.pos - b.pos);
+  });
 }
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleString("pl-PL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleString("pl-PL", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 }
 
 const MEDAL = ["🥇", "🥈", "🥉"];
@@ -81,36 +82,84 @@ const TABS = [
 ];
 
 function RaceCard({ r, next }: { r: Race; next: boolean }) {
+  const [expanded, setExpanded] = useState(false);
   const finished = r.state === "post";
   const live = r.state === "in";
+  const podium = r.allDrivers.slice(0, 3);
+  const rest = r.allDrivers.slice(3);
+
   return (
-    <div className={`rounded-2xl border p-4 ${
-      live ? "border-red-500/40 bg-red-500/[0.06]" :
-      next ? "border-[#F5C400]/40 bg-[#F5C400]/[0.06]" :
-      "border-white/[0.06] bg-[#111]"
+    <div className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+      live ? "border-red-500/40 bg-red-500/[0.06] card-glow-live" :
+      next ? "border-[#F5C400]/40 bg-[#F5C400]/[0.06] card-glow-gold" :
+      "border-white/[0.06] bg-[#111] card-glow"
     }`}>
-      <div className="flex items-start justify-between gap-3 mb-1">
-        <div className="flex items-center gap-2 min-w-0">
-          <Flag size={14} className={live ? "text-red-400" : next ? "text-[#F5C400]" : "text-white/30"} />
-          <p className="text-white font-black text-sm truncate">{r.name}</p>
+      {/* Nagłówek — klikalny żeby rozwinąć */}
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="w-full text-left p-4 active:bg-white/[0.03] transition"
+      >
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <Flag size={14} className={live ? "text-red-400" : next ? "text-[#F5C400]" : "text-white/30"} />
+            <p className="text-white font-black text-sm truncate">{r.name}</p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {live && <span className="flex items-center gap-1 text-red-400 text-[10px] font-black"><span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />NA ŻYWO</span>}
+            {next && !live && <span className="text-[#F5C400] text-[10px] font-black uppercase tracking-wide">Następny</span>}
+            {(finished || live) && (
+              expanded ? <ChevronUp size={14} className="text-white/30" /> : <ChevronDown size={14} className="text-white/30" />
+            )}
+          </div>
         </div>
-        {live && <span className="flex-shrink-0 flex items-center gap-1 text-red-400 text-[10px] font-black"><span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />NA ŻYWO</span>}
-        {next && !live && <span className="flex-shrink-0 text-[#F5C400] text-[10px] font-black uppercase tracking-wide">Następny</span>}
-      </div>
-      <p className="text-white/40 text-xs flex items-center gap-1.5 mb-2"><Clock size={11} /> {fmtDate(r.date)}</p>
-      {finished && r.podium.length > 0 ? (
-        <div className="flex flex-col gap-1.5 mt-3">
-          {r.podium.map((d) => (
-            <div key={d.order} className="flex items-center gap-2">
-              <span className="text-base leading-none w-5">{MEDAL[d.order - 1]}</span>
-              {d.flag && <img src={d.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm" />}
-              <span className="text-white/90 text-sm font-semibold">{d.name}</span>
-            </div>
-          ))}
+        <p className="text-white/40 text-xs flex items-center gap-1.5"><Clock size={11} /> {fmtDate(r.date)}</p>
+
+        {/* Podium — zawsze widoczne gdy zakończony */}
+        {finished && podium.length > 0 && (
+          <div className="flex gap-3 mt-3">
+            {podium.map((d) => (
+              <div key={d.order} className="flex items-center gap-1.5">
+                <span className="text-base leading-none">{MEDAL[d.order - 1]}</span>
+                {d.flag && <img src={d.flag} alt="" className="w-4 h-3 object-cover rounded-sm" />}
+                <span className="text-white/80 text-xs font-semibold truncate max-w-[70px]">{d.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </button>
+
+      {/* Rozwinięte szczegóły */}
+      {expanded && (finished || live) && (
+        <div className="border-t border-white/[0.06] px-4 pb-4 pt-3">
+          <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-3">
+            {live ? "Aktualna kolejność" : "Pełne wyniki"}
+          </p>
+          <div className="flex flex-col gap-1">
+            {r.allDrivers.map((d) => (
+              <div key={d.order} className="flex items-center gap-2 py-1">
+                <span className={`w-6 text-center font-black text-xs tabular-nums flex-shrink-0 ${
+                  d.order === 1 ? "text-[#F5C400]" : d.order === 2 ? "text-white/50" : d.order === 3 ? "text-orange-400/70" : "text-white/25"
+                }`}>
+                  {d.order <= 3 ? MEDAL[d.order - 1] : d.order}
+                </span>
+                {d.flag
+                  ? <img src={d.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" />
+                  : <span className="w-5 flex-shrink-0" />
+                }
+                <span className="text-white text-xs font-semibold flex-1 truncate">{d.name}</span>
+                {d.team && <span className="text-white/25 text-[10px] truncate max-w-[80px]">{d.team}</span>}
+              </div>
+            ))}
+          </div>
         </div>
-      ) : finished ? (
-        <p className="text-white/30 text-xs mt-2">Wyniki niedostępne</p>
-      ) : null}
+      )}
+
+      {/* Nadchodzący — rozwinięte info */}
+      {expanded && !finished && !live && (
+        <div className="border-t border-white/[0.06] px-4 pb-4 pt-3">
+          <p className="text-white/30 text-xs text-center py-2">Wyścig jeszcze się nie odbył — wyniki pojawią się po zakończeniu</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -125,11 +174,11 @@ function StandingsTable({ entries }: { entries: StandingEntry[] }) {
     );
   }
   return (
-    <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+    <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden card-glow">
       <div className="flex items-center px-3 py-2 text-white/30 text-[10px] font-bold uppercase border-b border-white/[0.04]">
         <span className="w-7 text-center">#</span>
         <span className="flex-1 pl-1">Kierowca</span>
-        <span className="w-20 text-right text-white/20">Zespół</span>
+        <span className="w-24 text-right text-white/20 pr-2">Zespół</span>
         <span className="w-12 text-center text-[#F5C400]">PKT</span>
       </div>
       {entries.map((e, i) => (
@@ -152,6 +201,7 @@ function StandingsTable({ entries }: { entries: StandingEntry[] }) {
 }
 
 export default function F1Page() {
+  const router = useRouter();
   const [races, setRaces] = useState<Race[]>([]);
   const [standings, setStandings] = useState<StandingEntry[]>([]);
   const [tab, setTab] = useState("upcoming");
@@ -201,13 +251,16 @@ export default function F1Page() {
 
   return (
     <div className="px-4 pt-6 pb-nav fade-in">
-      <div className="flex items-center justify-between mb-1">
-        <h1 className="text-white font-black text-2xl font-archivo">🏎️ Formuła 1</h1>
-        <button onClick={() => setShowInfo(true)} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition">
+      <div className="flex items-center gap-3 mb-1">
+        <button onClick={() => router.back()} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition flex-shrink-0">
+          <ArrowLeft size={16} className="text-white/60" />
+        </button>
+        <h1 className="text-white font-black text-2xl font-archivo flex-1">🏎️ Formuła 1</h1>
+        <button onClick={() => setShowInfo(true)} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition flex-shrink-0">
           <Info size={18} className="text-white/40" />
         </button>
       </div>
-      <p className="text-white/30 text-xs mb-5">Sezon 2026 · dane: ESPN</p>
+      <p className="text-white/30 text-xs mb-5 pl-12">Sezon 2026 · dane: ESPN · kliknij wyścig po szczegóły</p>
       {showInfo && <SportInfoModal sport="f1" onClose={() => setShowInfo(false)} />}
 
       <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">

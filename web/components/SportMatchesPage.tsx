@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Info } from "lucide-react";
+import { Info, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { supabase, Match, isLive, isFinished } from "@/lib/supabase";
 import MatchCard from "@/components/MatchCard";
 import SportInfoModal from "@/components/SportInfoModal";
@@ -121,6 +122,7 @@ interface Props {
 }
 
 export default function SportMatchesPage({ sportType, title, emoji }: Props) {
+  const router = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
   const [tab, setTab] = useState("upcoming");
   const [loading, setLoading] = useState(true);
@@ -161,9 +163,12 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
 
   return (
     <div className="px-4 pt-6 pb-6 fade-in">
-      <div className="flex items-center justify-between mb-5">
-        <h1 className="text-white font-black text-2xl font-archivo">{emoji} {title}</h1>
-        <button onClick={() => setShowInfo(true)} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition">
+      <div className="flex items-center gap-3 mb-5">
+        <button onClick={() => router.back()} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition flex-shrink-0">
+          <ArrowLeft size={16} className="text-white/60" />
+        </button>
+        <h1 className="text-white font-black text-2xl font-archivo flex-1">{emoji} {title}</h1>
+        <button onClick={() => setShowInfo(true)} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition flex-shrink-0">
           <Info size={18} className="text-white/40" />
         </button>
       </div>
