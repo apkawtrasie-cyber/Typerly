@@ -57,7 +57,7 @@ export default function MatchDetailPage() {
     if (localStorage.getItem(overlayKey(uid, m.id))) return;
 
     const points = own.points_earned ?? calculatePoints(
-      own.predicted_home_score, own.predicted_away_score, m.home_score, m.away_score,
+      own.predicted_home_score, own.predicted_away_score, m.home_score, m.away_score, m.sport_type,
     );
 
     // Przyznaj odznakę w bazie (wygrana LUB pocieszenia) — raz na odznakę dzięki unique(user_id, badge_id)

@@ -40,21 +40,14 @@ function isRealMatch(m: Match): boolean {
   return !!h && !!a && h !== "unknown" && a !== "unknown" && h !== "tbd" && a !== "tbd";
 }
 
-// Etykiety i ikony rozgrywek/dyscyplin (pole sport_type w bazie trzyma nazwy
-// rozgrywek). Pasek buduje się dynamicznie — nowe wartości pojawią się same.
-const SPORT_META: Record<string, { label: string; icon: string }> = {
-  football:            { label: "Piłka nożna",       icon: "⚽" },
-  "fifa world cup":    { label: "Mistrzostwa Świata", icon: "🏆" },
-  "copa libertadores": { label: "Copa Libertadores", icon: "🏆" },
-  basketball:          { label: "Koszykówka",        icon: "🏀" },
-  volleyball:          { label: "Siatkówka",         icon: "🏐" },
-  handball:            { label: "Piłka ręczna",       icon: "🤾" },
-  tennis:              { label: "Tenis",             icon: "🎾" },
-  hockey:              { label: "Hokej",             icon: "🏒" },
+const SPORT_ICONS: Record<string, string> = {
+  football: "⚽", "fifa world cup": "🏆", "copa libertadores": "🏆",
+  basketball: "🏀", volleyball: "🏐", handball: "🤾", tennis: "🎾", hockey: "🏒",
 };
-function sportMeta(s: string) {
-  return SPORT_META[s.toLowerCase()] ?? { label: s.charAt(0).toUpperCase() + s.slice(1), icon: "🏆" };
-}
+// translatable sport names (keyed sport_type → translation key)
+const SPORT_KEY_MAP: Record<string, "sport.football" | "sport.volleyball" | "sport.handball"> = {
+  football: "sport.football", volleyball: "sport.volleyball", handball: "sport.handball",
+};
 
 function pointsBadge(pts: number | null) {
   if (pts === null || pts === undefined) return null;
@@ -256,9 +249,9 @@ export default function HomePage() {
       {!search && (
         <div className="flex gap-3 mb-6 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
           {[
-            { href: "/f1", emoji: "🏎️", label: "Formuła 1", sub: "Kalendarz sezonu 2026" },
-            { href: "/volleyball", emoji: "🏐", label: "Siatkówka", sub: "Nadchodzące mecze" },
-            { href: "/handball", emoji: "🤾", label: "Piłka ręczna", sub: "Nadchodzące mecze" },
+            { href: "/f1", emoji: "🏎️", label: t("sport.f1"), sub: t("home.f1_subtitle") },
+            { href: "/volleyball", emoji: "🏐", label: t("sport.volleyball"), sub: t("home.sport_upcoming") },
+            { href: "/handball", emoji: "🤾", label: t("sport.handball"), sub: t("home.sport_upcoming") },
           ].map(({ href, emoji, label, sub }) => (
             <Link key={href} href={href} className="flex-shrink-0 w-40">
               <div className="flex flex-col gap-2 rounded-2xl border border-white/[0.10] bg-[#1e1e1e] px-4 py-3 active:scale-[0.97] transition-transform h-full card-glow">
@@ -280,16 +273,19 @@ export default function HomePage() {
             className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-all ${
               sport === "all" ? "bg-[#F5C400] text-black" : "bg-[#1e1e1e] border border-white/[0.12] text-white/40"
             }`}>
-            Wszystkie
+            {t("sport.all")}
           </button>
           {availableSports.map(s => {
-            const meta = sportMeta(s);
+            const key = s.toLowerCase();
+            const icon = SPORT_ICONS[key] ?? "🏆";
+            const tKey = SPORT_KEY_MAP[key];
+            const label = tKey ? t(tKey) : s.charAt(0).toUpperCase() + s.slice(1);
             return (
               <button key={s} onClick={() => setSport(s)}
                 className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-all ${
                   sport === s ? "bg-[#F5C400] text-black" : "bg-[#1e1e1e] border border-white/[0.12] text-white/40"
                 }`}>
-                {meta.icon} {meta.label}
+                {icon} {label}
               </button>
             );
           })}

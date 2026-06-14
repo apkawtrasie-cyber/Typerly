@@ -112,7 +112,14 @@ export type TranslationKey =
   // Badge names (by badge id)
   | "badge.exact_score" | "badge.goal_diff" | "badge.tendency" | "badge.consolation"
   // Tournament rules modal
-  | "rules.title" | "rules.close" | "rules.scroll_hint";
+  | "rules.title" | "rules.close" | "rules.scroll_hint"
+  // Sport names & home chips
+  | "sport.all" | "sport.football" | "sport.volleyball" | "sport.handball" | "sport.f1"
+  | "home.sport_upcoming" | "home.f1_subtitle"
+  // Error / system messages
+  | "error.save" | "error.load" | "error.auth_required"
+  | "pred.saved" | "pred.saving" | "pred.pick_driver" | "pred.confirm_prefix"
+  | "pred.race_finished" | "pred.race_live" | "pred.your_pick" | "pred.updated";
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -248,6 +255,11 @@ const en: Translations = {
   "home.player_fallback": "Player", "home.your_points": "Your points", "home.predictions_made": "predictions made",
   "home.results": "Results", "home.no_results": "No results", "home.nearest_matches": "Nearest matches",
   "home.week_ranking": "Weekly ranking", "home.predictions_short": "predictions", "home.see": "See",
+  "sport.all": "All", "sport.football": "Football", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formula 1",
+  "home.sport_upcoming": "Upcoming matches", "home.f1_subtitle": "2026 Season Calendar",
+  "error.save": "Could not save — try again", "error.load": "Could not load data", "error.auth_required": "Sign in to make predictions",
+  "pred.saved": "✓ Saved!", "pred.saving": "Saving...", "pred.pick_driver": "Pick a driver to make your prediction", "pred.confirm_prefix": "My pick:",
+  "pred.race_finished": "Race finished", "pred.race_live": "LIVE NOW", "pred.your_pick": "Your pick", "pred.updated": "✓ Updated!",
   "league.player_fallback": "Player",
   "wc.no_data": "No WC table data", "wc.swipe_hint": "Swipe or use arrows · 3 pts win · 1 pt draw",
   "wc.group": "Group", "wc.team": "Team",
@@ -379,6 +391,11 @@ const pl: Translations = {
   "home.player_fallback": "Graczu", "home.your_points": "Twoje punkty", "home.predictions_made": "typów oddanych",
   "home.results": "Wyniki", "home.no_results": "Brak wyników", "home.nearest_matches": "Najbliższe mecze",
   "home.week_ranking": "Ranking tygodnia", "home.predictions_short": "typów", "home.see": "Zobacz",
+  "sport.all": "Wszystkie", "sport.football": "Piłka nożna", "sport.volleyball": "Siatkówka", "sport.handball": "Piłka ręczna", "sport.f1": "Formuła 1",
+  "home.sport_upcoming": "Nadchodzące mecze", "home.f1_subtitle": "Kalendarz sezonu 2026",
+  "error.save": "Nie udało się zapisać — spróbuj ponownie", "error.load": "Nie udało się pobrać danych", "error.auth_required": "Zaloguj się żeby typować",
+  "pred.saved": "✓ Zapisano!", "pred.saving": "Zapisuję...", "pred.pick_driver": "Wybierz kierowcę żeby postawić typ", "pred.confirm_prefix": "Typuję:",
+  "pred.race_finished": "Wyścig zakończony", "pred.race_live": "TRWA NA ŻYWO", "pred.your_pick": "Twój typ", "pred.updated": "✓ Zaktualizowano!",
   "league.player_fallback": "Gracz",
   "wc.no_data": "Brak danych tabeli MŚ", "wc.swipe_hint": "Przesuń palcem lub użyj strzałek · 3 pkt zwycięstwo · 1 pkt remis",
   "wc.group": "Grupa", "wc.team": "Drużyna",
@@ -510,6 +527,11 @@ const de: Translations = {
   "home.player_fallback": "Spieler", "home.your_points": "Deine Punkte", "home.predictions_made": "Tipps abgegeben",
   "home.results": "Ergebnisse", "home.no_results": "Keine Ergebnisse", "home.nearest_matches": "Nächste Spiele",
   "home.week_ranking": "Wochenrangliste", "home.predictions_short": "Tipps", "home.see": "Ansehen",
+  "sport.all": "Alle", "sport.football": "Fußball", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formel 1",
+  "home.sport_upcoming": "Nächste Spiele", "home.f1_subtitle": "Kalender Saison 2026",
+  "error.save": "Speichern fehlgeschlagen — nochmal versuchen", "error.load": "Daten konnten nicht geladen werden", "error.auth_required": "Einloggen zum Tippen",
+  "pred.saved": "✓ Gespeichert!", "pred.saving": "Speichert...", "pred.pick_driver": "Fahrer wählen um zu tippen", "pred.confirm_prefix": "Ich tippe:",
+  "pred.race_finished": "Rennen beendet", "pred.race_live": "LIVE JETZT", "pred.your_pick": "Dein Tipp", "pred.updated": "✓ Aktualisiert!",
   "league.player_fallback": "Spieler",
   "wc.no_data": "Keine WM-Tabellendaten", "wc.swipe_hint": "Wischen oder Pfeile nutzen · 3 Pkt Sieg · 1 Pkt Unentschieden",
   "wc.group": "Gruppe", "wc.team": "Team",
@@ -641,6 +663,11 @@ const fr: Translations = {
   "home.player_fallback": "Joueur", "home.your_points": "Tes points", "home.predictions_made": "pronostics faits",
   "home.results": "Résultats", "home.no_results": "Aucun résultat", "home.nearest_matches": "Prochains matchs",
   "home.week_ranking": "Classement de la semaine", "home.predictions_short": "pronostics", "home.see": "Voir",
+  "sport.all": "Tout", "sport.football": "Football", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formule 1",
+  "home.sport_upcoming": "Prochains matchs", "home.f1_subtitle": "Calendrier saison 2026",
+  "error.save": "Sauvegarde échouée — réessaie", "error.load": "Impossible de charger les données", "error.auth_required": "Connecte-toi pour pronostiquer",
+  "pred.saved": "✓ Sauvegardé!", "pred.saving": "Sauvegarde...", "pred.pick_driver": "Choisir un pilote pour pronostiquer", "pred.confirm_prefix": "Je pronostique:",
+  "pred.race_finished": "Course terminée", "pred.race_live": "EN DIRECT", "pred.your_pick": "Ton pronostic", "pred.updated": "✓ Mis à jour!",
   "league.player_fallback": "Joueur",
   "wc.no_data": "Aucune donnée de tableau CM", "wc.swipe_hint": "Glisse ou utilise les flèches · 3 pts victoire · 1 pt nul",
   "wc.group": "Groupe", "wc.team": "Équipe",
@@ -772,6 +799,11 @@ const es: Translations = {
   "home.player_fallback": "Jugador", "home.your_points": "Tus puntos", "home.predictions_made": "predicciones hechas",
   "home.results": "Resultados", "home.no_results": "Sin resultados", "home.nearest_matches": "Próximos partidos",
   "home.week_ranking": "Ranking semanal", "home.predictions_short": "predicciones", "home.see": "Ver",
+  "sport.all": "Todo", "sport.football": "Fútbol", "sport.volleyball": "Voleibol", "sport.handball": "Balonmano", "sport.f1": "Fórmula 1",
+  "home.sport_upcoming": "Próximos partidos", "home.f1_subtitle": "Calendario temporada 2026",
+  "error.save": "No se pudo guardar — inténtalo de nuevo", "error.load": "No se pudieron cargar los datos", "error.auth_required": "Inicia sesión para pronosticar",
+  "pred.saved": "✓ ¡Guardado!", "pred.saving": "Guardando...", "pred.pick_driver": "Elige un piloto para pronosticar", "pred.confirm_prefix": "Mi pronóstico:",
+  "pred.race_finished": "Carrera finalizada", "pred.race_live": "EN DIRECTO", "pred.your_pick": "Tu pronóstico", "pred.updated": "✓ ¡Actualizado!",
   "league.player_fallback": "Jugador",
   "wc.no_data": "Sin datos de tabla del Mundial", "wc.swipe_hint": "Desliza o usa las flechas · 3 pts victoria · 1 pt empate",
   "wc.group": "Grupo", "wc.team": "Equipo",
@@ -903,6 +935,11 @@ const it: Translations = {
   "home.player_fallback": "Giocatore", "home.your_points": "I tuoi punti", "home.predictions_made": "pronostici fatti",
   "home.results": "Risultati", "home.no_results": "Nessun risultato", "home.nearest_matches": "Prossime partite",
   "home.week_ranking": "Classifica settimanale", "home.predictions_short": "pronostici", "home.see": "Vedi",
+  "sport.all": "Tutti", "sport.football": "Calcio", "sport.volleyball": "Pallavolo", "sport.handball": "Pallamano", "sport.f1": "Formula 1",
+  "home.sport_upcoming": "Prossime partite", "home.f1_subtitle": "Calendario stagione 2026",
+  "error.save": "Salvataggio fallito — riprova", "error.load": "Impossibile caricare i dati", "error.auth_required": "Accedi per pronosticare",
+  "pred.saved": "✓ Salvato!", "pred.saving": "Salvataggio...", "pred.pick_driver": "Scegli un pilota per pronosticare", "pred.confirm_prefix": "Pronostico:",
+  "pred.race_finished": "Gara terminata", "pred.race_live": "IN DIRETTA", "pred.your_pick": "Il tuo pronostico", "pred.updated": "✓ Aggiornato!",
   "league.player_fallback": "Giocatore",
   "wc.no_data": "Nessun dato tabella Mondiali", "wc.swipe_hint": "Scorri o usa le frecce · 3 pti vittoria · 1 pt pareggio",
   "wc.group": "Gruppo", "wc.team": "Squadra",

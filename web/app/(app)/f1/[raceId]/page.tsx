@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useLang } from "@/contexts/LangContext";
 
 const ESPN_F1 = "https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard?dates=2026";
 const ESPN_STANDINGS = "https://site.api.espn.com/apis/v2/sports/racing/f1/standings";
@@ -55,6 +56,7 @@ function fmtDate(iso: string) {
 export default function F1RacePage() {
   const router = useRouter();
   const { raceId } = useParams<{ raceId: string }>();
+  const { t } = useLang();
 
   const [race, setRace] = useState<Race | null>(null);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -126,7 +128,7 @@ export default function F1RacePage() {
     if (err) {
       setSaveError(err.code === "42P01"
         ? "Tabela f1_predictions nie istnieje — uruchom SQL w Supabase."
-        : `Błąd zapisu: ${err.message}`);
+        : t("error.save") + `: ${err.message}`);
       return;
     }
     setMyPrediction(selected.name);
@@ -183,8 +185,8 @@ export default function F1RacePage() {
       }`}>
         <p className="text-white font-black">{race.fullName}</p>
         <p className="text-white/50 text-sm mt-1">{fmtDate(race.date)}</p>
-        {live && <p className="text-red-400 text-xs font-black mt-2 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />TRWA NA ŻYWO</p>}
-        {finished && <p className="text-white/30 text-xs mt-2">Wyścig zakończony</p>}
+        {live && <p className="text-red-400 text-xs font-black mt-2 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />{t("pred.race_live")}</p>}
+        {finished && <p className="text-white/30 text-xs mt-2">{t("pred.race_finished")}</p>}
         {!finished && !live && <p className="text-[#F5C400]/80 text-xs font-semibold mt-2">Typuj zwycięzcę poniżej ↓</p>}
       </div>
 
@@ -193,10 +195,10 @@ export default function F1RacePage() {
         <div className="bg-[#F5C400]/[0.08] border border-[#F5C400]/25 rounded-2xl px-4 py-3 mb-5 flex items-center gap-3 card-glow-gold">
           <Trophy size={18} className="text-[#F5C400] flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Twój typ</p>
+            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">{t("pred.your_pick")}</p>
             <p className="text-white font-black">{myPrediction}</p>
           </div>
-          {saved && <span className="text-green-400 text-xs font-black">✓ Zaktualizowano!</span>}
+          {saved && <span className="text-green-400 text-xs font-black">{t("pred.updated")}</span>}
           {!finished && !saved && <p className="text-white/30 text-xs">Zmień poniżej</p>}
         </div>
       )}
@@ -269,20 +271,20 @@ export default function F1RacePage() {
             <div className="sticky bottom-24 pb-2">
               <button onClick={savePrediction} disabled={saving}
                 className="w-full py-4 rounded-2xl bg-[#F5C400] text-black font-black text-base active:scale-[0.97] transition disabled:opacity-50 shadow-[0_4px_24px_rgba(245,196,0,0.35)]">
-                {saving ? "Zapisuję..." : saved ? "✓ Zapisano!" : `Typuję: ${selected.name}`}
+                {saving ? t("pred.saving") : saved ? t("pred.saved") : `${t("pred.confirm_prefix")} ${selected.name}`}
               </button>
             </div>
           )}
 
           {!selected && !myPrediction && (
-            <p className="text-white/25 text-sm text-center py-4">Wybierz kierowcę żeby postawić typ</p>
+            <p className="text-white/25 text-sm text-center py-4">{t("pred.pick_driver")}</p>
           )}
         </div>
       )}
 
       {!userId && (
         <div className="text-center py-8">
-          <p className="text-white/30 text-sm">Zaloguj się żeby typować wyniki</p>
+          <p className="text-white/30 text-sm">{t("error.auth_required")}</p>
         </div>
       )}
     </div>
