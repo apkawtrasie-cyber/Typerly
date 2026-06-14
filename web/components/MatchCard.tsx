@@ -18,7 +18,7 @@ export default function MatchCard({ match, myPrediction, index = 0 }: Props) {
   return (
     <Link href={`/matches/${match.id}`} className="block slide-up" style={{ animationDelay: `${index * 40}ms` }}>
       <div className={`relative overflow-hidden rounded-2xl border transition-all duration-200 active:scale-[0.97] ${
-        live ? "border-red-500/30 bg-red-500/5 card-glow-live" : "border-white/[0.06] bg-[#111] card-glow"
+        live ? "border-red-500/40 bg-red-500/[0.07] card-glow-live" : "border-white/[0.12] bg-[#1a1a1a] card-glow"
       }`}>
         {/* Górna belka */}
         <div className="flex items-center justify-between px-4 pt-3 pb-2">

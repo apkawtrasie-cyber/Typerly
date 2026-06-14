@@ -80,7 +80,7 @@ function StandingsSection({ matches, sportType }: { matches: Match[]; sportType:
       {comps.map(comp => (
         <div key={comp}>
           <p className="text-white/40 text-[11px] font-black uppercase tracking-widest mb-2">{comp}</p>
-          <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+          <div className="bg-[#1a1a1a] border border-white/[0.12] rounded-2xl overflow-hidden">
             <div className="flex items-center px-3 py-2 text-white/30 text-[10px] font-bold uppercase border-b border-white/[0.04]">
               <span className="w-6 text-center">#</span>
               <span className="flex-1 pl-1">Drużyna</span>
@@ -180,7 +180,7 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
             className={`relative flex-shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-all ${
               tab === t.key
                 ? "bg-[#F5C400] text-black"
-                : "bg-[#111] border border-white/[0.06] text-white/40 hover:text-white/70"
+                : "bg-[#1a1a1a] border border-white/[0.12] text-white/50 hover:text-white/70"
             }`}>
             {t.label}
             {t.key === "live" && liveCount > 0 && (

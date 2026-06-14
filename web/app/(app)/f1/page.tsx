@@ -1,8 +1,9 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { useEffect, useState } from "react";
-import { Flag, Clock, ArrowLeft, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Flag, Clock, ArrowLeft, Info, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import SportInfoModal from "@/components/SportInfoModal";
 
 const ESPN_F1 = "https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard?dates=2026";
@@ -82,23 +83,17 @@ const TABS = [
 ];
 
 function RaceCard({ r, next }: { r: Race; next: boolean }) {
-  const [expanded, setExpanded] = useState(false);
   const finished = r.state === "post";
   const live = r.state === "in";
   const podium = r.allDrivers.slice(0, 3);
-  const rest = r.allDrivers.slice(3);
 
   return (
-    <div className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
-      live ? "border-red-500/40 bg-red-500/[0.06] card-glow-live" :
-      next ? "border-[#F5C400]/40 bg-[#F5C400]/[0.06] card-glow-gold" :
-      "border-white/[0.06] bg-[#111] card-glow"
-    }`}>
-      {/* Nagłówek — klikalny żeby rozwinąć */}
-      <button
-        onClick={() => setExpanded(e => !e)}
-        className="w-full text-left p-4 active:bg-white/[0.03] transition"
-      >
+    <Link href={`/f1/${r.id}`} className="block active:scale-[0.98] transition-transform">
+      <div className={`rounded-2xl border p-4 ${
+        live ? "border-red-500/40 bg-red-500/[0.06] card-glow-live" :
+        next ? "border-[#F5C400]/40 bg-[#F5C400]/[0.06] card-glow-gold" :
+        "border-white/[0.12] bg-[#1a1a1a] card-glow"
+      }`}>
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="flex items-center gap-2 min-w-0">
             <Flag size={14} className={live ? "text-red-400" : next ? "text-[#F5C400]" : "text-white/30"} />
@@ -107,16 +102,13 @@ function RaceCard({ r, next }: { r: Race; next: boolean }) {
           <div className="flex items-center gap-2 flex-shrink-0">
             {live && <span className="flex items-center gap-1 text-red-400 text-[10px] font-black"><span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />NA ŻYWO</span>}
             {next && !live && <span className="text-[#F5C400] text-[10px] font-black uppercase tracking-wide">Następny</span>}
-            {(finished || live) && (
-              expanded ? <ChevronUp size={14} className="text-white/30" /> : <ChevronDown size={14} className="text-white/30" />
-            )}
+            <ChevronRight size={14} className="text-white/25" />
           </div>
         </div>
-        <p className="text-white/40 text-xs flex items-center gap-1.5"><Clock size={11} /> {fmtDate(r.date)}</p>
-
-        {/* Podium — zawsze widoczne gdy zakończony */}
+        <p className="text-white/40 text-xs flex items-center gap-1.5 mb-2"><Clock size={11} /> {fmtDate(r.date)}</p>
+        {!finished && !live && <p className="text-white/25 text-[10px]">Kliknij aby zobaczyć szczegóły i typować</p>}
         {finished && podium.length > 0 && (
-          <div className="flex gap-3 mt-3">
+          <div className="flex gap-3 mt-1">
             {podium.map((d) => (
               <div key={d.order} className="flex items-center gap-1.5">
                 <span className="text-base leading-none">{MEDAL[d.order - 1]}</span>
@@ -126,41 +118,8 @@ function RaceCard({ r, next }: { r: Race; next: boolean }) {
             ))}
           </div>
         )}
-      </button>
-
-      {/* Rozwinięte szczegóły */}
-      {expanded && (finished || live) && (
-        <div className="border-t border-white/[0.06] px-4 pb-4 pt-3">
-          <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-3">
-            {live ? "Aktualna kolejność" : "Pełne wyniki"}
-          </p>
-          <div className="flex flex-col gap-1">
-            {r.allDrivers.map((d) => (
-              <div key={d.order} className="flex items-center gap-2 py-1">
-                <span className={`w-6 text-center font-black text-xs tabular-nums flex-shrink-0 ${
-                  d.order === 1 ? "text-[#F5C400]" : d.order === 2 ? "text-white/50" : d.order === 3 ? "text-orange-400/70" : "text-white/25"
-                }`}>
-                  {d.order <= 3 ? MEDAL[d.order - 1] : d.order}
-                </span>
-                {d.flag
-                  ? <img src={d.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" />
-                  : <span className="w-5 flex-shrink-0" />
-                }
-                <span className="text-white text-xs font-semibold flex-1 truncate">{d.name}</span>
-                {d.team && <span className="text-white/25 text-[10px] truncate max-w-[80px]">{d.team}</span>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Nadchodzący — rozwinięte info */}
-      {expanded && !finished && !live && (
-        <div className="border-t border-white/[0.06] px-4 pb-4 pt-3">
-          <p className="text-white/30 text-xs text-center py-2">Wyścig jeszcze się nie odbył — wyniki pojawią się po zakończeniu</p>
-        </div>
-      )}
-    </div>
+      </div>
+    </Link>
   );
 }
 
