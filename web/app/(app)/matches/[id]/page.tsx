@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { TeamLogo } from "@/components/MatchCard";
 import { calculatePoints, badgeFor } from "@/lib/scorer";
 import PredictionResultOverlay from "@/components/PredictionResultOverlay";
+import SquadsSection from "@/components/SquadsSection";
 import { useLang } from "@/contexts/LangContext";
 
 type Prediction = {
@@ -243,6 +244,9 @@ export default function MatchDetailPage() {
           {saveError && <p className="text-red-400 text-sm mt-2 text-center">{saveError}</p>}
         </div>
       ) : null}
+
+      {/* Składy drużyn (tabela squads, jak w aplikacji natywnej) */}
+      <SquadsSection homeTeam={match.home_team_name} awayTeam={match.away_team_name} />
 
       {/* Lista typów */}
       <div className="px-4">

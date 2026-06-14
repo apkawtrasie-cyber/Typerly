@@ -32,6 +32,20 @@ function SkeletonCard() {
   return <div className="skeleton h-24 rounded-2xl" />;
 }
 
+// Etykiety i ikony dyscyplin. Pasek buduje się dynamicznie z danych w bazie —
+// gdy dojdą inne sporty, pojawią się automatycznie bez zmian w kodzie.
+const SPORT_META: Record<string, { label: string; icon: string }> = {
+  football:   { label: "Piłka nożna", icon: "⚽" },
+  basketball: { label: "Koszykówka",  icon: "🏀" },
+  volleyball: { label: "Siatkówka",   icon: "🏐" },
+  handball:   { label: "Piłka ręczna", icon: "🤾" },
+  tennis:     { label: "Tenis",       icon: "🎾" },
+  hockey:     { label: "Hokej",       icon: "🏒" },
+};
+function sportMeta(s: string) {
+  return SPORT_META[s] ?? { label: s.charAt(0).toUpperCase() + s.slice(1), icon: "🏆" };
+}
+
 function pointsBadge(pts: number | null) {
   if (pts === null || pts === undefined) return null;
   if (pts >= 3) return { icon: "⭐", label: `${pts} pkt`, color: "text-yellow-300", bg: "bg-yellow-400/10 border-yellow-400/20" };
@@ -51,6 +65,8 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sport, setSport] = useState<string>("all");
+  const [allMatches, setAllMatches] = useState<Match[]>([]);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -120,6 +136,7 @@ export default function HomePage() {
     const live = matches.filter(m => isLive(m.status));
     const upc = matches.filter(m => !isLive(m.status) && !isFinished(m.status) && isUpcoming(m.status) && new Date(m.match_time) > now);
 
+    setAllMatches(matches);
     setLiveMatches(live);
     setUpcoming(upc);
     setRanking(rankingData);
@@ -136,6 +153,12 @@ export default function HomePage() {
       .order("match_time", { ascending: false }).limit(10)
       .then(({ data }) => setSearchResults(data ?? []));
   }, [search]);
+
+  // Pasek dyscyplin — lista budowana z meczów w bazie (skaluje się sam)
+  const availableSports = [...new Set(allMatches.map(m => m.sport_type).filter(Boolean))];
+  const matchSport = (m: Match) => sport === "all" || m.sport_type === sport;
+  const liveFiltered = liveMatches.filter(matchSport);
+  const upcomingFiltered = upcoming.filter(matchSport);
 
   const greetHour = new Date().getHours();
   const greeting = greetHour < 12 ? t("home.greeting_morning") : greetHour < 18 ? t("home.greeting_afternoon") : t("home.greeting_evening");
@@ -214,19 +237,42 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Pasek dyscyplin — pojawia się tylko gdy jest więcej niż jeden sport */}
+      {!search && availableSports.length > 1 && (
+        <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          <button onClick={() => setSport("all")}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-all ${
+              sport === "all" ? "bg-[#F5C400] text-black" : "bg-[#111] border border-white/[0.06] text-white/40"
+            }`}>
+            Wszystkie
+          </button>
+          {availableSports.map(s => {
+            const meta = sportMeta(s);
+            return (
+              <button key={s} onClick={() => setSport(s)}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-all ${
+                  sport === s ? "bg-[#F5C400] text-black" : "bg-[#111] border border-white/[0.06] text-white/40"
+                }`}>
+                {meta.icon} {meta.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {!search && (
         <>
           {/* NA ŻYWO */}
-          {liveMatches.length > 0 && (
+          {liveFiltered.length > 0 && (
             <div className="mb-6">
               <SectionHeader
                 title={t("home.live")}
                 icon={<Zap size={14} className="text-red-400 fill-red-400" />}
-                count={liveMatches.length}
+                count={liveFiltered.length}
                 href="/matches"
               />
               <div className="flex flex-col gap-3">
-                {liveMatches.slice(0, 3).map((m, i) => <MatchCard key={m.id} match={m} myPrediction={myPredictions[m.id]} index={i} />)}
+                {liveFiltered.slice(0, 3).map((m, i) => <MatchCard key={m.id} match={m} myPrediction={myPredictions[m.id]} index={i} />)}
               </div>
             </div>
           )}
@@ -234,20 +280,20 @@ export default function HomePage() {
           {/* Nadchodzące */}
           <div className="mb-6">
             <SectionHeader
-              title={liveMatches.length > 0 ? t("home.upcoming") : t("home.nearest_matches")}
+              title={liveFiltered.length > 0 ? t("home.upcoming") : t("home.nearest_matches")}
               icon={<Clock size={14} className="text-[#F5C400]" />}
-              count={upcoming.length}
+              count={upcomingFiltered.length}
               href="/matches"
             />
             {loading ? (
               <div className="flex flex-col gap-3">
                 {[0,1,2].map(i => <SkeletonCard key={i} />)}
               </div>
-            ) : upcoming.length === 0 ? (
+            ) : upcomingFiltered.length === 0 ? (
               <p className="text-white/20 text-sm text-center py-6">{t("home.no_upcoming")}</p>
             ) : (
               <div className="flex flex-col gap-3">
-                {upcoming.slice(0, 5).map((m, i) => <MatchCard key={m.id} match={m} myPrediction={myPredictions[m.id]} index={i} />)}
+                {upcomingFiltered.slice(0, 5).map((m, i) => <MatchCard key={m.id} match={m} myPrediction={myPredictions[m.id]} index={i} />)}
               </div>
             )}
           </div>
