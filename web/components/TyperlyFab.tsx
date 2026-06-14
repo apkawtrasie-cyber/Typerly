@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Plus, X, Users, Trophy, LogIn, Share2, MessageCircle } from "lucide-react";
+import { Plus, X, Users, Trophy, LogIn, Share2, MessageCircle, BarChart2 } from "lucide-react";
 import { useLang } from "@/contexts/LangContext";
 
 const SHARE_URL = "https://typerly.andrzejmich.ch";
@@ -42,6 +42,7 @@ export default function TyperlyFab() {
     { icon: Users,         label: t("fab.create_league"),      onClick: () => go("create-league") },
     { icon: Trophy,        label: t("fab.create_tournament"),   onClick: () => go("create-tournament") },
     { icon: LogIn,         label: t("fab.join_code"),           onClick: () => go("join") },
+    { icon: BarChart2,     label: "Ranking globalny",           onClick: () => { setOpen(false); router.push("/ranking"); } },
     { icon: Share2,        label: t("fab.share_app"),           onClick: share },
     { icon: MessageCircle, label: t("fab.chat"),                onClick: () => go("chat") },
   ];
