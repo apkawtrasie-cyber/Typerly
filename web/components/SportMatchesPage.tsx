@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Info } from "lucide-react";
 import { supabase, Match, isLive, isFinished } from "@/lib/supabase";
 import MatchCard from "@/components/MatchCard";
+import SportInfoModal from "@/components/SportInfoModal";
 
 const DATE_LOCALE = "pl-PL";
 
@@ -122,6 +124,7 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
   const [matches, setMatches] = useState<Match[]>([]);
   const [tab, setTab] = useState("upcoming");
   const [loading, setLoading] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -158,7 +161,13 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
 
   return (
     <div className="px-4 pt-6 pb-6 fade-in">
-      <h1 className="text-white font-black text-2xl font-archivo mb-5">{emoji} {title}</h1>
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-white font-black text-2xl font-archivo">{emoji} {title}</h1>
+        <button onClick={() => setShowInfo(true)} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition">
+          <Info size={18} className="text-white/40" />
+        </button>
+      </div>
+      {showInfo && <SportInfoModal sport={sportType} onClose={() => setShowInfo(false)} />}
 
       <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
         {TABS.map(t => (

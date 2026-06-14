@@ -1,7 +1,8 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
-import { Flag, Clock, Trophy } from "lucide-react";
+import { Flag, Clock, Trophy, Info } from "lucide-react";
+import SportInfoModal from "@/components/SportInfoModal";
 
 const ESPN_F1 = "https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard?dates=2026";
 const ESPN_F1_STANDINGS = "https://site.api.espn.com/apis/v2/sports/racing/f1/standings";
@@ -157,6 +158,7 @@ export default function F1Page() {
   const [loading, setLoading] = useState(true);
   const [standingsLoading, setStandingsLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -199,8 +201,14 @@ export default function F1Page() {
 
   return (
     <div className="px-4 pt-6 pb-nav fade-in">
-      <h1 className="text-white font-black text-2xl font-archivo mb-1">🏎️ Formuła 1</h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="text-white font-black text-2xl font-archivo">🏎️ Formuła 1</h1>
+        <button onClick={() => setShowInfo(true)} className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center active:scale-90 transition">
+          <Info size={18} className="text-white/40" />
+        </button>
+      </div>
       <p className="text-white/30 text-xs mb-5">Sezon 2026 · dane: ESPN</p>
+      {showInfo && <SportInfoModal sport="f1" onClose={() => setShowInfo(false)} />}
 
       <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
         {TABS.map(t => (
