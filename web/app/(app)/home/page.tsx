@@ -32,18 +32,28 @@ function SkeletonCard() {
   return <div className="skeleton h-24 rounded-2xl" />;
 }
 
-// Etykiety i ikony dyscyplin. Pasek buduje się dynamicznie z danych w bazie —
-// gdy dojdą inne sporty, pojawią się automatycznie bez zmian w kodzie.
+// Mecz "prawdziwy" = ma rozstawione drużyny. Zaślepki drabinki pucharowej
+// w bazie mają nazwy "Unknown" (jeszcze nieznani rywale) — nie pokazujemy ich.
+function isRealMatch(m: Match): boolean {
+  const h = (m.home_team_name ?? "").trim().toLowerCase();
+  const a = (m.away_team_name ?? "").trim().toLowerCase();
+  return !!h && !!a && h !== "unknown" && a !== "unknown" && h !== "tbd" && a !== "tbd";
+}
+
+// Etykiety i ikony rozgrywek/dyscyplin (pole sport_type w bazie trzyma nazwy
+// rozgrywek). Pasek buduje się dynamicznie — nowe wartości pojawią się same.
 const SPORT_META: Record<string, { label: string; icon: string }> = {
-  football:   { label: "Piłka nożna", icon: "⚽" },
-  basketball: { label: "Koszykówka",  icon: "🏀" },
-  volleyball: { label: "Siatkówka",   icon: "🏐" },
-  handball:   { label: "Piłka ręczna", icon: "🤾" },
-  tennis:     { label: "Tenis",       icon: "🎾" },
-  hockey:     { label: "Hokej",       icon: "🏒" },
+  football:            { label: "Piłka nożna",       icon: "⚽" },
+  "fifa world cup":    { label: "Mistrzostwa Świata", icon: "🏆" },
+  "copa libertadores": { label: "Copa Libertadores", icon: "🏆" },
+  basketball:          { label: "Koszykówka",        icon: "🏀" },
+  volleyball:          { label: "Siatkówka",         icon: "🏐" },
+  handball:            { label: "Piłka ręczna",       icon: "🤾" },
+  tennis:              { label: "Tenis",             icon: "🎾" },
+  hockey:              { label: "Hokej",             icon: "🏒" },
 };
 function sportMeta(s: string) {
-  return SPORT_META[s] ?? { label: s.charAt(0).toUpperCase() + s.slice(1), icon: "🏆" };
+  return SPORT_META[s.toLowerCase()] ?? { label: s.charAt(0).toUpperCase() + s.slice(1), icon: "🏆" };
 }
 
 function pointsBadge(pts: number | null) {
@@ -86,7 +96,8 @@ export default function HomePage() {
       supabase.from("predictions").select("user_id, points_earned").eq("is_calculated", true),
     ]);
 
-    const matches: Match[] = matchesRes.data ?? [];
+    // Pomijamy mecze-zaślepki (drabinka pucharowa bez rozstawienia: "Unknown vs Unknown")
+    const matches: Match[] = (matchesRes.data ?? []).filter(isRealMatch);
     const preds: Prediction[] = (predsRes as any).data ?? [];
     const profile = (profileRes as any).data;
 

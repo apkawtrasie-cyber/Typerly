@@ -37,7 +37,15 @@ export default function MatchesPage() {
     supabase.from("matches").select("*")
       .gte("match_time", from).lte("match_time", to)
       .order("match_time")
-      .then(({ data }) => { setMatches(data ?? []); setLoading(false); });
+      .then(({ data }) => {
+        // Pomijamy mecze-zaślepki drabinki pucharowej ("Unknown vs Unknown")
+        const real = (data ?? []).filter(m => {
+          const h = (m.home_team_name ?? "").trim().toLowerCase();
+          const a = (m.away_team_name ?? "").trim().toLowerCase();
+          return h && a && h !== "unknown" && a !== "unknown" && h !== "tbd" && a !== "tbd";
+        });
+        setMatches(real); setLoading(false);
+      });
   }, []);
 
   const filtered = matches.filter(m => {
