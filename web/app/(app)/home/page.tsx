@@ -248,18 +248,25 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Szybki dostęp do F1 (dane z ESPN, osobny ekran) */}
+      {/* Karuzela dyscyplin */}
       {!search && (
-        <Link href="/f1" className="block mb-6">
-          <div className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-[#111] px-4 py-3 active:scale-[0.98] transition-transform">
-            <span className="text-2xl leading-none">🏎️</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-white font-black text-sm">Formuła 1</p>
-              <p className="text-white/40 text-xs">Kalendarz i wyniki sezonu 2026</p>
-            </div>
-            <ChevronRight size={18} className="text-white/30" />
-          </div>
-        </Link>
+        <div className="flex gap-3 mb-6 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { href: "/f1", emoji: "🏎️", label: "Formuła 1", sub: "Kalendarz sezonu 2026" },
+            { href: "/volleyball", emoji: "🏐", label: "Siatkówka", sub: "Nadchodzące mecze" },
+            { href: "/handball", emoji: "🤾", label: "Piłka ręczna", sub: "Nadchodzące mecze" },
+          ].map(({ href, emoji, label, sub }) => (
+            <Link key={href} href={href} className="flex-shrink-0 w-40">
+              <div className="flex flex-col gap-2 rounded-2xl border border-white/[0.06] bg-[#111] px-4 py-3 active:scale-[0.97] transition-transform h-full">
+                <span className="text-3xl leading-none">{emoji}</span>
+                <div>
+                  <p className="text-white font-black text-sm leading-tight">{label}</p>
+                  <p className="text-white/40 text-xs mt-0.5">{sub}</p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
       )}
 
       {/* Pasek dyscyplin — pojawia się tylko gdy jest więcej niż jeden sport */}
