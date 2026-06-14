@@ -119,7 +119,7 @@ export default function SquadsSection({ homeTeam, awayTeam }: { homeTeam: string
 
   return (
     <div className="px-4 mb-5">
-      <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-4">
+      <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl p-4">
         <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">Składy</h3>
         <div className="flex items-start">
           <div className="flex-1 min-w-0">

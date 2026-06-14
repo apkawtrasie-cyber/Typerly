@@ -391,7 +391,7 @@ export default function TournamentRulesModal({ open, onClose }: Props) {
               className="rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden"
             >
               {/* Section header */}
-              <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
+              <div className="px-4 py-3 border-b border-white/[0.12] flex items-center gap-2">
                 <span className="text-xl">{section.emoji}</span>
                 <span className="text-white font-black text-sm">{section.title}</span>
               </div>
@@ -414,7 +414,7 @@ export default function TournamentRulesModal({ open, onClose }: Props) {
               {/* Alternative tip */}
               {section.alt && (
                 <div className="px-4 pb-3">
-                  <div className="rounded-lg px-3 py-2 bg-white/[0.04] border border-white/[0.06]">
+                  <div className="rounded-lg px-3 py-2 bg-white/[0.04] border border-white/[0.12]">
                     <p className="text-white/40 text-[11px] leading-relaxed">💡 {section.alt}</p>
                   </div>
                 </div>

@@ -237,7 +237,7 @@ export default function LeaguesPage() {
         <div className="flex flex-col gap-3">
           {leagues.map(l => (
             <Link key={l.id} href={`/leagues/${l.id}`}>
-              <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-4 active:scale-[0.98] transition">
+              <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl p-4 active:scale-[0.98] transition">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#F5C400]/20 to-[#F5C400]/5 border border-[#F5C400]/20 flex items-center justify-center text-2xl flex-shrink-0">🏆</div>
                   <div className="flex-1 min-w-0">
@@ -260,7 +260,7 @@ export default function LeaguesPage() {
           ))}
 
           {tournaments.map(t => (
-            <div key={t.id} className="bg-[#111] border border-white/[0.06] rounded-2xl p-4 active:scale-[0.98] transition-transform">
+            <div key={t.id} className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl p-4 active:scale-[0.98] transition-transform">
               <div className="flex items-center gap-3">
                 <button onClick={() => router.push(`/tournaments/${t.id}`)}
                   className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20 flex items-center justify-center flex-shrink-0">

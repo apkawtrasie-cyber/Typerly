@@ -178,7 +178,7 @@ export default function MatchDetailPage() {
           <ArrowLeft size={18} /> {t("match.back")}
         </button>
 
-        <div className="relative overflow-hidden rounded-2xl bg-[#111] border border-white/[0.06] p-5">
+        <div className="relative overflow-hidden rounded-2xl bg-[#1e1e1e] border border-white/[0.12] p-5">
           <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest text-center mb-4">
             {competitionLabel(match.competition, match.sport_type, t)}
           </p>
@@ -215,7 +215,7 @@ export default function MatchDetailPage() {
       {myPred ? (
         <div className="px-4 mb-5">
           <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">{t("match.your_prediction")}</h3>
-          <div className={`rounded-xl px-4 py-3 flex items-center justify-between ${myPred.points_earned != null && myPred.points_earned > 0 ? "bg-green-500/10 border border-green-500/20" : "bg-[#111] border border-white/[0.06]"}`}>
+          <div className={`rounded-xl px-4 py-3 flex items-center justify-between ${myPred.points_earned != null && myPred.points_earned > 0 ? "bg-green-500/10 border border-green-500/20" : "bg-[#1e1e1e] border border-white/[0.12]"}`}>
             <span className="text-[#F5C400] font-black text-xl tabular-nums">{myPred.predicted_home_score}:{myPred.predicted_away_score}</span>
             {myPred.points_earned != null ? (
               <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${myPred.points_earned > 0 ? "bg-green-500/20 text-green-400" : "bg-white/10 text-white/40"}`}>
@@ -231,10 +231,10 @@ export default function MatchDetailPage() {
           <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">{t("match.your_prediction")}</h3>
           <div className="flex items-center gap-3 mb-3">
             <input value={predHome} onChange={e => setPredHome(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
-              className="flex-1 min-w-0 bg-[#111] border border-white/[0.06] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
+              className="flex-1 min-w-0 bg-[#1e1e1e] border border-white/[0.12] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
             <span className="text-white/20 font-black text-xl flex-shrink-0">:</span>
             <input value={predAway} onChange={e => setPredAway(e.target.value)} type="number" min="0" inputMode="numeric" placeholder="0"
-              className="flex-1 min-w-0 bg-[#111] border border-white/[0.06] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
+              className="flex-1 min-w-0 bg-[#1e1e1e] border border-white/[0.12] rounded-xl p-3 text-white text-center text-2xl font-black focus:border-[#F5C400]/40 focus:outline-none" />
           </div>
           <button onClick={submitPrediction} disabled={saving || predHome === "" || predAway === ""}
             className="w-full bg-[#F5C400] text-black font-black py-3.5 rounded-xl disabled:opacity-50 active:scale-95 transition">
@@ -256,7 +256,7 @@ export default function MatchDetailPage() {
         ) : (
           <div className="flex flex-col gap-2">
             {predictions.map(p => (
-              <div key={p.id} className={`flex items-center justify-between rounded-xl px-4 py-3 border ${p.user_id === userId ? "border-[#F5C400]/40 bg-[#F5C400]/5" : "border-white/[0.06] bg-[#111]"}`}>
+              <div key={p.id} className={`flex items-center justify-between rounded-xl px-4 py-3 border ${p.user_id === userId ? "border-[#F5C400]/40 bg-[#F5C400]/5" : "border-white/[0.12] bg-[#1e1e1e]"}`}>
                 <span className="text-white font-semibold text-sm flex-1">{predUsername(p)}</span>
                 <span className="text-[#F5C400] font-black mx-3">{p.predicted_home_score}:{p.predicted_away_score}</span>
                 {p.points_earned != null && (

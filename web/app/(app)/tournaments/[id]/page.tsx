@@ -69,7 +69,7 @@ function Sheet({ onClose, children }: { onClose: () => void; children: React.Rea
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="bg-[#1a1a1a] border-t border-white/[0.08] rounded-t-3xl w-full max-w-lg mx-auto"
+        className="bg-[#1e1e1e] border-t border-white/[0.08] rounded-t-3xl w-full max-w-lg mx-auto"
         style={{ paddingBottom: "calc(5.5rem + env(safe-area-inset-bottom, 0px))" }}
       >
         {children}
@@ -84,7 +84,7 @@ function CenterModal({ onClose, children }: { onClose: () => void; children: Rea
       onClick={onClose}
       className={`fixed inset-0 ${MODAL_Z} bg-black/80 backdrop-blur-sm flex items-center justify-center px-4`}
     >
-      <div onClick={e => e.stopPropagation()} className="bg-[#1a1a1a] border border-white/[0.08] rounded-2xl p-5 w-full max-w-xs">
+      <div onClick={e => e.stopPropagation()} className="bg-[#1e1e1e] border border-white/[0.08] rounded-2xl p-5 w-full max-w-xs">
         {children}
       </div>
     </div>
@@ -136,7 +136,7 @@ function SortableTeamRow({
       ref={setNodeRef}
       style={style}
       className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border ${
-        rank < byeCount ? "border-[#F5C400]/25 bg-[#F5C400]/5" : "bg-[#111] border-white/[0.06]"
+        rank < byeCount ? "border-[#F5C400]/25 bg-[#F5C400]/5" : "bg-[#1e1e1e] border-white/[0.12]"
       }`}
     >
       {/* Drag handle — long press on mobile */}
@@ -520,7 +520,7 @@ export default function TournamentDetailPage() {
         </div>
 
         {teams.length === 0 ? (
-          <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] px-4 py-8 text-center">
+          <div className="rounded-2xl bg-white/[0.03] border border-white/[0.12] px-4 py-8 text-center">
             <p className="text-white/40 text-sm">Brak drużyn</p>
             {isAdmin && (
               <button onClick={openAdd} className="mt-3 text-[#F5C400] text-sm font-bold">+ Dodaj pierwszą drużynę</button>
@@ -582,7 +582,7 @@ export default function TournamentDetailPage() {
                 </p>
                 <div className="flex flex-col gap-2">
                   {rounds[roundNum].map(m => (
-                    <div key={m.id} className={`rounded-2xl border overflow-hidden ${m.status === "FT" ? "border-white/10 bg-[#111]" : "border-white/[0.06] bg-[#0d0d0d]"}`}>
+                    <div key={m.id} className={`rounded-2xl border overflow-hidden ${m.status === "FT" ? "border-white/10 bg-[#1e1e1e]" : "border-white/[0.12] bg-[#0d0d0d]"}`}>
                       <div className={`flex items-center gap-3 px-4 py-2.5 ${m.status === "FT" && (m.home_score ?? 0) > (m.away_score ?? 0) ? "bg-[#F5C400]/5" : ""}`}>
                         <TeamAvatar url={m.home_team_logo} name={m.home_team_name} size={7} />
                         <span className={`flex-1 text-sm font-semibold truncate ${m.home_team_name === "TBD" ? "text-white/30" : "text-white"}`}>{m.home_team_name}</span>
@@ -596,13 +596,13 @@ export default function TournamentDetailPage() {
                       </div>
                       {isAdmin && m.home_team_name !== "TBD" && m.away_team_name !== "TBD" && m.status !== "FT" && (
                         <button onClick={() => { setResultMatch(m); setScoreH(""); setScoreA(""); }}
-                          className="w-full border-t border-white/[0.06] text-white/40 text-xs font-semibold py-2 hover:text-[#F5C400] transition">
+                          className="w-full border-t border-white/[0.12] text-white/40 text-xs font-semibold py-2 hover:text-[#F5C400] transition">
                           Wpisz wynik
                         </button>
                       )}
                       {m.status === "FT" && isAdmin && (
                         <button onClick={() => { setResultMatch(m); setScoreH(String(m.home_score ?? "")); setScoreA(String(m.away_score ?? "")); }}
-                          className="w-full border-t border-white/[0.06] text-white/25 text-[11px] py-1.5">
+                          className="w-full border-t border-white/[0.12] text-white/25 text-[11px] py-1.5">
                           Zmień wynik
                         </button>
                       )}
@@ -675,7 +675,7 @@ export default function TournamentDetailPage() {
                   onChange={e => setTeamName(e.target.value)}
                   placeholder="Nazwa drużyny"
                   autoFocus
-                  className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-[#F5C400]/40 focus:outline-none"
+                  className="w-full bg-[#1e1e1e] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-[#F5C400]/40 focus:outline-none"
                   onKeyDown={e => { if (e.key === "Enter" && teamName.trim()) addTeamNew(); }}
                 />
                 <p className="text-white/20 text-[11px] mt-1.5 pl-1">
@@ -716,7 +716,7 @@ export default function TournamentDetailPage() {
 
             <div className="flex-1 overflow-y-auto flex flex-col gap-2 mb-4 min-h-0">
               {seedOrder.map((team, i) => (
-                <div key={team.id} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border ${i < byeCount ? "border-[#F5C400]/30 bg-[#F5C400]/5" : "border-white/[0.06] bg-white/[0.03]"}`}>
+                <div key={team.id} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border ${i < byeCount ? "border-[#F5C400]/30 bg-[#F5C400]/5" : "border-white/[0.12] bg-white/[0.03]"}`}>
                   <span className={`text-xs font-black w-5 ${i < byeCount ? "text-[#F5C400]" : "text-white/30"}`}>{i + 1}</span>
                   <TeamAvatar url={team.logo_url} name={team.name} size={7} />
                   <span className="flex-1 text-white text-sm font-semibold truncate">{team.name}</span>
@@ -766,7 +766,7 @@ export default function TournamentDetailPage() {
                 onChange={e => setScoreH(e.target.value)}
                 type="number" min="0" inputMode="numeric" placeholder="0"
                 autoFocus
-                className="w-20 h-16 bg-[#111] border-2 border-white/10 rounded-2xl text-white text-center text-4xl font-black focus:border-[#F5C400] focus:outline-none tabular-nums"
+                className="w-20 h-16 bg-[#1e1e1e] border-2 border-white/10 rounded-2xl text-white text-center text-4xl font-black focus:border-[#F5C400] focus:outline-none tabular-nums"
               />
             </div>
 
@@ -787,7 +787,7 @@ export default function TournamentDetailPage() {
                 value={scoreA}
                 onChange={e => setScoreA(e.target.value)}
                 type="number" min="0" inputMode="numeric" placeholder="0"
-                className="w-20 h-16 bg-[#111] border-2 border-white/10 rounded-2xl text-white text-center text-4xl font-black focus:border-[#F5C400] focus:outline-none tabular-nums"
+                className="w-20 h-16 bg-[#1e1e1e] border-2 border-white/10 rounded-2xl text-white text-center text-4xl font-black focus:border-[#F5C400] focus:outline-none tabular-nums"
               />
             </div>
 
@@ -824,7 +824,7 @@ export default function TournamentDetailPage() {
           </div>
 
           {/* Invite code */}
-          <div className="bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-center mb-3">
+          <div className="bg-[#1e1e1e] border border-white/10 rounded-xl px-4 py-3 text-center mb-3">
             <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">Kod zaproszenia</p>
             <p className="text-white font-black text-2xl tracking-[0.3em] font-mono">{tournament.invite_code}</p>
           </div>

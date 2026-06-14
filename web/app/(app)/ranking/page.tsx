@@ -150,7 +150,7 @@ export default function RankingPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-[#111] border border-white/[0.06] rounded-2xl p-1 mb-5">
+      <div className="flex bg-[#1e1e1e] border border-white/[0.12] rounded-2xl p-1 mb-5">
         {(["global", "moje"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 py-2 rounded-xl text-sm font-black transition ${tab === t ? "bg-[#F5C400] text-black" : "text-white/40"}`}>
@@ -176,7 +176,7 @@ export default function RankingPage() {
                   <div key={r.user_id} className="flex-1 flex flex-col items-center gap-1">
                     <p className="text-lg">{medal(realPos)}</p>
                     <div className={`w-full ${heights[vi]} rounded-t-2xl flex flex-col items-center justify-end pb-2 border-t border-x
-                      ${realPos === 0 ? "bg-[#F5C400]/10 border-[#F5C400]/30" : "bg-white/[0.04] border-white/[0.06]"}
+                      ${realPos === 0 ? "bg-[#F5C400]/10 border-[#F5C400]/30" : "bg-white/[0.04] border-white/[0.12]"}
                       ${isMe ? "ring-2 ring-[#F5C400]/40" : ""}`}>
                       <p className={`font-black text-xs truncate px-1 text-center ${realPos === 0 ? "text-[#F5C400]" : "text-white/70"}`}>{r.username}</p>
                       <p className={`font-black text-sm ${realPos === 0 ? "text-[#F5C400]" : "text-white/40"}`}>{r.total_points}</p>
@@ -188,7 +188,7 @@ export default function RankingPage() {
           )}
 
           {/* Lista */}
-          <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+          <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl overflow-hidden">
             {ranking.map((r, i) => {
               const isMe = r.user_id === myId;
               const m = medal(i);
@@ -239,7 +239,7 @@ export default function RankingPage() {
                 <div key={i} className={`border rounded-2xl px-4 py-3 flex items-center gap-3 ${
                   calculated && (p.points_earned ?? 0) >= 3 ? "bg-yellow-400/5 border-yellow-400/20" :
                   calculated && (p.points_earned ?? 0) >= 1 ? "bg-orange-400/5 border-orange-400/20" :
-                  "bg-[#111] border-white/[0.06]"
+                  "bg-[#1e1e1e] border-white/[0.12]"
                 }`}>
                   {pi.icon && <span className="text-2xl leading-none">{pi.icon}</span>}
                   <div className="flex-1 min-w-0">

@@ -92,7 +92,7 @@ export default function ChatPage() {
         <h1 className="text-white font-black text-2xl font-archivo">{t("chat.title")}</h1>
         <div className="flex gap-2">
           <button onClick={() => { setDialog("join"); setError(""); }}
-            className="flex items-center gap-1.5 bg-[#111] border border-white/[0.06] text-white/70 text-sm font-bold px-3 py-2 rounded-xl active:scale-95 transition">
+            className="flex items-center gap-1.5 bg-[#1e1e1e] border border-white/[0.12] text-white/70 text-sm font-bold px-3 py-2 rounded-xl active:scale-95 transition">
             <LogIn size={15} /> {t("dialog.join")}
           </button>
           <button onClick={() => { setDialog("create"); setError(""); }}
@@ -117,7 +117,7 @@ export default function ChatPage() {
         <div className="flex flex-col gap-2">
           {rooms.map(r => (
             <Link key={r.id} href={`/chat/${r.id}`}>
-              <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition">
+              <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#F5C400]/20 to-[#F5C400]/5 border border-[#F5C400]/20 flex items-center justify-center flex-shrink-0">
                   <MessageCircle size={20} className="text-[#F5C400]" />
                 </div>

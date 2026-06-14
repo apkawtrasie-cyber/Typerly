@@ -3,10 +3,10 @@
 :root {
   --gold: #F5C400;
   --gold-dim: #C49A00;
-  --bg: #0e0e0e;
-  --card: #1a1a1a;
-  --card2: #202020;
-  --border: rgba(255,255,255,0.10);
+  --bg: #141414;
+  --card: #1e1e1e;
+  --card2: #242424;
+  --border: rgba(255,255,255,0.12);
   --red: #FF3B3B;
   --green: #00E676;
 }
@@ -21,7 +21,7 @@ html {
 }
 
 html, body {
-  background: #0e0e0e;
+  background: #141414;
   color: #ffffff;
   font-family: var(--font-manrope), system-ui, sans-serif;
   overscroll-behavior: none;
@@ -85,19 +85,20 @@ html, body {
 
 /* Subtelna poświata kart */
 .card-glow {
-  box-shadow: 0 1px 0 0 rgba(255,255,255,0.04) inset,
-              0 0 0 1px rgba(255,255,255,0.05),
-              0 4px 16px rgba(0,0,0,0.4);
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.06) inset,
+              0 0 0 1px rgba(255,255,255,0.07),
+              0 4px 16px rgba(0,0,0,0.35),
+              0 8px 32px rgba(245,196,0,0.04);
 }
 .card-glow-live {
-  box-shadow: 0 1px 0 0 rgba(255,80,80,0.1) inset,
-              0 0 0 1px rgba(255,80,80,0.18),
-              0 4px 20px rgba(255,40,40,0.12),
-              0 0 32px rgba(255,40,40,0.06);
+  box-shadow: 0 1px 0 0 rgba(255,80,80,0.12) inset,
+              0 0 0 1px rgba(255,80,80,0.20),
+              0 4px 20px rgba(255,40,40,0.14),
+              0 8px 32px rgba(255,40,40,0.08);
 }
 .card-glow-gold {
-  box-shadow: 0 1px 0 0 rgba(245,196,0,0.12) inset,
-              0 0 0 1px rgba(245,196,0,0.22),
-              0 4px 20px rgba(245,196,0,0.12),
-              0 0 32px rgba(245,196,0,0.06);
+  box-shadow: 0 1px 0 0 rgba(245,196,0,0.15) inset,
+              0 0 0 1px rgba(245,196,0,0.25),
+              0 4px 20px rgba(245,196,0,0.15),
+              0 8px 40px rgba(245,196,0,0.10);
 }

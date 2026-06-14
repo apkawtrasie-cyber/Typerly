@@ -92,7 +92,7 @@ function RaceCard({ r, next }: { r: Race; next: boolean }) {
       <div className={`rounded-2xl border p-4 ${
         live ? "border-red-500/40 bg-red-500/[0.06] card-glow-live" :
         next ? "border-[#F5C400]/40 bg-[#F5C400]/[0.06] card-glow-gold" :
-        "border-white/[0.12] bg-[#1a1a1a] card-glow"
+        "border-white/[0.12] bg-[#1e1e1e] card-glow"
       }`}>
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="flex items-center gap-2 min-w-0">
@@ -133,7 +133,7 @@ function StandingsTable({ entries }: { entries: StandingEntry[] }) {
     );
   }
   return (
-    <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden card-glow">
+    <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl overflow-hidden card-glow">
       <div className="flex items-center px-3 py-2 text-white/30 text-[10px] font-bold uppercase border-b border-white/[0.04]">
         <span className="w-7 text-center">#</span>
         <span className="flex-1 pl-1">Kierowca</span>
@@ -226,7 +226,7 @@ export default function F1Page() {
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`relative flex-shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-all ${
-              tab === t.key ? "bg-[#F5C400] text-black" : "bg-[#111] border border-white/[0.06] text-white/40"
+              tab === t.key ? "bg-[#F5C400] text-black" : "bg-[#1e1e1e] border border-white/[0.12] text-white/40"
             }`}>
             {t.label}
             {t.key === "live" && liveRaces.length > 0 && (

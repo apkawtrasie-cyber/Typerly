@@ -35,7 +35,7 @@ function getBadgeDef(b: Badge): BadgeDef | null {
 
 function StatBox({ value, label, accent }: { value: string | number; label: string; accent?: boolean }) {
   return (
-    <div className={`flex-1 rounded-2xl p-4 text-center border ${accent ? "bg-[#1a1500] border-[#F5C400]/20" : "bg-[#111] border-white/[0.06]"}`}>
+    <div className={`flex-1 rounded-2xl p-4 text-center border ${accent ? "bg-[#1a1500] border-[#F5C400]/20" : "bg-[#1e1e1e] border-white/[0.12]"}`}>
       <p className={`font-black text-2xl font-archivo ${accent ? "text-[#F5C400]" : "text-white"}`}>{value}</p>
       <p className="text-white/30 text-[10px] font-semibold uppercase tracking-wide mt-1">{label}</p>
     </div>
@@ -191,7 +191,7 @@ export default function ProfilePage() {
       {/* Rozbicie punktów */}
       <div className="mb-6">
         <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{t("profile.stats")}</h2>
-        <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+        <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl overflow-hidden">
           <PointsRow icon="🎯" label={t("profile.exact")} sub="3 pkt" count={s.exact} pts={s.exact * 3} color="#F5C400" />
           <PointsRow icon="⚡" label={t("profile.diff")} sub="2 pkt" count={s.diff} pts={s.diff * 2} color="#44AAFF" />
           <PointsRow icon="📊" label={t("profile.tendency")} sub="1 pkt" count={s.tendency} pts={s.tendency * 1} color="#66DD66" />
@@ -205,14 +205,14 @@ export default function ProfilePage() {
 
       {/* Puchary i gwiazdki */}
       <div className="flex gap-3 mb-6">
-        <div className="flex-1 bg-[#111] border border-white/[0.06] rounded-2xl p-4 flex items-center gap-3">
+        <div className="flex-1 bg-[#1e1e1e] border border-white/[0.12] rounded-2xl p-4 flex items-center gap-3">
           <span className="text-3xl">🏆</span>
           <div>
             <p className="text-white font-black text-xl">{trophyCount}</p>
             <p className="text-white/30 text-xs">{t("profile.trophies")}</p>
           </div>
         </div>
-        <div className="flex-1 bg-[#111] border border-white/[0.06] rounded-2xl p-4 flex items-center gap-3">
+        <div className="flex-1 bg-[#1e1e1e] border border-white/[0.12] rounded-2xl p-4 flex items-center gap-3">
           <span className="text-3xl">⭐</span>
           <div>
             <p className="text-white font-black text-xl">{starCount}</p>
@@ -225,7 +225,7 @@ export default function ProfilePage() {
       <div className="mb-6">
         <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{t("profile.badges")}</h2>
         {badges.length === 0 ? (
-          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-6 text-center">
+          <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl p-6 text-center">
             <p className="text-2xl mb-2">🎯</p>
             <p className="text-white/30 text-sm font-semibold">{t("profile.no_badges")}</p>
           </div>
@@ -257,7 +257,7 @@ export default function ProfilePage() {
       {/* Ustawienia konta */}
       <div className="mb-4">
         <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{t("profile.settings")}</h2>
-        <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+        <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl overflow-hidden">
           <button onClick={() => setShowEmailDialog(true)}
             className="w-full flex items-center gap-3 px-4 py-4 border-b border-white/[0.04] active:bg-white/5 transition">
             <Mail size={16} className="text-white/30" />
@@ -284,7 +284,7 @@ export default function ProfilePage() {
                   className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-semibold transition active:scale-95 ${
                     locale === loc.code
                       ? "bg-[#F5C400]/15 border-[#F5C400]/50 text-[#F5C400]"
-                      : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:text-white/60"
+                      : "bg-white/[0.03] border-white/[0.12] text-white/40 hover:text-white/60"
                   }`}
                 >
                   <span className="text-base">{loc.flag}</span>

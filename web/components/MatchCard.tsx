@@ -18,7 +18,7 @@ export default function MatchCard({ match, myPrediction, index = 0 }: Props) {
   return (
     <Link href={`/matches/${match.id}`} className="block slide-up" style={{ animationDelay: `${index * 40}ms` }}>
       <div className={`relative overflow-hidden rounded-2xl border transition-all duration-200 active:scale-[0.97] ${
-        live ? "border-red-500/40 bg-red-500/[0.07] card-glow-live" : "border-white/[0.12] bg-[#1a1a1a] card-glow"
+        live ? "border-red-500/40 bg-red-500/[0.07] card-glow-live" : "border-white/[0.12] bg-[#1e1e1e] card-glow"
       }`}>
         {/* Górna belka */}
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
@@ -72,7 +72,7 @@ export default function MatchCard({ match, myPrediction, index = 0 }: Props) {
 
         {/* Mój typ — widoczny dopiero po starcie meczu */}
         {myPrediction && new Date(match.match_time) <= new Date() && (
-          <div className={`border-t border-white/[0.06] px-4 py-2 flex items-center justify-between ${
+          <div className={`border-t border-white/[0.12] px-4 py-2 flex items-center justify-between ${
             myPrediction.points_earned != null ? "bg-[#F5C400]/5" : ""
           }`}>
             <span className="text-white/30 text-[10px] font-semibold">{t("match.your_prediction")}</span>

@@ -54,7 +54,7 @@ export default function WorldCupStandings() {
       {/* Nawigacja grup */}
       <div className="flex items-center justify-between mb-4">
         <button onClick={() => goTo(active - 1)} disabled={active === 0}
-          className="w-9 h-9 rounded-full bg-[#111] border border-white/[0.06] flex items-center justify-center text-white/60 disabled:opacity-20 active:scale-90 transition">
+          className="w-9 h-9 rounded-full bg-[#1e1e1e] border border-white/[0.12] flex items-center justify-center text-white/60 disabled:opacity-20 active:scale-90 transition">
           <ChevronLeft size={18} />
         </button>
 
@@ -62,7 +62,7 @@ export default function WorldCupStandings() {
           {groups.map((g, i) => (
             <button key={g.letter} onClick={() => goTo(i)}
               className={`flex-shrink-0 w-9 h-9 rounded-full font-black text-sm transition-all ${
-                i === active ? "bg-[#F5C400] text-black" : "bg-[#111] border border-white/[0.06] text-white/40"
+                i === active ? "bg-[#F5C400] text-black" : "bg-[#1e1e1e] border border-white/[0.12] text-white/40"
               }`}>
               {g.letter}
             </button>
@@ -70,7 +70,7 @@ export default function WorldCupStandings() {
         </div>
 
         <button onClick={() => goTo(active + 1)} disabled={active === groups.length - 1}
-          className="w-9 h-9 rounded-full bg-[#111] border border-white/[0.06] flex items-center justify-center text-white/60 disabled:opacity-20 active:scale-90 transition">
+          className="w-9 h-9 rounded-full bg-[#1e1e1e] border border-white/[0.12] flex items-center justify-center text-white/60 disabled:opacity-20 active:scale-90 transition">
           <ChevronRight size={18} />
         </button>
       </div>
@@ -95,9 +95,9 @@ export default function WorldCupStandings() {
 function GroupCard({ group }: { group: GroupTable }) {
   const { t } = useLang();
   return (
-    <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+    <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl overflow-hidden">
       {/* Nagłówek grupy */}
-      <div className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-[#1a1500] to-transparent border-b border-white/[0.06]">
+      <div className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-[#1a1500] to-transparent border-b border-white/[0.12]">
         <span className="w-7 h-7 rounded-lg bg-[#F5C400] text-black font-black text-sm flex items-center justify-center">{group.letter}</span>
         <span className="text-white font-black text-sm uppercase tracking-wide">{t("wc.group")} {group.letter}</span>
       </div>

@@ -79,7 +79,7 @@ export default function MatchesPage() {
             className={`relative flex-shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-all ${
               tab === t.key
                 ? "bg-[#F5C400] text-black"
-                : "bg-[#111] border border-white/[0.06] text-white/40 hover:text-white/70"
+                : "bg-[#1e1e1e] border border-white/[0.12] text-white/40 hover:text-white/70"
             }`}>
             {t.label}
             {t.key === "live" && liveCount > 0 && (

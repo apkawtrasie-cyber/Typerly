@@ -104,7 +104,7 @@ export default function SportInfoModal({ sport, onClose }: Props) {
           {/* Zasady */}
           <div className="flex flex-col gap-2 mb-4">
             {info.rules.map((r, i) => (
-              <div key={i} className="flex items-start gap-3 bg-[#111] border border-white/[0.06] rounded-xl px-3 py-2.5">
+              <div key={i} className="flex items-start gap-3 bg-[#1e1e1e] border border-white/[0.12] rounded-xl px-3 py-2.5">
                 <span className="text-lg leading-none flex-shrink-0 mt-0.5">{r.icon}</span>
                 <p className="text-white/70 text-sm">{r.text}</p>
               </div>
@@ -113,7 +113,7 @@ export default function SportInfoModal({ sport, onClose }: Props) {
 
           {/* Przykład */}
           {info.example && (
-            <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-4">
+            <div className="bg-[#1e1e1e] border border-white/[0.12] rounded-2xl p-4">
               <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-3">Przykład</p>
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="text-white font-semibold text-sm flex-1">{info.example.home}</span>

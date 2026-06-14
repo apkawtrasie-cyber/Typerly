@@ -134,7 +134,7 @@ export default function LeagueDetailPage() {
           {menuOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-              <div className="absolute right-0 top-9 z-50 bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden w-48 shadow-xl">
+              <div className="absolute right-0 top-9 z-50 bg-[#1e1e1e] border border-white/10 rounded-xl overflow-hidden w-48 shadow-xl">
                 {isAdmin ? (
                   <>
                     <button onClick={() => { setMenuOpen(false); setEditName(league.name); setEditing(true); }}
@@ -142,7 +142,7 @@ export default function LeagueDetailPage() {
                       <Pencil size={15} /> {t("league.edit_name")}
                     </button>
                     <button onClick={() => { setMenuOpen(false); setConfirmDelete(true); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-red-400 text-sm hover:bg-red-500/10 transition border-t border-white/[0.06]">
+                      className="w-full flex items-center gap-3 px-4 py-3 text-red-400 text-sm hover:bg-red-500/10 transition border-t border-white/[0.12]">
                       <Trash2 size={15} /> {t("league.delete_league")}
                     </button>
                   </>
@@ -173,7 +173,7 @@ export default function LeagueDetailPage() {
       <h2 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-3">{t("league.ranking")} ({members.length})</h2>
       <div className="flex flex-col gap-2">
         {members.map((m, i) => (
-          <div key={m.user_id} className={`flex items-center gap-3 rounded-xl px-4 py-3 border ${m.user_id === userId ? "border-[#F5C400]/40 bg-[#F5C400]/5" : "border-white/[0.06] bg-[#111]"}`}>
+          <div key={m.user_id} className={`flex items-center gap-3 rounded-xl px-4 py-3 border ${m.user_id === userId ? "border-[#F5C400]/40 bg-[#F5C400]/5" : "border-white/[0.12] bg-[#1e1e1e]"}`}>
             <span className="w-7 text-center font-black text-sm">
               {i < 3 ? <span className="text-lg">{medals[i]}</span> : <span className="text-white/30">{i + 1}</span>}
             </span>
@@ -198,7 +198,7 @@ export default function LeagueDetailPage() {
           <div className="flex flex-col gap-2">
             {upcoming.map(m => (
               <Link key={m.id} href={`/matches/${m.id}?league=${league.id}`}>
-                <div className="flex items-center gap-2 bg-[#111] border border-white/[0.06] rounded-xl px-3 py-3 active:scale-[0.98] transition">
+                <div className="flex items-center gap-2 bg-[#1e1e1e] border border-white/[0.12] rounded-xl px-3 py-3 active:scale-[0.98] transition">
                   <TeamLogo url={m.home_team_logo_url} name={m.home_team_name} />
                   <span className="flex-1 text-white text-xs font-semibold text-center truncate">{m.home_team_name}</span>
                   <span className="text-white/20 text-[10px] font-black px-1.5">VS</span>

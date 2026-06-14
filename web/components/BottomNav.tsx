@@ -21,7 +21,7 @@ export default function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-white/[0.06] flex items-stretch justify-around px-1">
+      <div className="bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-white/[0.12] flex items-stretch justify-around px-1">
         {tabs.map(({ href, icon: Icon, label }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (
