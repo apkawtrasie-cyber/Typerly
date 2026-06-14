@@ -143,30 +143,20 @@ export default function HomePage() {
         </Link>
       </div>
 
-      {/* Punkty hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a1500] to-[#111] border border-[#F5C400]/20 gold-glow p-5 mb-6">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-[#F5C400]/5 rounded-full blur-2xl -translate-y-8 translate-x-8" />
-        <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">{t("home.your_points")}</p>
-        <p className="text-[#F5C400] font-black text-5xl font-archivo">{totalPoints.toLocaleString(numLocale[locale])}</p>
-        <p className="text-white/20 text-xs mt-1">
-          {Object.keys(myPredictions).length} {t("home.predictions_made")}
-        </p>
-      </div>
-
       {/* Baner: Sprawdź ostatnie typy */}
       {recentPreds.length > 0 && (() => {
         const last = recentPreds[0];
-        const b = pointsBadge(last.points_earned ?? 0);
         const totalCalc = recentPreds.reduce((s, p) => s + (p.points_earned ?? 0), 0);
+        const hasPts = totalCalc > 0;
         return (
           <Link href="/ranking" className="block mb-6">
-            <div className={`relative overflow-hidden rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-[0.98] transition-transform
-              border border-[#F5C400]/40 bg-gradient-to-r from-[#1a1500] to-[#111]`}
-              style={{ boxShadow: "0 0 0 1px rgba(245,196,0,0.15), 0 0 20px rgba(245,196,0,0.12)" }}>
+            <div className="relative overflow-hidden rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-[0.98] transition-transform
+              border border-[#F5C400]/40 bg-gradient-to-r from-[#1a1500] to-[#111]"
+              style={{ boxShadow: "0 0 0 1px rgba(245,196,0,0.15), 0 0 24px rgba(245,196,0,0.15)" }}>
               {/* Pulsująca poświata */}
               <div className="absolute inset-0 rounded-2xl pointer-events-none"
                 style={{ boxShadow: "inset 0 0 0 1px rgba(245,196,0,0.2)", animation: "pulse-live 2s ease-in-out infinite" }} />
-              {b?.icon && <div className="text-4xl leading-none flex-shrink-0">{b.icon}</div>}
+              {/* Tekst */}
               <div className="flex-1 min-w-0">
                 <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-0.5">Sprawdź ostatnie typy</p>
                 <p className="text-white font-black text-base leading-tight truncate">
@@ -176,9 +166,12 @@ export default function HomePage() {
                   Typ: {last.predicted_home_score}:{last.predicted_away_score}
                   {last.match?.home_score != null && <> · wynik: <span className="text-white/60">{last.match.home_score}:{last.match.away_score}</span></>}
                 </p>
-                <p className={`text-sm font-black mt-1 ${b?.color}`}>{b?.label} · {totalCalc} pkt łącznie</p>
+                <p className={`text-sm font-black mt-1 ${hasPts ? "text-[#F5C400]" : "text-white/30"}`}>{totalCalc} pkt łącznie</p>
               </div>
-              <ChevronRight size={16} className="text-white/20 flex-shrink-0" />
+              {/* Ikona po prawej — puchar lub gwiazdka */}
+              <div className="flex-shrink-0 text-5xl leading-none">
+                {hasPts ? "🏆" : "⭐"}
+              </div>
             </div>
           </Link>
         );

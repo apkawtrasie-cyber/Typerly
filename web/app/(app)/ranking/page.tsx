@@ -83,15 +83,20 @@ export default function RankingPage() {
     setMyPreds(preds);
     setLoading(false);
 
-    // Konfetti po załadowaniu
+    // Konfetti na całą stronę po załadowaniu
     if (user) {
       const myEntry = entries.find(e => e.user_id === user.id);
       const hasPts = (myEntry?.total_points ?? 0) > 0;
       setTimeout(() => {
         if (hasPts) {
-          confetti({ particleCount: 100, spread: 80, origin: { y: 0.3 }, colors: ["#F5C400", "#fff", "#FFD700", "#FF9800"] });
+          // Złote konfetti z lewej i prawej
+          confetti({ particleCount: 80, angle: 60, spread: 70, origin: { x: 0, y: 0.5 }, colors: ["#F5C400", "#FFD700", "#fff", "#FF9800"] });
+          confetti({ particleCount: 80, angle: 120, spread: 70, origin: { x: 1, y: 0.5 }, colors: ["#F5C400", "#FFD700", "#fff", "#FF9800"] });
+          setTimeout(() => confetti({ particleCount: 60, spread: 100, origin: { x: 0.5, y: 0.2 }, colors: ["#F5C400", "#FFD700", "#fff"] }), 300);
         } else {
-          confetti({ particleCount: 25, spread: 40, origin: { y: 0.3 }, colors: ["#ffffff22", "#888"] });
+          // Srebrne z góry — pocieszenie
+          confetti({ particleCount: 50, angle: 60, spread: 60, origin: { x: 0, y: 0.4 }, colors: ["#aaa", "#ddd", "#fff"] });
+          confetti({ particleCount: 50, angle: 120, spread: 60, origin: { x: 1, y: 0.4 }, colors: ["#aaa", "#ddd", "#fff"] });
         }
       }, 400);
     }
