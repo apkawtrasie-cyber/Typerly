@@ -8,6 +8,7 @@ const archivo = Archivo({ subsets: ["latin"], variable: "--font-archivo", weight
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://typerly.andrzejmich.ch"),
   title: "Typerly",
   description: "Predict · Compete · Win",
   manifest: "/manifest.json",
@@ -15,6 +16,29 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Typerly",
+  },
+  // Podgląd przy udostępnianiu linku (Facebook, WhatsApp, LinkedIn itd.)
+  openGraph: {
+    type: "website",
+    siteName: "Typerly",
+    title: "Typerly",
+    description: "Predict · Compete · Win",
+    url: "https://typerly.andrzejmich.ch",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Typerly — Predict · Compete · Win",
+      },
+    ],
+  },
+  // Podgląd na X / Twitter
+  twitter: {
+    card: "summary_large_image",
+    title: "Typerly",
+    description: "Predict · Compete · Win",
+    images: ["/og-image.png"],
   },
 };
 
