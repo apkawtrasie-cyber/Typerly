@@ -232,10 +232,11 @@ export default function MatchDetailPage() {
         </div>
       ) : canPredict ? (
         <div className="px-4 mb-5">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest">{t("match.your_prediction")}</h3>
-            <button onClick={() => setShowInfo(true)} className="flex items-center gap-1 text-white/30 text-[10px] font-semibold active:text-white/60 transition">
-              <Info size={13} /> Jak typować?
+            <button onClick={() => setShowInfo(true)} className="flex items-center gap-1.5 bg-white/[0.07] border border-white/[0.12] rounded-xl px-3 py-1.5 active:scale-95 transition">
+              <Info size={14} className="text-[#F5C400]" />
+              <span className="text-white text-xs font-bold">Jak typować?</span>
             </button>
           </div>
           <div className="flex items-center gap-3 mb-3">
