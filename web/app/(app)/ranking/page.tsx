@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type GlobalEntry = { user_id: string; username: string; total_points: number; predictions_count: number };
-type PredSummary = { points_earned: number; match_home: string; match_away: string; predicted_h: number; predicted_a: number; real_h: number | null; real_a: number | null; match_time: string | null };
+type PredSummary = { points_earned: number; is_calculated: boolean; match_home: string; match_away: string; predicted_h: number; predicted_a: number; real_h: number | null; real_a: number | null; match_time: string | null };
 
 function medal(pos: number) {
   if (pos === 0) return "🥇";
@@ -42,13 +42,12 @@ export default function RankingPage() {
       supabase.from("predictions")
         .select("user_id, points_earned")
         .eq("is_calculated", true),
-      // Moje typy szczegółowe
+      // Moje typy szczegółowe — WSZYSTKIE (nie tylko obliczone)
       user ? supabase.from("predictions")
         .select("points_earned, predicted_home_score, predicted_away_score, is_calculated, matches(home_team_name, away_team_name, home_score, away_score, match_time)")
         .eq("user_id", user.id)
-        .eq("is_calculated", true)
         .order("created_at", { ascending: false })
-        .limit(50) : Promise.resolve({ data: [] }),
+        .limit(100) : Promise.resolve({ data: [] }),
     ]);
 
     // Policz punkty z predictions (nie z profiles.total_points który może być nieaktualny)
@@ -72,6 +71,7 @@ export default function RankingPage() {
 
     const preds: PredSummary[] = ((predRes as any).data ?? []).map((p: any) => ({
       points_earned: p.points_earned ?? 0,
+      is_calculated: p.is_calculated ?? false,
       match_home: p.matches?.home_team_name ?? "",
       match_away: p.matches?.away_team_name ?? "",
       predicted_h: p.predicted_home_score,
@@ -83,22 +83,27 @@ export default function RankingPage() {
     setMyPreds(preds);
     setLoading(false);
 
-    // Konfetti na całą stronę po załadowaniu
+    // Konfetti na całą stronę — styl Flutter z gwiazdami
     if (user) {
       const myEntry = entries.find(e => e.user_id === user.id);
       const hasPts = (myEntry?.total_points ?? 0) > 0;
+      const colors = hasPts
+        ? ["#F5C400", "#FFD700", "#FF9800", "#FF5722", "#9C27B0", "#fff"]
+        : ["#9E9E9E", "#BDBDBD", "#E0E0E0", "#fff", "#78909C"];
+
+      function burst(origin: { x: number; y: number }, angle: number) {
+        confetti({ particleCount: 60, angle, spread: 65, origin, colors, scalar: 1.1, shapes: ["star", "circle"] });
+      }
+
       setTimeout(() => {
-        if (hasPts) {
-          // Złote konfetti z lewej i prawej
-          confetti({ particleCount: 80, angle: 60, spread: 70, origin: { x: 0, y: 0.5 }, colors: ["#F5C400", "#FFD700", "#fff", "#FF9800"] });
-          confetti({ particleCount: 80, angle: 120, spread: 70, origin: { x: 1, y: 0.5 }, colors: ["#F5C400", "#FFD700", "#fff", "#FF9800"] });
-          setTimeout(() => confetti({ particleCount: 60, spread: 100, origin: { x: 0.5, y: 0.2 }, colors: ["#F5C400", "#FFD700", "#fff"] }), 300);
-        } else {
-          // Srebrne z góry — pocieszenie
-          confetti({ particleCount: 50, angle: 60, spread: 60, origin: { x: 0, y: 0.4 }, colors: ["#aaa", "#ddd", "#fff"] });
-          confetti({ particleCount: 50, angle: 120, spread: 60, origin: { x: 1, y: 0.4 }, colors: ["#aaa", "#ddd", "#fff"] });
-        }
-      }, 400);
+        burst({ x: 0, y: 0.6 }, 60);
+        burst({ x: 1, y: 0.6 }, 120);
+      }, 300);
+      setTimeout(() => {
+        burst({ x: 0.1, y: 0.3 }, 75);
+        burst({ x: 0.9, y: 0.3 }, 105);
+        confetti({ particleCount: 40, spread: 120, origin: { x: 0.5, y: 0.15 }, colors, scalar: 1.2, shapes: ["star"] });
+      }, 600);
     }
   }, []);
 
@@ -191,7 +196,7 @@ export default function RankingPage() {
         myPreds.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-5xl mb-3">🎯</p>
-            <p className="text-white/40 font-bold">Brak zakończonych typów</p>
+            <p className="text-white/40 font-bold">Brak typów</p>
             <Link href="/matches" className="inline-block mt-4 bg-[#F5C400] text-black font-black px-6 py-3 rounded-xl">
               Obstaw mecze
             </Link>
@@ -200,19 +205,31 @@ export default function RankingPage() {
           <div className="flex flex-col gap-2">
             {myPreds.map((p, i) => {
               const started = p.match_time ? new Date(p.match_time) <= new Date() : true;
-              const pi = started ? pointIcon(p.points_earned) : { icon: "🔒", color: "text-white/20", label: "wyniki ukryte" };
+              const calculated = p.is_calculated;
+              let pi: { icon: string | null; color: string; label: string };
+              if (!started) {
+                pi = { icon: "🔒", color: "text-white/20", label: "przed startem" };
+              } else if (!calculated) {
+                pi = { icon: "⏳", color: "text-white/30", label: "w trakcie" };
+              } else {
+                pi = pointIcon(p.points_earned);
+              }
               return (
-                <div key={i} className="bg-[#111] border border-white/[0.06] rounded-2xl px-4 py-3 flex items-center gap-3">
+                <div key={i} className={`border rounded-2xl px-4 py-3 flex items-center gap-3 ${
+                  calculated && (p.points_earned ?? 0) >= 3 ? "bg-yellow-400/5 border-yellow-400/20" :
+                  calculated && (p.points_earned ?? 0) >= 1 ? "bg-orange-400/5 border-orange-400/20" :
+                  "bg-[#111] border-white/[0.06]"
+                }`}>
                   {pi.icon && <span className="text-2xl leading-none">{pi.icon}</span>}
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-bold text-sm truncate">{p.match_home} – {p.match_away}</p>
                     <p className="text-white/40 text-xs font-mono mt-0.5">
-                      Typ: {p.predicted_h}:{p.predicted_a}
+                      Typ: <span className="text-white/70">{p.predicted_h}:{p.predicted_a}</span>
                       {started && p.real_h != null && <span className="text-white/30"> · wynik: {p.real_h}:{p.real_a}</span>}
-                      {!started && p.match_time && <span className="text-white/20"> · start: {new Date(p.match_time).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}</span>}
+                      {!started && p.match_time && <span className="text-white/20"> · {new Date(p.match_time).toLocaleString("pl-PL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>}
                     </p>
                   </div>
-                  <p className={`font-black text-sm flex-shrink-0 ${pi.color}`}>{started ? pi.label : "—"}</p>
+                  <p className={`font-black text-sm flex-shrink-0 ${pi.color}`}>{pi.label}</p>
                 </div>
               );
             })}
