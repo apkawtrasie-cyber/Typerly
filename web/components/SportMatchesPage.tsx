@@ -13,7 +13,104 @@ const TABS = [
   { label: "Nadchodzące", key: "upcoming" },
   { label: "🔴 Na żywo", key: "live" },
   { label: "Ostatnie", key: "finished" },
+  { label: "🏆 Tabela", key: "standings" },
 ];
+
+// Oblicza tabelę ligową z wyników meczów (W/D/L + bramki/sety)
+type StandingRow = {
+  team: string;
+  played: number;
+  won: number;
+  draw: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  points: number;
+};
+
+function computeStandings(matches: Match[], isVolleyball: boolean): Record<string, StandingRow[]> {
+  const finished = matches.filter(m => isFinished(m.status) && m.home_score != null && m.away_score != null);
+  const byComp: Record<string, Record<string, StandingRow>> = {};
+
+  for (const m of finished) {
+    const comp = m.competition ?? "Inne";
+    if (!byComp[comp]) byComp[comp] = {};
+    const rows = byComp[comp];
+    const hs = Number(m.home_score);
+    const as_ = Number(m.away_score);
+
+    for (const [team, gf, ga] of [[m.home_team_name, hs, as_], [m.away_team_name, as_, hs]] as [string, number, number][]) {
+      if (!rows[team]) rows[team] = { team, played: 0, won: 0, draw: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 };
+      const r = rows[team];
+      r.played++;
+      r.goalsFor += gf;
+      r.goalsAgainst += ga;
+      if (gf > ga) { r.won++; r.points += isVolleyball ? (ga >= 2 ? 2 : 3) : 3; }
+      else if (gf < ga) { r.lost++; if (isVolleyball && gf >= 2) r.points += 1; }
+      else { r.draw++; r.points += 1; }
+    }
+  }
+
+  const result: Record<string, StandingRow[]> = {};
+  for (const [comp, rows] of Object.entries(byComp)) {
+    result[comp] = Object.values(rows).sort((a, b) => b.points - a.points || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst));
+  }
+  return result;
+}
+
+function StandingsSection({ matches, sportType }: { matches: Match[]; sportType: string }) {
+  const isVolleyball = sportType === "volleyball";
+  const tables = computeStandings(matches, isVolleyball);
+  const comps = Object.keys(tables);
+
+  if (comps.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-4xl mb-3">{isVolleyball ? "🏐" : "🤾"}</p>
+        <p className="text-white/30 font-semibold">Brak danych do tabeli — wyniki meczów pojawią się po ich zakończeniu</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {comps.map(comp => (
+        <div key={comp}>
+          <p className="text-white/40 text-[11px] font-black uppercase tracking-widest mb-2">{comp}</p>
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+            <div className="flex items-center px-3 py-2 text-white/30 text-[10px] font-bold uppercase border-b border-white/[0.04]">
+              <span className="w-6 text-center">#</span>
+              <span className="flex-1 pl-1">Drużyna</span>
+              <span className="w-6 text-center">M</span>
+              <span className="w-6 text-center">W</span>
+              <span className="w-6 text-center">R</span>
+              <span className="w-6 text-center">P</span>
+              <span className="w-9 text-center">+/-</span>
+              <span className="w-8 text-center text-[#F5C400]">PKT</span>
+            </div>
+            {tables[comp].map((r, i) => {
+              const diff = r.goalsFor - r.goalsAgainst;
+              return (
+                <div key={r.team} className={`flex items-center px-3 py-2.5 ${i < tables[comp].length - 1 ? "border-b border-white/[0.03]" : ""}`}>
+                  <span className={`w-6 text-center font-black text-sm ${i === 0 ? "text-[#F5C400]" : i < 3 ? "text-white/40" : "text-white/20"}`}>{i + 1}</span>
+                  <span className="flex-1 text-white font-semibold text-xs truncate pl-1">{r.team}</span>
+                  <span className="w-6 text-center text-white/60 text-xs tabular-nums">{r.played}</span>
+                  <span className="w-6 text-center text-white/40 text-xs tabular-nums">{r.won}</span>
+                  <span className="w-6 text-center text-white/40 text-xs tabular-nums">{r.draw}</span>
+                  <span className="w-6 text-center text-white/40 text-xs tabular-nums">{r.lost}</span>
+                  <span className={`w-9 text-center text-xs tabular-nums font-semibold ${diff > 0 ? "text-green-400/70" : diff < 0 ? "text-red-400/70" : "text-white/40"}`}>
+                    {diff > 0 ? "+" : ""}{diff}
+                  </span>
+                  <span className="w-8 text-center text-[#F5C400] font-black text-sm tabular-nums">{r.points}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface Props {
   sportType: string;
@@ -28,7 +125,7 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
 
   useEffect(() => {
     const now = new Date();
-    const from = new Date(now.getTime() - 14 * 86400000).toISOString();
+    const from = new Date(now.getTime() - 30 * 86400000).toISOString();
     const to = new Date(now.getTime() + 60 * 86400000).toISOString();
 
     supabase.from("matches").select("*")
@@ -61,7 +158,7 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
 
   return (
     <div className="px-4 pt-6 pb-6 fade-in">
-      <h1 className="text-white font-black text-2xl font-archivo mb-4">{emoji} {title}</h1>
+      <h1 className="text-white font-black text-2xl font-archivo mb-5">{emoji} {title}</h1>
 
       <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
         {TABS.map(t => (
@@ -79,7 +176,11 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
         ))}
       </div>
 
-      {loading ? (
+      {tab === "standings" ? (
+        loading
+          ? <div className="flex flex-col gap-2">{[0,1,2].map(i => <div key={i} className="skeleton h-40 rounded-2xl" />)}</div>
+          : <StandingsSection matches={matches} sportType={sportType} />
+      ) : loading ? (
         <div className="flex flex-col gap-3">{[0,1,2,3].map(i => <SkeletonCard key={i} />)}</div>
       ) : Object.keys(grouped).length === 0 ? (
         <div className="text-center py-16">
