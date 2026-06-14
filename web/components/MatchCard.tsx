@@ -70,8 +70,8 @@ export default function MatchCard({ match, myPrediction, index = 0 }: Props) {
           </div>
         </div>
 
-        {/* Mój typ — jeśli jest */}
-        {myPrediction && (
+        {/* Mój typ — widoczny dopiero po starcie meczu */}
+        {myPrediction && new Date(match.match_time) <= new Date() && (
           <div className={`border-t border-white/[0.06] px-4 py-2 flex items-center justify-between ${
             myPrediction.points_earned != null ? "bg-[#F5C400]/5" : ""
           }`}>
@@ -79,10 +79,8 @@ export default function MatchCard({ match, myPrediction, index = 0 }: Props) {
             <span className="text-[#F5C400] font-black text-sm">
               {myPrediction.predicted_home_score} : {myPrediction.predicted_away_score}
             </span>
-            {myPrediction.points_earned != null && (
-              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                myPrediction.points_earned > 0 ? "bg-green-500/20 text-green-400" : "bg-white/10 text-white/40"
-              }`}>
+            {myPrediction.points_earned != null && myPrediction.points_earned > 0 && (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">
                 +{myPrediction.points_earned} {t("home.points")}
               </span>
             )}

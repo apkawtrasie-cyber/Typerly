@@ -36,7 +36,7 @@ function pointsBadge(pts: number | null) {
   if (pts === null || pts === undefined) return null;
   if (pts >= 3) return { icon: "⭐", label: `${pts} pkt`, color: "text-yellow-300", bg: "bg-yellow-400/10 border-yellow-400/20" };
   if (pts >= 1) return { icon: "🏆", label: `${pts} pkt`, color: "text-orange-300", bg: "bg-orange-400/10 border-orange-400/20" };
-  return { icon: "💀", label: "0 pkt", color: "text-white/30", bg: "bg-white/[0.04] border-white/[0.06]" };
+  return { icon: null, label: "0 pkt", color: "text-white/30", bg: "bg-white/[0.04] border-white/[0.06]" };
 }
 
 export default function HomePage() {
@@ -161,7 +161,7 @@ export default function HomePage() {
         return (
           <Link href="/ranking" className="block mb-6">
             <div className={`relative overflow-hidden border rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-[0.98] transition-transform ${b?.bg}`}>
-              <div className="text-4xl leading-none flex-shrink-0">{b?.icon}</div>
+              {b?.icon && <div className="text-4xl leading-none flex-shrink-0">{b.icon}</div>}
               <div className="flex-1 min-w-0">
                 <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-0.5">Sprawdź ostatnie typy</p>
                 <p className="text-white font-black text-base leading-tight truncate">

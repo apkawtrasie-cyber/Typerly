@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type GlobalEntry = { user_id: string; username: string; total_points: number; predictions_count: number };
-type PredSummary = { points_earned: number; match_home: string; match_away: string; predicted_h: number; predicted_a: number; real_h: number | null; real_a: number | null };
+type PredSummary = { points_earned: number; match_home: string; match_away: string; predicted_h: number; predicted_a: number; real_h: number | null; real_a: number | null; match_time: string | null };
 
 function medal(pos: number) {
   if (pos === 0) return "🥇";
@@ -20,7 +20,7 @@ function medal(pos: number) {
 function pointIcon(pts: number) {
   if (pts >= 3) return { icon: "⭐", color: "text-yellow-300", label: `${pts} pkt` };
   if (pts >= 1) return { icon: "🏆", color: "text-orange-300", label: `${pts} pkt` };
-  return { icon: "💀", color: "text-white/30", label: "0 pkt" };
+  return { icon: null, color: "text-white/30", label: "0 pkt" };
 }
 
 export default function RankingPage() {
@@ -41,7 +41,7 @@ export default function RankingPage() {
         .order("total_points", { ascending: false })
         .limit(50),
       user ? supabase.from("predictions")
-        .select("points_earned, predicted_home_score, predicted_away_score, is_calculated, matches(home_team_name, away_team_name, home_score, away_score)")
+        .select("points_earned, predicted_home_score, predicted_away_score, is_calculated, matches(home_team_name, away_team_name, home_score, away_score, match_time)")
         .eq("user_id", user.id)
         .eq("is_calculated", true)
         .order("created_at", { ascending: false })
@@ -61,6 +61,7 @@ export default function RankingPage() {
       predicted_a: p.predicted_away_score,
       real_h: p.matches?.home_score ?? null,
       real_a: p.matches?.away_score ?? null,
+      match_time: p.matches?.match_time ?? null,
     }));
     setMyPreds(preds);
     setLoading(false);
@@ -176,18 +177,20 @@ export default function RankingPage() {
         ) : (
           <div className="flex flex-col gap-2">
             {myPreds.map((p, i) => {
-              const pi = pointIcon(p.points_earned);
+              const started = p.match_time ? new Date(p.match_time) <= new Date() : true;
+              const pi = started ? pointIcon(p.points_earned) : { icon: "🔒", color: "text-white/20", label: "wyniki ukryte" };
               return (
                 <div key={i} className="bg-[#111] border border-white/[0.06] rounded-2xl px-4 py-3 flex items-center gap-3">
-                  <span className="text-2xl leading-none">{pi.icon}</span>
+                  {pi.icon && <span className="text-2xl leading-none">{pi.icon}</span>}
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-bold text-sm truncate">{p.match_home} – {p.match_away}</p>
                     <p className="text-white/40 text-xs font-mono mt-0.5">
                       Typ: {p.predicted_h}:{p.predicted_a}
-                      {p.real_h != null && <span className="text-white/30"> · wynik: {p.real_h}:{p.real_a}</span>}
+                      {started && p.real_h != null && <span className="text-white/30"> · wynik: {p.real_h}:{p.real_a}</span>}
+                      {!started && p.match_time && <span className="text-white/20"> · start: {new Date(p.match_time).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}</span>}
                     </p>
                   </div>
-                  <p className={`font-black text-sm flex-shrink-0 ${pi.color}`}>{pi.label}</p>
+                  <p className={`font-black text-sm flex-shrink-0 ${pi.color}`}>{started ? pi.label : "—"}</p>
                 </div>
               );
             })}
