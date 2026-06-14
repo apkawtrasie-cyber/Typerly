@@ -160,7 +160,12 @@ export default function HomePage() {
         const totalCalc = recentPreds.reduce((s, p) => s + (p.points_earned ?? 0), 0);
         return (
           <Link href="/ranking" className="block mb-6">
-            <div className={`relative overflow-hidden border rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-[0.98] transition-transform ${b?.bg}`}>
+            <div className={`relative overflow-hidden rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-[0.98] transition-transform
+              border border-[#F5C400]/40 bg-gradient-to-r from-[#1a1500] to-[#111]`}
+              style={{ boxShadow: "0 0 0 1px rgba(245,196,0,0.15), 0 0 20px rgba(245,196,0,0.12)" }}>
+              {/* Pulsująca poświata */}
+              <div className="absolute inset-0 rounded-2xl pointer-events-none"
+                style={{ boxShadow: "inset 0 0 0 1px rgba(245,196,0,0.2)", animation: "pulse-live 2s ease-in-out infinite" }} />
               {b?.icon && <div className="text-4xl leading-none flex-shrink-0">{b.icon}</div>}
               <div className="flex-1 min-w-0">
                 <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-0.5">Sprawdź ostatnie typy</p>

@@ -35,22 +35,39 @@ export default function RankingPage() {
     const { data: { user } } = await supabase.auth.getUser();
     setMyId(user?.id ?? null);
 
-    const [rankRes, predRes] = await Promise.all([
-      supabase.from("profiles")
-        .select("id, username, total_points, predictions_count")
-        .order("total_points", { ascending: false })
-        .limit(50),
+    const [profilesRes, predsAllRes, predRes] = await Promise.all([
+      // Wszyscy użytkownicy z username
+      supabase.from("profiles").select("id, username"),
+      // Wszystkie obliczone typy (do policzenia punktów per user)
+      supabase.from("predictions")
+        .select("user_id, points_earned")
+        .eq("is_calculated", true),
+      // Moje typy szczegółowe
       user ? supabase.from("predictions")
         .select("points_earned, predicted_home_score, predicted_away_score, is_calculated, matches(home_team_name, away_team_name, home_score, away_score, match_time)")
         .eq("user_id", user.id)
         .eq("is_calculated", true)
         .order("created_at", { ascending: false })
-        .limit(30) : Promise.resolve({ data: [] }),
+        .limit(50) : Promise.resolve({ data: [] }),
     ]);
 
-    const entries: GlobalEntry[] = (rankRes.data ?? []).map((r: any) => ({
-      user_id: r.id, username: r.username, total_points: r.total_points ?? 0, predictions_count: r.predictions_count ?? 0,
-    }));
+    // Policz punkty z predictions (nie z profiles.total_points który może być nieaktualny)
+    const pointsMap: Record<string, { pts: number; count: number }> = {};
+    for (const p of (predsAllRes.data ?? [])) {
+      if (!pointsMap[p.user_id]) pointsMap[p.user_id] = { pts: 0, count: 0 };
+      pointsMap[p.user_id].pts += p.points_earned ?? 0;
+      pointsMap[p.user_id].count += 1;
+    }
+
+    const entries: GlobalEntry[] = (profilesRes.data ?? [])
+      .filter((r: any) => pointsMap[r.id]) // tylko użytkownicy którzy mają typy
+      .map((r: any) => ({
+        user_id: r.id,
+        username: r.username ?? "Gracz",
+        total_points: pointsMap[r.id]?.pts ?? 0,
+        predictions_count: pointsMap[r.id]?.count ?? 0,
+      }))
+      .sort((a, b) => b.total_points - a.total_points);
     setRanking(entries);
 
     const preds: PredSummary[] = ((predRes as any).data ?? []).map((p: any) => ({
