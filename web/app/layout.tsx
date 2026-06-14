@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Manrope } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { LangProvider } from "@/contexts/LangContext";
 
@@ -32,8 +33,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        {/* Google AdSense — weryfikacja + reklamy */}
+        <meta name="google-adsense-account" content="ca-pub-5244367621175515" />
       </head>
       <body className="bg-[#0A0A0A] text-white min-h-screen font-manrope antialiased">
+        <Script
+          id="adsbygoogle-init"
+          async
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5244367621175515"
+        />
         <LangProvider>{children}</LangProvider>
       </body>
     </html>
