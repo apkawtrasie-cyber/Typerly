@@ -35,21 +35,23 @@ export default function RankingPage() {
     const { data: { user } } = await supabase.auth.getUser();
     setMyId(user?.id ?? null);
 
-    const [profilesRes, predsAllRes, predRes] = await Promise.all([
+    // UWAGA: nie używamy embedu matches(...) bo PostgREST nie zna relacji FK → 400.
+    // Pobieramy predictions i matches osobno, łączymy w JS (jak na stronie home).
+    const [profilesRes, predsAllRes, myPredsRes] = await Promise.all([
       // Wszyscy użytkownicy z username
       supabase.from("profiles").select("id, username"),
       // Wszystkie obliczone typy (do policzenia punktów per user)
       supabase.from("predictions")
         .select("user_id, points_earned")
         .eq("is_calculated", true),
-      // Moje typy szczegółowe — WSZYSTKIE (nie tylko obliczone)
+      // Moje typy — WSZYSTKIE (bez embedu)
       user ? supabase.from("predictions")
-        .select("points_earned, predicted_home_score, predicted_away_score, is_calculated, matches(home_team_name, away_team_name, home_score, away_score, match_time)")
+        .select("match_id, points_earned, predicted_home_score, predicted_away_score, is_calculated")
         .eq("user_id", user.id)
-        .limit(100) : Promise.resolve({ data: [] }),
+        .limit(200) : Promise.resolve({ data: [] }),
     ]);
 
-    // Policz punkty z predictions (nie z profiles.total_points który może być nieaktualny)
+    // Policz punkty z predictions (profiles.total_points może nie istnieć/być nieaktualny)
     const pointsMap: Record<string, { pts: number; count: number }> = {};
     for (const p of (predsAllRes.data ?? [])) {
       if (!pointsMap[p.user_id]) pointsMap[p.user_id] = { pts: 0, count: 0 };
@@ -68,17 +70,37 @@ export default function RankingPage() {
       .sort((a, b) => b.total_points - a.total_points);
     setRanking(entries);
 
-    const preds: PredSummary[] = ((predRes as any).data ?? []).map((p: any) => ({
-      points_earned: p.points_earned ?? 0,
-      is_calculated: p.is_calculated ?? false,
-      match_home: p.matches?.home_team_name ?? "",
-      match_away: p.matches?.away_team_name ?? "",
-      predicted_h: p.predicted_home_score,
-      predicted_a: p.predicted_away_score,
-      real_h: p.matches?.home_score ?? null,
-      real_a: p.matches?.away_score ?? null,
-      match_time: p.matches?.match_time ?? null,
-    }));
+    // Pobierz mecze dla moich typów osobnym zapytaniem
+    const myRaw: any[] = (myPredsRes as any).data ?? [];
+    const matchIds = [...new Set(myRaw.map(p => p.match_id).filter(Boolean))];
+    const matchMap: Record<string, any> = {};
+    if (matchIds.length > 0) {
+      const { data: mData } = await supabase.from("matches")
+        .select("id, home_team_name, away_team_name, home_score, away_score, match_time")
+        .in("id", matchIds);
+      for (const m of (mData ?? [])) matchMap[m.id] = m;
+    }
+
+    const preds: PredSummary[] = myRaw
+      .map((p: any) => {
+        const m = matchMap[p.match_id];
+        return {
+          points_earned: p.points_earned ?? 0,
+          is_calculated: p.is_calculated ?? false,
+          match_home: m?.home_team_name ?? "",
+          match_away: m?.away_team_name ?? "",
+          predicted_h: p.predicted_home_score,
+          predicted_a: p.predicted_away_score,
+          real_h: m?.home_score ?? null,
+          real_a: m?.away_score ?? null,
+          match_time: m?.match_time ?? null,
+        };
+      })
+      .sort((a, b) => {
+        const ta = a.match_time ? new Date(a.match_time).getTime() : 0;
+        const tb = b.match_time ? new Date(b.match_time).getTime() : 0;
+        return tb - ta;
+      });
     setMyPreds(preds);
     setLoading(false);
 

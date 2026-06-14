@@ -62,23 +62,36 @@ export default function HomePage() {
     const from = new Date(now.getTime() - 7 * 86400000).toISOString();
     const to = new Date(now.getTime() + 60 * 86400000).toISOString();
 
-    const [matchesRes, predsRes, profileRes, rankingRes] = await Promise.all([
+    const [matchesRes, predsRes, profileRes, allProfilesRes, allPredsRes] = await Promise.all([
       supabase.from("matches").select("*").gte("match_time", from).lte("match_time", to).order("match_time"),
       user ? supabase.from("predictions").select("*").eq("user_id", user.id) : Promise.resolve({ data: [] }),
-      user ? supabase.from("profiles").select("username, total_points").eq("id", user.id).single() : Promise.resolve({ data: null }),
-      supabase.from("profiles").select("id, username, total_points, predictions_count").order("total_points", { ascending: false }).limit(10),
+      user ? supabase.from("profiles").select("username").eq("id", user.id).single() : Promise.resolve({ data: null }),
+      supabase.from("profiles").select("id, username"),
+      supabase.from("predictions").select("user_id, points_earned").eq("is_calculated", true),
     ]);
 
     const matches: Match[] = matchesRes.data ?? [];
     const preds: Prediction[] = (predsRes as any).data ?? [];
     const profile = (profileRes as any).data;
-    const rankingData: RankingEntry[] = (rankingRes.data ?? []).map((r: any) => ({
-      user_id: r.id, username: r.username, total_points: r.total_points ?? 0, predictions_count: r.predictions_count ?? 0,
-    }));
+
+    // Ranking liczony z predictions (profiles nie ma total_points)
+    const ptsMap: Record<string, { pts: number; count: number }> = {};
+    for (const p of ((allPredsRes as any).data ?? [])) {
+      if (!ptsMap[p.user_id]) ptsMap[p.user_id] = { pts: 0, count: 0 };
+      ptsMap[p.user_id].pts += p.points_earned ?? 0;
+      ptsMap[p.user_id].count += 1;
+    }
+    const rankingData: RankingEntry[] = ((allProfilesRes as any).data ?? [])
+      .filter((r: any) => ptsMap[r.id])
+      .map((r: any) => ({
+        user_id: r.id, username: r.username ?? "Gracz",
+        total_points: ptsMap[r.id]?.pts ?? 0, predictions_count: ptsMap[r.id]?.count ?? 0,
+      }))
+      .sort((a: RankingEntry, b: RankingEntry) => b.total_points - a.total_points)
+      .slice(0, 10);
 
     if (profile) {
       setUsername(profile.username ?? "");
-      setTotalPoints(profile.total_points ?? 0);
     }
 
     const predMap: Record<string, Prediction> = {};
@@ -88,7 +101,7 @@ export default function HomePage() {
       if (p.is_calculated) pts += p.points_earned ?? 0;
     }
     setMyPredictions(predMap);
-    if (!profile) setTotalPoints(pts);
+    setTotalPoints(pts);
 
     // Ostatnie typy na zakończone mecze
     const calculated = preds.filter(p => p.is_calculated);
