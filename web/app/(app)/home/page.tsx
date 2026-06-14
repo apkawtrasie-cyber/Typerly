@@ -248,6 +248,20 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Szybki dostęp do F1 (dane z ESPN, osobny ekran) */}
+      {!search && (
+        <Link href="/f1" className="block mb-6">
+          <div className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-[#111] px-4 py-3 active:scale-[0.98] transition-transform">
+            <span className="text-2xl leading-none">🏎️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-black text-sm">Formuła 1</p>
+              <p className="text-white/40 text-xs">Kalendarz i wyniki sezonu 2026</p>
+            </div>
+            <ChevronRight size={18} className="text-white/30" />
+          </div>
+        </Link>
+      )}
+
       {/* Pasek dyscyplin — pojawia się tylko gdy jest więcej niż jeden sport */}
       {!search && availableSports.length > 1 && (
         <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
