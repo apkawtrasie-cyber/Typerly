@@ -303,6 +303,17 @@ export default function ProfilePage() {
         {t("profile.logout")}
       </button>
 
+      {/* Linki prawne */}
+      <div className="flex items-center justify-center gap-4 mb-6 mt-2">
+        <a href="/privacy" className="text-white/25 text-xs underline underline-offset-2 active:text-white/50">
+          Polityka prywatności
+        </a>
+        <span className="text-white/10 text-xs">·</span>
+        <a href="/terms" className="text-white/25 text-xs underline underline-offset-2 active:text-white/50">
+          Regulamin
+        </a>
+      </div>
+
       {/* Dialog - email */}
       {showEmailDialog && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center px-6">

@@ -88,8 +88,17 @@ export default function LoginPage() {
         </div>
       </div>
 
+      {/* Drobny druk — polityka i regulamin */}
+      <p className="text-white/20 text-[10px] text-center mt-6 px-2 leading-relaxed">
+        Korzystając z aplikacji, akceptujesz{" "}
+        <a href="/terms" className="text-white/40 underline underline-offset-2">Regulamin</a>
+        {" "}i{" "}
+        <a href="/privacy" className="text-white/40 underline underline-offset-2">Politykę Prywatności</a>.
+        Typerly to gra towarzyska — bez hazardu, bez opłat, bez wypłat.
+      </p>
+
       {/* Przełącznik języka — dół ekranu */}
-      <div className="flex justify-center pt-8 pb-2">
+      <div className="flex justify-center pt-6 pb-2">
         <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
           {LOCALES.map(loc => (
             <button
