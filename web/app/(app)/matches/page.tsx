@@ -6,6 +6,7 @@ import MatchCard from "@/components/MatchCard";
 import WorldCupStandings from "@/components/WorldCupStandings";
 import { useLang } from "@/contexts/LangContext";
 import { Locale } from "@/lib/translations";
+import { Search } from "lucide-react";
 
 // Mapowanie kodu języka na locale dla formatowania dat
 const DATE_LOCALE: Record<Locale, string> = {
@@ -28,6 +29,7 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [tab, setTab] = useState("upcoming");
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const now = new Date();
@@ -48,13 +50,28 @@ export default function MatchesPage() {
       });
   }, []);
 
+  const q = search.trim().toLowerCase();
+  const now = new Date();
   const filtered = matches.filter(m => {
+    // Wyszukiwarka — po nazwie drużyny gospodarza lub gościa
+    if (q) {
+      const h = (m.home_team_name ?? "").toLowerCase();
+      const a = (m.away_team_name ?? "").toLowerCase();
+      if (!h.includes(q) && !a.includes(q)) return false;
+    }
     if (tab === "live") return isLive(m.status);
     if (tab === "finished") return isFinished(m.status);
-    if (tab === "upcoming") return !isLive(m.status) && !isFinished(m.status) && new Date(m.match_time) > new Date();
-    return true;
+    if (tab === "upcoming") return !isLive(m.status) && !isFinished(m.status) && new Date(m.match_time) > now;
+    // "all" → tylko teraźniejszość i przyszłość: na żywo lub nadchodzące (nigdy wstecz)
+    return isLive(m.status) || (!isFinished(m.status) && new Date(m.match_time) >= now);
   }).sort((a, b) => {
     if (tab === "finished") return new Date(b.match_time).getTime() - new Date(a.match_time).getTime();
+    if (tab === "all") {
+      // Najpierw mecze na żywo, potem chronologicznie w przód
+      const aLive = isLive(a.status) ? 0 : 1;
+      const bLive = isLive(b.status) ? 0 : 1;
+      if (aLive !== bLive) return aLive - bLive;
+    }
     return new Date(a.match_time).getTime() - new Date(b.match_time).getTime();
   });
 
@@ -71,6 +88,16 @@ export default function MatchesPage() {
   return (
     <div className="px-4 pt-6 pb-6 fade-in">
       <h1 className="text-white font-black text-2xl font-archivo mb-4">{t("matches.title")}</h1>
+
+      {/* Wyszukiwarka meczów */}
+      <div className="relative mb-4">
+        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
+        <input
+          value={search} onChange={e => setSearch(e.target.value)}
+          placeholder={t("home.search_placeholder")}
+          className="w-full bg-[#1e1e1e] border border-white/[0.10] rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F5C400]/40 transition"
+        />
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
