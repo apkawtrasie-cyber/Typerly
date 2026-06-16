@@ -69,7 +69,7 @@ export default function HomePage() {
   const [username, setUsername] = useState("");
   const [totalPoints, setTotalPoints] = useState(0);
   const [accuracy, setAccuracy] = useState(0);
-  const [streak, setStreak] = useState(0);
+  const [hits, setHits] = useState(0);
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
   const [upcoming, setUpcoming] = useState<Match[]>([]);
   const [myPredictions, setMyPredictions] = useState<Record<string, Prediction>>({});
@@ -124,29 +124,19 @@ export default function HomePage() {
     }
 
     const predMap: Record<string, Prediction> = {};
-    let pts = 0, calculatedCount = 0, hits = 0;
+    let pts = 0, calculatedCount = 0, hitCount = 0;
     for (const p of preds) {
       predMap[p.match_id] = p;
       if (p.is_calculated) {
         pts += p.points_earned ?? 0;
         calculatedCount++;
-        if ((p.points_earned ?? 0) > 0) hits++;
+        if ((p.points_earned ?? 0) > 0) hitCount++;
       }
     }
     setMyPredictions(predMap);
     setTotalPoints(pts);
-    setAccuracy(calculatedCount > 0 ? Math.round((hits / calculatedCount) * 100) : 0);
-
-    // Seria — kolejne trafienia od najnowszego typu (jak w profilu)
-    const calculatedByDate = preds
-      .filter(p => p.is_calculated)
-      .sort((a, b) => new Date((b as any).updated_at ?? 0).getTime() - new Date((a as any).updated_at ?? 0).getTime());
-    let s = 0;
-    for (const p of calculatedByDate) {
-      if ((p.points_earned ?? 0) > 0) s++;
-      else break;
-    }
-    setStreak(s);
+    setAccuracy(calculatedCount > 0 ? Math.round((hitCount / calculatedCount) * 100) : 0);
+    setHits(hitCount); // łączna liczba trafień (typy z punktami > 0)
 
     // Ostatnie typy na zakończone mecze
     const calculated = preds.filter(p => p.is_calculated);
@@ -238,13 +228,12 @@ export default function HomePage() {
             <p className="text-white/35 text-[10px] font-bold uppercase tracking-wide">{t("profile.accuracy")}</p>
             <p className="text-[#F5C400] font-black text-base mt-1 leading-tight tabular-nums">{accuracy}%</p>
           </div>
-          {/* Seria */}
+          {/* Trafienia — łączna liczba typów z punktami */}
           <div className="rounded-2xl border border-white/[0.10] bg-[#1e1e1e] px-3 py-2.5 card-glow">
-            <p className="text-white/35 text-[10px] font-bold uppercase tracking-wide">{t("home.streak")}</p>
-            <p className="text-white font-black text-sm mt-1 flex items-center gap-1 leading-tight">
-              <span>{streak}</span>
-              <span className="text-white/40 text-[11px] font-semibold truncate">{t("home.streak_hits")}</span>
-              {streak > 0 && <span>🔥</span>}
+            <p className="text-white/35 text-[10px] font-bold uppercase tracking-wide">{t("home.hits")}</p>
+            <p className="text-white font-black text-base mt-1 flex items-center gap-1 leading-tight tabular-nums">
+              <span>{hits}</span>
+              {hits > 0 && <span className="text-sm">🎯</span>}
             </p>
           </div>
         </div>

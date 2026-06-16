@@ -96,7 +96,7 @@ export type TranslationKey =
   | "home.player_fallback" | "home.your_points" | "home.predictions_made"
   | "home.results" | "home.no_results" | "home.nearest_matches"
   | "home.week_ranking" | "home.predictions_short" | "home.see"
-  | "home.level" | "home.streak" | "home.streak_hits"
+  | "home.level" | "home.streak" | "home.streak_hits" | "home.hits"
   | "level.rookie" | "level.player" | "level.expert" | "level.master"
   | "home.last_pick" | "home.nearest_match" | "home.win_chance"
   | "home.place_bet" | "home.win" | "home.loss"
@@ -275,7 +275,7 @@ const en: Translations = {
   "home.player_fallback": "Player", "home.your_points": "Your points", "home.predictions_made": "predictions made",
   "home.results": "Results", "home.no_results": "No results", "home.nearest_matches": "Nearest matches",
   "home.week_ranking": "Weekly ranking", "home.predictions_short": "predictions", "home.see": "See",
-  "home.level": "Level", "home.streak": "Streak", "home.streak_hits": "in a row",
+  "home.level": "Level", "home.streak": "Streak", "home.streak_hits": "in a row", "home.hits": "Hits",
   "level.rookie": "Rookie", "level.player": "Player", "level.expert": "Expert", "level.master": "Master",
   "home.last_pick": "Your last pick", "home.nearest_match": "Next match", "home.win_chance": "Win chance",
   "home.place_bet": "PLACE PICK", "home.win": "WIN", "home.loss": "MISS",
@@ -427,7 +427,7 @@ const pl: Translations = {
   "home.player_fallback": "Graczu", "home.your_points": "Twoje punkty", "home.predictions_made": "typów oddanych",
   "home.results": "Wyniki", "home.no_results": "Brak wyników", "home.nearest_matches": "Najbliższe mecze",
   "home.week_ranking": "Ranking tygodnia", "home.predictions_short": "typów", "home.see": "Zobacz",
-  "home.level": "Poziom", "home.streak": "Seria", "home.streak_hits": "trafione",
+  "home.level": "Poziom", "home.streak": "Seria", "home.streak_hits": "trafione", "home.hits": "Trafienia",
   "level.rookie": "Nowicjusz", "level.player": "Gracz", "level.expert": "Ekspert", "level.master": "Mistrz",
   "home.last_pick": "Twój ostatni typ", "home.nearest_match": "Najbliższy mecz", "home.win_chance": "Szanse na wygraną",
   "home.place_bet": "POSTAW TYP", "home.win": "WIN", "home.loss": "PUDŁO",
@@ -579,7 +579,7 @@ const de: Translations = {
   "home.player_fallback": "Spieler", "home.your_points": "Deine Punkte", "home.predictions_made": "Tipps abgegeben",
   "home.results": "Ergebnisse", "home.no_results": "Keine Ergebnisse", "home.nearest_matches": "Nächste Spiele",
   "home.week_ranking": "Wochenrangliste", "home.predictions_short": "Tipps", "home.see": "Ansehen",
-  "home.level": "Stufe", "home.streak": "Serie", "home.streak_hits": "in Folge",
+  "home.level": "Stufe", "home.streak": "Serie", "home.streak_hits": "in Folge", "home.hits": "Treffer",
   "level.rookie": "Neuling", "level.player": "Spieler", "level.expert": "Experte", "level.master": "Meister",
   "home.last_pick": "Dein letzter Tipp", "home.nearest_match": "Nächstes Spiel", "home.win_chance": "Siegchance",
   "home.place_bet": "TIPP ABGEBEN", "home.win": "WIN", "home.loss": "DANEBEN",
@@ -731,7 +731,7 @@ const fr: Translations = {
   "home.player_fallback": "Joueur", "home.your_points": "Tes points", "home.predictions_made": "pronostics faits",
   "home.results": "Résultats", "home.no_results": "Aucun résultat", "home.nearest_matches": "Prochains matchs",
   "home.week_ranking": "Classement de la semaine", "home.predictions_short": "pronostics", "home.see": "Voir",
-  "home.level": "Niveau", "home.streak": "Série", "home.streak_hits": "d'affilée",
+  "home.level": "Niveau", "home.streak": "Série", "home.streak_hits": "d'affilée", "home.hits": "Réussis",
   "level.rookie": "Débutant", "level.player": "Joueur", "level.expert": "Expert", "level.master": "Maître",
   "home.last_pick": "Ton dernier pronostic", "home.nearest_match": "Prochain match", "home.win_chance": "Chances de victoire",
   "home.place_bet": "PRONOSTIQUER", "home.win": "WIN", "home.loss": "RATÉ",
@@ -883,7 +883,7 @@ const es: Translations = {
   "home.player_fallback": "Jugador", "home.your_points": "Tus puntos", "home.predictions_made": "predicciones hechas",
   "home.results": "Resultados", "home.no_results": "Sin resultados", "home.nearest_matches": "Próximos partidos",
   "home.week_ranking": "Ranking semanal", "home.predictions_short": "predicciones", "home.see": "Ver",
-  "home.level": "Nivel", "home.streak": "Racha", "home.streak_hits": "seguidos",
+  "home.level": "Nivel", "home.streak": "Racha", "home.streak_hits": "seguidos", "home.hits": "Aciertos",
   "level.rookie": "Novato", "level.player": "Jugador", "level.expert": "Experto", "level.master": "Maestro",
   "home.last_pick": "Tu último pronóstico", "home.nearest_match": "Próximo partido", "home.win_chance": "Probabilidad de victoria",
   "home.place_bet": "PRONOSTICAR", "home.win": "WIN", "home.loss": "FALLO",
@@ -1035,7 +1035,7 @@ const it: Translations = {
   "home.player_fallback": "Giocatore", "home.your_points": "I tuoi punti", "home.predictions_made": "pronostici fatti",
   "home.results": "Risultati", "home.no_results": "Nessun risultato", "home.nearest_matches": "Prossime partite",
   "home.week_ranking": "Classifica settimanale", "home.predictions_short": "pronostici", "home.see": "Vedi",
-  "home.level": "Livello", "home.streak": "Serie", "home.streak_hits": "di fila",
+  "home.level": "Livello", "home.streak": "Serie", "home.streak_hits": "di fila", "home.hits": "Azzeccati",
   "level.rookie": "Esordiente", "level.player": "Giocatore", "level.expert": "Esperto", "level.master": "Maestro",
   "home.last_pick": "Il tuo ultimo pronostico", "home.nearest_match": "Prossima partita", "home.win_chance": "Probabilità di vittoria",
   "home.place_bet": "PRONOSTICA", "home.win": "WIN", "home.loss": "ERRORE",
