@@ -139,14 +139,22 @@ export default function SportMatchesPage({ sportType, title, emoji }: Props) {
       .gte("match_time", from).lte("match_time", to)
       .order("match_time")
       .then(({ data }) => {
-        setMatches(data ?? []);
+        const rows = data ?? [];
+        setMatches(rows);
         setLoading(false);
+        // Jeśli nie ma nadchodzących, ale są przeszłe — pokaż od razu "Zakończone"
+        const now = Date.now();
+        const hasUpcoming = rows.some(m => !isLive(m.status) && !isFinished(m.status) && new Date(m.match_time).getTime() > now);
+        if (!hasUpcoming && rows.length > 0) setTab("finished");
       });
   }, [sportType]);
 
+  // Mecz przeszły = data minęła. Część dyscyplin nie aktualizuje statusu na FT,
+  // więc traktujemy minione mecze jako "zakończone", żeby ekran nie był pusty.
+  const isPast = (m: Match) => new Date(m.match_time).getTime() < Date.now();
   const filtered = matches.filter(m => {
     if (tab === "live") return isLive(m.status);
-    if (tab === "finished") return isFinished(m.status);
+    if (tab === "finished") return isFinished(m.status) || (!isLive(m.status) && isPast(m));
     return !isLive(m.status) && !isFinished(m.status) && new Date(m.match_time) > new Date();
   }).sort((a, b) => {
     if (tab === "finished") return new Date(b.match_time).getTime() - new Date(a.match_time).getTime();

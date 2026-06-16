@@ -83,6 +83,7 @@ export type TranslationKey =
   | "chat.empty_room" | "chat.last_empty"
   // Matches extra
   | "matches.wc_tables" | "matches.no_in_category" | "matches.finished_short"
+  | "matches.competitions" | "matches.ended" | "matches.matches_count"
   // Leagues extra
   | "leagues.title_full" | "leagues.empty_title" | "leagues.empty_hint_a" | "leagues.empty_hint_b"
   | "leagues.create_first" | "leagues.tournament_label" | "leagues.create_error"
@@ -258,7 +259,7 @@ const en: Translations = {
   "chat.create_group": "Create group", "chat.group_not_found": "No group found with this code",
   "chat.create_error": "Could not create group", "chat.join_error": "Could not join",
   "chat.empty_room": "No messages — be the first! 👋", "chat.last_empty": "No messages — be the first!",
-  "matches.wc_tables": "WC tables", "matches.no_in_category": "No matches in this category",
+  "matches.wc_tables": "WC tables", "matches.no_in_category": "No matches in this category", "matches.competitions": "Competitions", "matches.ended": "Finished", "matches.matches_count": "matches",
   "matches.finished_short": "Finished",
   "leagues.title_full": "Leagues & tournaments", "leagues.empty_title": "No leagues or tournaments",
   "leagues.empty_hint_a": "Use the", "leagues.empty_hint_b": "button in the bottom-right to create a league, tournament or join with a code",
@@ -410,7 +411,7 @@ const pl: Translations = {
   "chat.create_group": "Stwórz grupę", "chat.group_not_found": "Nie znaleziono grupy o tym kodzie",
   "chat.create_error": "Nie udało się utworzyć grupy", "chat.join_error": "Nie udało się dołączyć",
   "chat.empty_room": "Brak wiadomości — napisz pierwszy! 👋", "chat.last_empty": "Brak wiadomości — napisz pierwszy!",
-  "matches.wc_tables": "Tabele MŚ", "matches.no_in_category": "Brak meczów w tej kategorii",
+  "matches.wc_tables": "Tabele MŚ", "matches.no_in_category": "Brak meczów w tej kategorii", "matches.competitions": "Rozgrywki", "matches.ended": "Zakończone", "matches.matches_count": "mecze",
   "matches.finished_short": "Zakończony",
   "leagues.title_full": "Ligi i turnieje", "leagues.empty_title": "Brak lig i turniejów",
   "leagues.empty_hint_a": "Użyj przycisku", "leagues.empty_hint_b": "w prawym dolnym rogu, aby stworzyć ligę, turniej lub dołączyć kodem",
@@ -562,7 +563,7 @@ const de: Translations = {
   "chat.create_group": "Gruppe erstellen", "chat.group_not_found": "Keine Gruppe mit diesem Code gefunden",
   "chat.create_error": "Gruppe konnte nicht erstellt werden", "chat.join_error": "Beitritt fehlgeschlagen",
   "chat.empty_room": "Keine Nachrichten — sei der Erste! 👋", "chat.last_empty": "Keine Nachrichten — sei der Erste!",
-  "matches.wc_tables": "WM-Tabellen", "matches.no_in_category": "Keine Spiele in dieser Kategorie",
+  "matches.wc_tables": "WM-Tabellen", "matches.no_in_category": "Keine Spiele in dieser Kategorie", "matches.competitions": "Wettbewerbe", "matches.ended": "Beendet", "matches.matches_count": "Spiele",
   "matches.finished_short": "Beendet",
   "leagues.title_full": "Ligen & Turniere", "leagues.empty_title": "Keine Ligen oder Turniere",
   "leagues.empty_hint_a": "Nutze die", "leagues.empty_hint_b": "Schaltfläche unten rechts, um eine Liga, ein Turnier zu erstellen oder mit Code beizutreten",
@@ -714,7 +715,7 @@ const fr: Translations = {
   "chat.create_group": "Créer le groupe", "chat.group_not_found": "Aucun groupe trouvé avec ce code",
   "chat.create_error": "Impossible de créer le groupe", "chat.join_error": "Impossible de rejoindre",
   "chat.empty_room": "Aucun message — sois le premier ! 👋", "chat.last_empty": "Aucun message — sois le premier !",
-  "matches.wc_tables": "Tableaux CM", "matches.no_in_category": "Aucun match dans cette catégorie",
+  "matches.wc_tables": "Tableaux CM", "matches.no_in_category": "Aucun match dans cette catégorie", "matches.competitions": "Compétitions", "matches.ended": "Terminé", "matches.matches_count": "matchs",
   "matches.finished_short": "Terminé",
   "leagues.title_full": "Ligues & tournois", "leagues.empty_title": "Aucune ligue ni tournoi",
   "leagues.empty_hint_a": "Utilise le bouton", "leagues.empty_hint_b": "en bas à droite pour créer une ligue, un tournoi ou rejoindre avec un code",
@@ -866,7 +867,7 @@ const es: Translations = {
   "chat.create_group": "Crear grupo", "chat.group_not_found": "No se encontró ningún grupo con este código",
   "chat.create_error": "No se pudo crear el grupo", "chat.join_error": "No se pudo unir",
   "chat.empty_room": "Sin mensajes — ¡sé el primero! 👋", "chat.last_empty": "Sin mensajes — ¡sé el primero!",
-  "matches.wc_tables": "Tablas del Mundial", "matches.no_in_category": "Sin partidos en esta categoría",
+  "matches.wc_tables": "Tablas del Mundial", "matches.no_in_category": "Sin partidos en esta categoría", "matches.competitions": "Competiciones", "matches.ended": "Finalizado", "matches.matches_count": "partidos",
   "matches.finished_short": "Terminado",
   "leagues.title_full": "Ligas y torneos", "leagues.empty_title": "Sin ligas ni torneos",
   "leagues.empty_hint_a": "Usa el botón", "leagues.empty_hint_b": "abajo a la derecha para crear una liga, un torneo o unirte con un código",
@@ -1018,7 +1019,7 @@ const it: Translations = {
   "chat.create_group": "Crea gruppo", "chat.group_not_found": "Nessun gruppo trovato con questo codice",
   "chat.create_error": "Impossibile creare il gruppo", "chat.join_error": "Impossibile unirsi",
   "chat.empty_room": "Nessun messaggio — scrivi per primo! 👋", "chat.last_empty": "Nessun messaggio — scrivi per primo!",
-  "matches.wc_tables": "Tabelle Mondiali", "matches.no_in_category": "Nessuna partita in questa categoria",
+  "matches.wc_tables": "Tabelle Mondiali", "matches.no_in_category": "Nessuna partita in questa categoria", "matches.competitions": "Competizioni", "matches.ended": "Terminato", "matches.matches_count": "partite",
   "matches.finished_short": "Terminata",
   "leagues.title_full": "Leghe e tornei", "leagues.empty_title": "Nessuna lega o torneo",
   "leagues.empty_hint_a": "Usa il pulsante", "leagues.empty_hint_b": "in basso a destra per creare una lega, un torneo o unirti con un codice",
