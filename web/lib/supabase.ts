@@ -1,16 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
-export const supabase = createClient(
+// createBrowserClient przechowuje sesję w cookies (nie localStorage),
+// dzięki czemu middleware serwerowy może ją odczytać i odświeżyć.
+export const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storageKey: "typerly-auth",
-    },
-  },
 );
 
 export type Match = {
