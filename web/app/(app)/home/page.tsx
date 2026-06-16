@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback } from "react";
 import { supabase, Match, Prediction, isLive, isFinished, isUpcoming, competitionLabel, ensureProfile } from "@/lib/supabase";
-import MatchCard from "@/components/MatchCard";
+import MatchCard, { TeamLogo } from "@/components/MatchCard";
 import { Search, ChevronRight, Zap, Clock, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useLang } from "@/contexts/LangContext";
@@ -80,6 +80,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [sport, setSport] = useState<string>("all");
   const [allMatches, setAllMatches] = useState<Match[]>([]);
+  const [featuredChance, setFeaturedChance] = useState<{ home: number; away: number } | null>(null);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -189,6 +190,25 @@ export default function HomePage() {
   const matchSport = (m: Match) => sport === "all" || m.sport_type === sport;
   const liveFiltered = liveMatches.filter(matchSport);
   const upcomingFiltered = upcoming.filter(matchSport);
+  const featured = upcomingFiltered[0] ?? null;
+
+  // "Szanse na wygraną" — sentyment społeczności: % typów na zwycięstwo gospodarza vs gościa
+  useEffect(() => {
+    const next = upcoming.filter(m => sport === "all" || m.sport_type === sport)[0];
+    if (!next) { setFeaturedChance(null); return; }
+    supabase.from("predictions").select("predicted_home_score, predicted_away_score").eq("match_id", next.id)
+      .then(({ data }) => {
+        let h = 0, a = 0;
+        for (const p of data ?? []) {
+          if (p.predicted_home_score > p.predicted_away_score) h++;
+          else if (p.predicted_home_score < p.predicted_away_score) a++;
+        }
+        const total = h + a;
+        if (total === 0) { setFeaturedChance({ home: 50, away: 50 }); return; }
+        const home = Math.round((h / total) * 100);
+        setFeaturedChance({ home, away: 100 - home });
+      });
+  }, [upcoming, sport]);
 
   const greetHour = new Date().getHours();
   const greeting = greetHour < 12 ? t("home.greeting_morning") : greetHour < 18 ? t("home.greeting_afternoon") : t("home.greeting_evening");
@@ -241,37 +261,48 @@ export default function HomePage() {
         </div>
       </Link>
 
-      {/* Baner: Sprawdź ostatnie typy */}
+      {/* Twój ostatni typ — karta z flagami */}
       {recentPreds.length > 0 && (() => {
         const last = recentPreds[0];
-        const totalCalc = recentPreds.reduce((s, p) => s + (p.points_earned ?? 0), 0);
-        const hasPts = totalCalc > 0;
+        const m = last.match!;
+        const win = (last.points_earned ?? 0) > 0;
         return (
-          <Link href="/ranking" className="block mb-6">
-            <div className="relative overflow-hidden rounded-2xl px-5 py-4 flex items-center gap-4 active:scale-[0.98] transition-transform
-              border border-[#F5C400]/40 bg-gradient-to-r from-[#1a1500] to-[#111]"
-              style={{ boxShadow: "0 0 0 1px rgba(245,196,0,0.15), 0 0 24px rgba(245,196,0,0.15)" }}>
-              {/* Pulsująca poświata */}
-              <div className="absolute inset-0 rounded-2xl pointer-events-none"
-                style={{ boxShadow: "inset 0 0 0 1px rgba(245,196,0,0.2)", animation: "pulse-live 2s ease-in-out infinite" }} />
-              {/* Tekst */}
-              <div className="flex-1 min-w-0">
-                <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-0.5">{t("home.check_recent")}</p>
-                <p className="text-white font-black text-base leading-tight truncate">
-                  {last.match?.home_team_name} – {last.match?.away_team_name}
+          <div className="mb-6">
+            <SectionHeader title={t("home.last_pick")} icon={<></>} href="/ranking" />
+            <Link href={`/matches/${m.id}`} className="block">
+              <div className="relative overflow-hidden rounded-2xl border border-white/[0.12] bg-[#161616] p-4 active:scale-[0.98] transition-transform card-glow">
+                {/* Nagłówek meczu */}
+                <p className="text-white/40 text-[11px] font-semibold mb-3">
+                  {competitionLabel(m.competition, m.sport_type, t)} · {new Date(m.match_time).toLocaleString(numLocale[locale] ?? "pl-PL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                 </p>
-                <p className="text-white/40 text-xs font-mono mt-0.5">
-                  {t("pred.pick_label")} {last.predicted_home_score}:{last.predicted_away_score}
-                  {last.match?.home_score != null && <> · {t("pred.result_label")} <span className="text-white/60">{last.match.home_score}:{last.match.away_score}</span></>}
-                </p>
-                <p className={`text-sm font-black mt-1 ${hasPts ? "text-[#F5C400]" : "text-white/30"}`}>{totalCalc} {t("home.pts_total")}</p>
+                <div className="flex items-center gap-4">
+                  {/* Lewa część: drużyny + wynik */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2.5 mb-1">
+                      <TeamLogo url={m.home_team_logo_url} name={m.home_team_name} />
+                      <span className="text-white font-bold text-base truncate">{m.home_team_name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 my-1.5">
+                      <span className="font-black text-3xl font-archivo tabular-nums">
+                        <span className="text-white">{last.predicted_home_score}</span>
+                        <span className="text-[#F5C400] mx-1">:</span>
+                        <span className="text-[#F5C400]">{last.predicted_away_score}</span>
+                      </span>
+                      <span className={`font-black text-sm ${win ? "text-green-400" : "text-white/30"}`}>
+                        {win ? t("home.win") : t("home.loss")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2.5 mt-1">
+                      <TeamLogo url={m.away_team_logo_url} name={m.away_team_name} />
+                      <span className="text-white font-bold text-base truncate">{m.away_team_name}</span>
+                    </div>
+                  </div>
+                  {/* Prawa część: puchar / gwiazdka */}
+                  <div className="flex-shrink-0 text-6xl leading-none">{win ? "🏆" : "⭐"}</div>
+                </div>
               </div>
-              {/* Ikona po prawej — puchar lub gwiazdka */}
-              <div className="flex-shrink-0 text-5xl leading-none">
-                {hasPts ? "🏆" : "⭐"}
-              </div>
-            </div>
-          </Link>
+            </Link>
+          </div>
         );
       })()}
 
@@ -360,7 +391,54 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Nadchodzące */}
+          {/* Najbliższy mecz — wyróżniona karta z POSTAW TYP */}
+          {featured && (
+            <div className="mb-6">
+              <SectionHeader title={t("home.nearest_match")} icon={<Clock size={14} className="text-[#F5C400]" />} href="/matches" />
+              <div className="rounded-2xl border border-white/[0.12] bg-[#161616] p-5 card-glow">
+                <p className="text-white/40 text-[11px] font-semibold mb-4">
+                  {competitionLabel(featured.competition, featured.sport_type, t)} · {new Date(featured.match_time).toLocaleString(numLocale[locale] ?? "pl-PL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                </p>
+                {/* Drużyny */}
+                <div className="flex items-start justify-between gap-2 mb-4">
+                  <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
+                    <div className="scale-125"><TeamLogo url={featured.home_team_logo_url} name={featured.home_team_name} /></div>
+                    <span className="text-white font-bold text-sm text-center leading-tight line-clamp-2">{featured.home_team_name}</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center pt-2">
+                    <span className="text-white/25 font-black text-lg">VS</span>
+                    <span className="text-white/60 text-sm font-bold mt-1 tabular-nums">
+                      {new Date(featured.match_time).toLocaleTimeString(numLocale[locale] ?? "pl-PL", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
+                    <div className="scale-125"><TeamLogo url={featured.away_team_logo_url} name={featured.away_team_name} /></div>
+                    <span className="text-white font-bold text-sm text-center leading-tight line-clamp-2">{featured.away_team_name}</span>
+                  </div>
+                </div>
+                {/* Szanse na wygraną */}
+                {featuredChance && (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[#F5C400] font-black text-sm tabular-nums">{featuredChance.home}%</span>
+                      <span className="text-white/30 text-[11px] font-semibold">{t("home.win_chance")}</span>
+                      <span className="text-white/60 font-black text-sm tabular-nums">{featuredChance.away}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/[0.08] overflow-hidden flex">
+                      <div className="h-full bg-[#F5C400] rounded-full transition-all" style={{ width: `${featuredChance.home}%` }} />
+                    </div>
+                  </div>
+                )}
+                {/* POSTAW TYP */}
+                <Link href={`/matches/${featured.id}`}
+                  className="block w-full text-center py-3.5 rounded-xl bg-[#F5C400] text-black font-black text-sm uppercase tracking-wide active:scale-[0.97] transition shadow-[0_4px_24px_rgba(245,196,0,0.3)]">
+                  {myPredictions[featured.id] ? t("match.your_prediction") : t("home.place_bet")}
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Pozostałe nadchodzące mecze */}
           <div className="mb-6">
             <SectionHeader
               title={liveFiltered.length > 0 ? t("home.upcoming") : t("home.nearest_matches")}
@@ -372,11 +450,11 @@ export default function HomePage() {
               <div className="flex flex-col gap-3">
                 {[0,1,2].map(i => <SkeletonCard key={i} />)}
               </div>
-            ) : upcomingFiltered.length === 0 ? (
+            ) : upcomingFiltered.length <= 1 ? (
               <p className="text-white/20 text-sm text-center py-6">{t("home.no_upcoming")}</p>
             ) : (
               <div className="flex flex-col gap-3">
-                {upcomingFiltered.slice(0, 5).map((m, i) => <MatchCard key={m.id} match={m} myPrediction={myPredictions[m.id]} index={i} />)}
+                {upcomingFiltered.slice(1, 6).map((m, i) => <MatchCard key={m.id} match={m} myPrediction={myPredictions[m.id]} index={i} />)}
               </div>
             )}
           </div>

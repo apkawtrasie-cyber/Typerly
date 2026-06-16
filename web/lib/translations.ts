@@ -98,6 +98,8 @@ export type TranslationKey =
   | "home.week_ranking" | "home.predictions_short" | "home.see"
   | "home.level" | "home.streak" | "home.streak_hits"
   | "level.rookie" | "level.player" | "level.expert" | "level.master"
+  | "home.last_pick" | "home.nearest_match" | "home.win_chance"
+  | "home.place_bet" | "home.win" | "home.loss"
   // League detail extra
   | "league.player_fallback"
   // World Cup
@@ -275,6 +277,8 @@ const en: Translations = {
   "home.week_ranking": "Weekly ranking", "home.predictions_short": "predictions", "home.see": "See",
   "home.level": "Level", "home.streak": "Streak", "home.streak_hits": "in a row",
   "level.rookie": "Rookie", "level.player": "Player", "level.expert": "Expert", "level.master": "Master",
+  "home.last_pick": "Your last pick", "home.nearest_match": "Next match", "home.win_chance": "Win chance",
+  "home.place_bet": "PLACE PICK", "home.win": "WIN", "home.loss": "MISS",
   "sport.all": "All", "sport.football": "Football", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formula 1",
   "home.sport_upcoming": "Upcoming matches", "home.f1_subtitle": "2026 Season Calendar",
   "error.save": "Could not save — try again", "error.load": "Could not load data", "error.auth_required": "Sign in to make predictions",
@@ -425,6 +429,8 @@ const pl: Translations = {
   "home.week_ranking": "Ranking tygodnia", "home.predictions_short": "typów", "home.see": "Zobacz",
   "home.level": "Poziom", "home.streak": "Seria", "home.streak_hits": "trafione",
   "level.rookie": "Nowicjusz", "level.player": "Gracz", "level.expert": "Ekspert", "level.master": "Mistrz",
+  "home.last_pick": "Twój ostatni typ", "home.nearest_match": "Najbliższy mecz", "home.win_chance": "Szanse na wygraną",
+  "home.place_bet": "POSTAW TYP", "home.win": "WIN", "home.loss": "PUDŁO",
   "sport.all": "Wszystkie", "sport.football": "Piłka nożna", "sport.volleyball": "Siatkówka", "sport.handball": "Piłka ręczna", "sport.f1": "Formuła 1",
   "home.sport_upcoming": "Nadchodzące mecze", "home.f1_subtitle": "Kalendarz sezonu 2026",
   "error.save": "Nie udało się zapisać — spróbuj ponownie", "error.load": "Nie udało się pobrać danych", "error.auth_required": "Zaloguj się żeby typować",
@@ -575,6 +581,8 @@ const de: Translations = {
   "home.week_ranking": "Wochenrangliste", "home.predictions_short": "Tipps", "home.see": "Ansehen",
   "home.level": "Stufe", "home.streak": "Serie", "home.streak_hits": "in Folge",
   "level.rookie": "Neuling", "level.player": "Spieler", "level.expert": "Experte", "level.master": "Meister",
+  "home.last_pick": "Dein letzter Tipp", "home.nearest_match": "Nächstes Spiel", "home.win_chance": "Siegchance",
+  "home.place_bet": "TIPP ABGEBEN", "home.win": "WIN", "home.loss": "DANEBEN",
   "sport.all": "Alle", "sport.football": "Fußball", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formel 1",
   "home.sport_upcoming": "Nächste Spiele", "home.f1_subtitle": "Kalender Saison 2026",
   "error.save": "Speichern fehlgeschlagen — nochmal versuchen", "error.load": "Daten konnten nicht geladen werden", "error.auth_required": "Einloggen zum Tippen",
@@ -725,6 +733,8 @@ const fr: Translations = {
   "home.week_ranking": "Classement de la semaine", "home.predictions_short": "pronostics", "home.see": "Voir",
   "home.level": "Niveau", "home.streak": "Série", "home.streak_hits": "d'affilée",
   "level.rookie": "Débutant", "level.player": "Joueur", "level.expert": "Expert", "level.master": "Maître",
+  "home.last_pick": "Ton dernier pronostic", "home.nearest_match": "Prochain match", "home.win_chance": "Chances de victoire",
+  "home.place_bet": "PRONOSTIQUER", "home.win": "WIN", "home.loss": "RATÉ",
   "sport.all": "Tout", "sport.football": "Football", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formule 1",
   "home.sport_upcoming": "Prochains matchs", "home.f1_subtitle": "Calendrier saison 2026",
   "error.save": "Sauvegarde échouée — réessaie", "error.load": "Impossible de charger les données", "error.auth_required": "Connecte-toi pour pronostiquer",
@@ -875,6 +885,8 @@ const es: Translations = {
   "home.week_ranking": "Ranking semanal", "home.predictions_short": "predicciones", "home.see": "Ver",
   "home.level": "Nivel", "home.streak": "Racha", "home.streak_hits": "seguidos",
   "level.rookie": "Novato", "level.player": "Jugador", "level.expert": "Experto", "level.master": "Maestro",
+  "home.last_pick": "Tu último pronóstico", "home.nearest_match": "Próximo partido", "home.win_chance": "Probabilidad de victoria",
+  "home.place_bet": "PRONOSTICAR", "home.win": "WIN", "home.loss": "FALLO",
   "sport.all": "Todo", "sport.football": "Fútbol", "sport.volleyball": "Voleibol", "sport.handball": "Balonmano", "sport.f1": "Fórmula 1",
   "home.sport_upcoming": "Próximos partidos", "home.f1_subtitle": "Calendario temporada 2026",
   "error.save": "No se pudo guardar — inténtalo de nuevo", "error.load": "No se pudieron cargar los datos", "error.auth_required": "Inicia sesión para pronosticar",
@@ -1025,6 +1037,8 @@ const it: Translations = {
   "home.week_ranking": "Classifica settimanale", "home.predictions_short": "pronostici", "home.see": "Vedi",
   "home.level": "Livello", "home.streak": "Serie", "home.streak_hits": "di fila",
   "level.rookie": "Esordiente", "level.player": "Giocatore", "level.expert": "Esperto", "level.master": "Maestro",
+  "home.last_pick": "Il tuo ultimo pronostico", "home.nearest_match": "Prossima partita", "home.win_chance": "Probabilità di vittoria",
+  "home.place_bet": "PRONOSTICA", "home.win": "WIN", "home.loss": "ERRORE",
   "sport.all": "Tutti", "sport.football": "Calcio", "sport.volleyball": "Pallavolo", "sport.handball": "Pallamano", "sport.f1": "Formula 1",
   "home.sport_upcoming": "Prossime partite", "home.f1_subtitle": "Calendario stagione 2026",
   "error.save": "Salvataggio fallito — riprova", "error.load": "Impossibile caricare i dati", "error.auth_required": "Accedi per pronosticare",
