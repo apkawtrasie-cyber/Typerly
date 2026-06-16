@@ -19,14 +19,9 @@ export async function GET(request: Request) {
         cookies: {
           getAll: () => cookieStore.getAll(),
           setAll: (cookiesToSet) => {
+            // Bez httpOnly — klient przeglądarki musi czytać te cookies (patrz middleware)
             cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, {
-                ...options,
-                maxAge: 60 * 60 * 24 * 400, // 400 dni — sesja nie wygasa po zamknięciu
-                sameSite: "lax",
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-              });
+              cookieStore.set(name, value, options);
             });
           },
         },

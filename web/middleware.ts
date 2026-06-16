@@ -11,16 +11,12 @@ export async function middleware(request: NextRequest) {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet) => {
+          // WAŻNE: przekazujemy opcje Supabase BEZ zmian.
+          // NIE wolno ustawiać httpOnly — klient przeglądarki (createBrowserClient)
+          // czyta sesję z cookies przez JavaScript. httpOnly = klient ślepy = wylogowanie.
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value);
-            response.cookies.set(name, value, {
-              ...options,
-              // Sesja trzymana przez 400 dni — nie wygasa po zamknięciu przeglądarki
-              maxAge: 60 * 60 * 24 * 400,
-              sameSite: "lax",
-              httpOnly: true,
-              secure: process.env.NODE_ENV === "production",
-            });
+            response.cookies.set(name, value, options);
           });
         },
       },
