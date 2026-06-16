@@ -41,6 +41,57 @@ function SkeletonCard() {
   return <div className="skeleton h-28 rounded-2xl" />;
 }
 
+// Tabela ligowa liczona z zakończonych meczów (3 pkt zwycięstwo, 1 remis)
+type TableRow = { team: string; p: number; w: number; d: number; l: number; gf: number; ga: number; pts: number };
+function leagueTable(ms: Match[]): TableRow[] {
+  const finished = ms.filter(m => isFinished(m.status) && m.home_score != null && m.away_score != null);
+  const map: Record<string, TableRow> = {};
+  for (const m of finished) {
+    const hs = Number(m.home_score), as_ = Number(m.away_score);
+    for (const [team, gf, ga] of [[m.home_team_name, hs, as_], [m.away_team_name, as_, hs]] as [string, number, number][]) {
+      if (!map[team]) map[team] = { team, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 };
+      const r = map[team];
+      r.p++; r.gf += gf; r.ga += ga;
+      if (gf > ga) { r.w++; r.pts += 3; }
+      else if (gf < ga) { r.l++; }
+      else { r.d++; r.pts += 1; }
+    }
+  }
+  return Object.values(map).sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf);
+}
+
+function FootballStandings({ matches, t }: { matches: Match[]; t: (k: TranslationKey) => string }) {
+  const rows = leagueTable(matches);
+  if (rows.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-4xl mb-3">⚽</p>
+        <p className="text-white/30 font-semibold">{t("matches.no_standings")}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-[#1e1e1e] border border-white/[0.10] rounded-2xl overflow-hidden card-glow">
+      <div className="flex items-center px-3 py-2 text-white/30 text-[10px] font-bold uppercase border-b border-white/[0.06]">
+        <span className="w-6 text-center">#</span>
+        <span className="flex-1 pl-1">{t("wc.team")}</span>
+        <span className="w-7 text-center">{t("wc.col_played")}</span>
+        <span className="w-9 text-center">+/-</span>
+        <span className="w-9 text-center text-[#F5C400]">{t("wc.col_pts")}</span>
+      </div>
+      {rows.map((r, i) => (
+        <div key={r.team} className={`flex items-center px-3 py-2.5 ${i < rows.length - 1 ? "border-b border-white/[0.04]" : ""}`}>
+          <span className={`w-6 text-center font-black text-sm ${i < 4 ? "text-[#F5C400]" : i >= rows.length - 3 ? "text-red-400/60" : "text-white/30"}`}>{i + 1}</span>
+          <span className="flex-1 pl-1 text-white text-sm font-semibold truncate">{r.team}</span>
+          <span className="w-7 text-center text-white/50 text-sm tabular-nums">{r.p}</span>
+          <span className="w-9 text-center text-white/50 text-sm tabular-nums">{r.gf - r.ga > 0 ? "+" : ""}{r.gf - r.ga}</span>
+          <span className="w-9 text-center text-[#F5C400] font-black text-sm tabular-nums">{r.pts}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function MatchesPage() {
   const { t, locale } = useLang();
   const [matches, setMatches] = useState<Match[]>([]);
@@ -52,7 +103,7 @@ export default function MatchesPage() {
   useEffect(() => {
     const now = new Date();
     const from = new Date(now.getTime() - 30 * 86400000).toISOString();
-    const to = new Date(now.getTime() + 90 * 86400000).toISOString();
+    const to = new Date(now.getTime() + 180 * 86400000).toISOString();
 
     supabase.from("matches").select("*")
       .or("sport_type.eq.football,sport_type.is.null")
@@ -123,8 +174,8 @@ export default function MatchesPage() {
     { label: t("matches.upcoming"), key: "upcoming" },
     { label: "🔴 " + t("matches.live"), key: "live" },
     { label: t("matches.finished"), key: "finished" },
+    { label: "🏆 " + t("matches.standings"), key: "table" },
   ];
-  if (selectedComp === "WC") SUB_TABS.push({ label: "🏆 " + t("matches.wc_tables"), key: "wc" });
 
   // ════════════════════════════════════════════════════════════════════════
   // WIDOK 1: HUB — przełącznik sportu + kafelki rozgrywek
@@ -234,8 +285,8 @@ export default function MatchesPage() {
         ))}
       </div>
 
-      {tab === "wc" ? (
-        <WorldCupStandings />
+      {tab === "table" ? (
+        selectedComp === "WC" ? <WorldCupStandings /> : <FootballStandings matches={compMatches} t={t} />
       ) : loading ? (
         <div className="flex flex-col gap-3">{[0,1,2,3].map(i => <SkeletonCard key={i} />)}</div>
       ) : Object.keys(grouped).length === 0 ? (
