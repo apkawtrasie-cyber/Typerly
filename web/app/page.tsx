@@ -1,16 +1,21 @@
-import { redirect } from "next/navigation";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+"use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
-export default async function RootPage() {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll() } }
+// Strona startowa — sprawdza sesję po stronie klienta (localStorage)
+// i przekierowuje. Brak sprawdzania serwerowego = brak wylogowywania.
+export default function RootPage() {
+  const router = useRouter();
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      router.replace(data.session ? "/home" : "/login");
+    });
+  }, [router]);
+
+  return (
+    <div className="min-h-[100dvh] bg-[#0A0A0A] flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-[#F5C400] border-t-transparent rounded-full animate-spin" />
+    </div>
   );
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) redirect("/home");
-  else redirect("/login");
 }
