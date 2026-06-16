@@ -28,7 +28,6 @@ export default function LeaguesPage() {
   const [loading, setLoading] = useState(true);
   const [dialog, setDialog] = useState<null | "create" | "join" | "tournament">(null);
   const [name, setName] = useState("");
-  const [fee, setFee] = useState("0");
   const [prize, setPrize] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -116,11 +115,11 @@ export default function LeaguesPage() {
     const invite = generateInviteCode();
     const { data: league, error: e1 } = await supabase
       .from("leagues")
-      .insert({ name: name.trim(), admin_id: userId, entry_fee_gemings: parseInt(fee) || 0, invite_code: invite })
+      .insert({ name: name.trim(), admin_id: userId, invite_code: invite, prize_description: prize.trim() || null })
       .select().single();
     if (e1 || !league) { setError(tr("leagues.create_error") + ": " + (e1?.message ?? "")); setBusy(false); return; }
     await supabase.from("league_members").insert({ league_id: league.id, user_id: userId });
-    setBusy(false); setDialog(null); setName(""); setFee("0");
+    setBusy(false); setDialog(null); setName(""); setPrize("");
     load();
   }
 
@@ -151,7 +150,7 @@ export default function LeaguesPage() {
   }
 
   function closeDialog() {
-    setDialog(null); setName(""); setFee("0"); setPrize(""); setCode(""); setError(""); setEditTournamentId(null);
+    setDialog(null); setName(""); setPrize(""); setCode(""); setError(""); setEditTournamentId(null);
   }
 
   async function deleteTournament() {
@@ -316,9 +315,9 @@ export default function LeaguesPage() {
                 <input value={name} onChange={e => setName(e.target.value)} placeholder={tr("dialog.league_name")}
                   className="bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40" />
                 <div>
-                  <label className="text-white/40 text-xs font-semibold mb-1 block">{tr("dialog.entry_fee")}</label>
-                  <input value={fee} onChange={e => setFee(e.target.value)} type="number" min="0"
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#F5C400]/40" />
+                  <label className="text-white/40 text-xs font-semibold mb-1 block">{tr("dialog.prize_optional")}</label>
+                  <input value={prize} onChange={e => setPrize(e.target.value)} placeholder={tr("dialog.prize_placeholder")}
+                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#F5C400]/40" />
                 </div>
                 {error && <p className="text-red-400 text-sm">{error}</p>}
                 <button onClick={createLeague} disabled={busy || !name.trim()}
