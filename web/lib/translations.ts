@@ -96,6 +96,8 @@ export type TranslationKey =
   | "home.player_fallback" | "home.your_points" | "home.predictions_made"
   | "home.results" | "home.no_results" | "home.nearest_matches"
   | "home.week_ranking" | "home.predictions_short" | "home.see"
+  | "home.level" | "home.streak" | "home.streak_hits"
+  | "level.rookie" | "level.player" | "level.expert" | "level.master"
   // League detail extra
   | "league.player_fallback"
   // World Cup
@@ -271,6 +273,8 @@ const en: Translations = {
   "home.player_fallback": "Player", "home.your_points": "Your points", "home.predictions_made": "predictions made",
   "home.results": "Results", "home.no_results": "No results", "home.nearest_matches": "Nearest matches",
   "home.week_ranking": "Weekly ranking", "home.predictions_short": "predictions", "home.see": "See",
+  "home.level": "Level", "home.streak": "Streak", "home.streak_hits": "in a row",
+  "level.rookie": "Rookie", "level.player": "Player", "level.expert": "Expert", "level.master": "Master",
   "sport.all": "All", "sport.football": "Football", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formula 1",
   "home.sport_upcoming": "Upcoming matches", "home.f1_subtitle": "2026 Season Calendar",
   "error.save": "Could not save — try again", "error.load": "Could not load data", "error.auth_required": "Sign in to make predictions",
@@ -419,6 +423,8 @@ const pl: Translations = {
   "home.player_fallback": "Graczu", "home.your_points": "Twoje punkty", "home.predictions_made": "typów oddanych",
   "home.results": "Wyniki", "home.no_results": "Brak wyników", "home.nearest_matches": "Najbliższe mecze",
   "home.week_ranking": "Ranking tygodnia", "home.predictions_short": "typów", "home.see": "Zobacz",
+  "home.level": "Poziom", "home.streak": "Seria", "home.streak_hits": "trafione",
+  "level.rookie": "Nowicjusz", "level.player": "Gracz", "level.expert": "Ekspert", "level.master": "Mistrz",
   "sport.all": "Wszystkie", "sport.football": "Piłka nożna", "sport.volleyball": "Siatkówka", "sport.handball": "Piłka ręczna", "sport.f1": "Formuła 1",
   "home.sport_upcoming": "Nadchodzące mecze", "home.f1_subtitle": "Kalendarz sezonu 2026",
   "error.save": "Nie udało się zapisać — spróbuj ponownie", "error.load": "Nie udało się pobrać danych", "error.auth_required": "Zaloguj się żeby typować",
@@ -567,6 +573,8 @@ const de: Translations = {
   "home.player_fallback": "Spieler", "home.your_points": "Deine Punkte", "home.predictions_made": "Tipps abgegeben",
   "home.results": "Ergebnisse", "home.no_results": "Keine Ergebnisse", "home.nearest_matches": "Nächste Spiele",
   "home.week_ranking": "Wochenrangliste", "home.predictions_short": "Tipps", "home.see": "Ansehen",
+  "home.level": "Stufe", "home.streak": "Serie", "home.streak_hits": "in Folge",
+  "level.rookie": "Neuling", "level.player": "Spieler", "level.expert": "Experte", "level.master": "Meister",
   "sport.all": "Alle", "sport.football": "Fußball", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formel 1",
   "home.sport_upcoming": "Nächste Spiele", "home.f1_subtitle": "Kalender Saison 2026",
   "error.save": "Speichern fehlgeschlagen — nochmal versuchen", "error.load": "Daten konnten nicht geladen werden", "error.auth_required": "Einloggen zum Tippen",
@@ -715,6 +723,8 @@ const fr: Translations = {
   "home.player_fallback": "Joueur", "home.your_points": "Tes points", "home.predictions_made": "pronostics faits",
   "home.results": "Résultats", "home.no_results": "Aucun résultat", "home.nearest_matches": "Prochains matchs",
   "home.week_ranking": "Classement de la semaine", "home.predictions_short": "pronostics", "home.see": "Voir",
+  "home.level": "Niveau", "home.streak": "Série", "home.streak_hits": "d'affilée",
+  "level.rookie": "Débutant", "level.player": "Joueur", "level.expert": "Expert", "level.master": "Maître",
   "sport.all": "Tout", "sport.football": "Football", "sport.volleyball": "Volleyball", "sport.handball": "Handball", "sport.f1": "Formule 1",
   "home.sport_upcoming": "Prochains matchs", "home.f1_subtitle": "Calendrier saison 2026",
   "error.save": "Sauvegarde échouée — réessaie", "error.load": "Impossible de charger les données", "error.auth_required": "Connecte-toi pour pronostiquer",
@@ -863,6 +873,8 @@ const es: Translations = {
   "home.player_fallback": "Jugador", "home.your_points": "Tus puntos", "home.predictions_made": "predicciones hechas",
   "home.results": "Resultados", "home.no_results": "Sin resultados", "home.nearest_matches": "Próximos partidos",
   "home.week_ranking": "Ranking semanal", "home.predictions_short": "predicciones", "home.see": "Ver",
+  "home.level": "Nivel", "home.streak": "Racha", "home.streak_hits": "seguidos",
+  "level.rookie": "Novato", "level.player": "Jugador", "level.expert": "Experto", "level.master": "Maestro",
   "sport.all": "Todo", "sport.football": "Fútbol", "sport.volleyball": "Voleibol", "sport.handball": "Balonmano", "sport.f1": "Fórmula 1",
   "home.sport_upcoming": "Próximos partidos", "home.f1_subtitle": "Calendario temporada 2026",
   "error.save": "No se pudo guardar — inténtalo de nuevo", "error.load": "No se pudieron cargar los datos", "error.auth_required": "Inicia sesión para pronosticar",
@@ -1011,6 +1023,8 @@ const it: Translations = {
   "home.player_fallback": "Giocatore", "home.your_points": "I tuoi punti", "home.predictions_made": "pronostici fatti",
   "home.results": "Risultati", "home.no_results": "Nessun risultato", "home.nearest_matches": "Prossime partite",
   "home.week_ranking": "Classifica settimanale", "home.predictions_short": "pronostici", "home.see": "Vedi",
+  "home.level": "Livello", "home.streak": "Serie", "home.streak_hits": "di fila",
+  "level.rookie": "Esordiente", "level.player": "Giocatore", "level.expert": "Esperto", "level.master": "Maestro",
   "sport.all": "Tutti", "sport.football": "Calcio", "sport.volleyball": "Pallavolo", "sport.handball": "Pallamano", "sport.f1": "Formula 1",
   "home.sport_upcoming": "Prossime partite", "home.f1_subtitle": "Calendario stagione 2026",
   "error.save": "Salvataggio fallito — riprova", "error.load": "Impossibile caricare i dati", "error.auth_required": "Accedi per pronosticare",

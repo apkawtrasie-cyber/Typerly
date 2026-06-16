@@ -49,6 +49,14 @@ const SPORT_KEY_MAP: Record<string, "sport.football" | "sport.volleyball" | "spo
   football: "sport.football", volleyball: "sport.volleyball", handball: "sport.handball",
 };
 
+// Poziom gracza wg sumy punktów — emoji + klucz tłumaczenia
+function levelFor(points: number): { emoji: string; key: "level.rookie" | "level.player" | "level.expert" | "level.master" } {
+  if (points >= 250) return { emoji: "👑", key: "level.master" };
+  if (points >= 100) return { emoji: "⭐", key: "level.expert" };
+  if (points >= 30) return { emoji: "⚡", key: "level.player" };
+  return { emoji: "🌱", key: "level.rookie" };
+}
+
 function pointsBadge(pts: number | null) {
   if (pts === null || pts === undefined) return null;
   if (pts >= 3) return { icon: "⭐", label: `${pts} pkt`, color: "text-yellow-300", bg: "bg-yellow-400/10 border-yellow-400/20" };
@@ -60,6 +68,8 @@ export default function HomePage() {
   const { t, locale } = useLang();
   const [username, setUsername] = useState("");
   const [totalPoints, setTotalPoints] = useState(0);
+  const [accuracy, setAccuracy] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
   const [upcoming, setUpcoming] = useState<Match[]>([]);
   const [myPredictions, setMyPredictions] = useState<Record<string, Prediction>>({});
@@ -115,13 +125,29 @@ export default function HomePage() {
     }
 
     const predMap: Record<string, Prediction> = {};
-    let pts = 0;
+    let pts = 0, calculatedCount = 0, hits = 0;
     for (const p of preds) {
       predMap[p.match_id] = p;
-      if (p.is_calculated) pts += p.points_earned ?? 0;
+      if (p.is_calculated) {
+        pts += p.points_earned ?? 0;
+        calculatedCount++;
+        if ((p.points_earned ?? 0) > 0) hits++;
+      }
     }
     setMyPredictions(predMap);
     setTotalPoints(pts);
+    setAccuracy(calculatedCount > 0 ? Math.round((hits / calculatedCount) * 100) : 0);
+
+    // Seria — kolejne trafienia od najnowszego typu (jak w profilu)
+    const calculatedByDate = preds
+      .filter(p => p.is_calculated)
+      .sort((a, b) => new Date((b as any).updated_at ?? 0).getTime() - new Date((a as any).updated_at ?? 0).getTime());
+    let s = 0;
+    for (const p of calculatedByDate) {
+      if ((p.points_earned ?? 0) > 0) s++;
+      else break;
+    }
+    setStreak(s);
 
     // Ostatnie typy na zakończone mecze
     const calculated = preds.filter(p => p.is_calculated);
@@ -187,6 +213,34 @@ export default function HomePage() {
         </Link>
       </div>
 
+      {/* Pasek statystyk — spersonalizowane, pobierane z profilu. Klik → profil */}
+      <Link href="/profile" className="relative block mb-6">
+        <div className="grid grid-cols-3 gap-2.5 active:scale-[0.98] transition-transform">
+          {/* Poziom */}
+          <div className="rounded-2xl border border-white/[0.10] bg-[#1e1e1e] px-3 py-2.5 card-glow">
+            <p className="text-white/35 text-[10px] font-bold uppercase tracking-wide">{t("home.level")}</p>
+            <p className="text-white font-black text-sm mt-1 flex items-center gap-1 leading-tight">
+              <span>{levelFor(totalPoints).emoji}</span>
+              <span className="truncate">{t(levelFor(totalPoints).key)}</span>
+            </p>
+          </div>
+          {/* Skuteczność */}
+          <div className="rounded-2xl border border-white/[0.10] bg-[#1e1e1e] px-3 py-2.5 card-glow">
+            <p className="text-white/35 text-[10px] font-bold uppercase tracking-wide">{t("profile.accuracy")}</p>
+            <p className="text-[#F5C400] font-black text-base mt-1 leading-tight tabular-nums">{accuracy}%</p>
+          </div>
+          {/* Seria */}
+          <div className="rounded-2xl border border-white/[0.10] bg-[#1e1e1e] px-3 py-2.5 card-glow">
+            <p className="text-white/35 text-[10px] font-bold uppercase tracking-wide">{t("home.streak")}</p>
+            <p className="text-white font-black text-sm mt-1 flex items-center gap-1 leading-tight">
+              <span>{streak}</span>
+              <span className="text-white/40 text-[11px] font-semibold truncate">{t("home.streak_hits")}</span>
+              {streak > 0 && <span>🔥</span>}
+            </p>
+          </div>
+        </div>
+      </Link>
+
       {/* Baner: Sprawdź ostatnie typy */}
       {recentPreds.length > 0 && (() => {
         const last = recentPreds[0];
@@ -245,21 +299,18 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Karuzela dyscyplin */}
+      {/* Duże kafelki kategorii: Piłka · Siatkówka · Formuła */}
       {!search && (
-        <div className="flex gap-3 mb-6 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+        <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { href: "/f1", emoji: "🏎️", label: t("sport.f1"), sub: t("home.f1_subtitle") },
-            { href: "/volleyball", emoji: "🏐", label: t("sport.volleyball"), sub: t("home.sport_upcoming") },
-            { href: "/handball", emoji: "🤾", label: t("sport.handball"), sub: t("home.sport_upcoming") },
-          ].map(({ href, emoji, label, sub }) => (
-            <Link key={href} href={href} className="flex-shrink-0 w-40">
-              <div className="flex flex-col gap-2 rounded-2xl border border-white/[0.10] bg-[#1e1e1e] px-4 py-3 active:scale-[0.97] transition-transform h-full card-glow">
-                <span className="text-3xl leading-none">{emoji}</span>
-                <div>
-                  <p className="text-white font-black text-sm leading-tight">{label}</p>
-                  <p className="text-white/40 text-xs mt-0.5">{sub}</p>
-                </div>
+            { href: "/matches", emoji: "⚽", label: t("sport.football"), glow: "from-[#1a2e1a] to-[#111]" },
+            { href: "/volleyball", emoji: "🏐", label: t("sport.volleyball"), glow: "from-[#2e2a1a] to-[#111]" },
+            { href: "/f1", emoji: "🏎️", label: t("sport.f1"), glow: "from-[#2e1a1a] to-[#111]" },
+          ].map(({ href, emoji, label, glow }) => (
+            <Link key={href} href={href} className="block">
+              <div className={`flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.10] bg-gradient-to-b ${glow} py-5 active:scale-[0.96] transition-transform card-glow`}>
+                <span className="text-4xl leading-none">{emoji}</span>
+                <p className="text-white font-black text-xs uppercase tracking-wide text-center leading-tight">{label}</p>
               </div>
             </Link>
           ))}
