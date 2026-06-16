@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { supabase, generateUniqueUsername } from "@/lib/supabase";
 import Image from "next/image";
 import GoogleAuthButton from "@/components/GoogleAuthButton";
 import { useLang } from "@/contexts/LangContext";
@@ -29,8 +29,10 @@ export default function RegisterPage() {
     setLoading(false);
     if (error) { setError(error.message); return; }
     if (data.session && data.user) {
+      // Nadaj nickowi unikalność — zapobiega podszywaniu i duplikatom
+      const uniqueName = await generateUniqueUsername(username, data.user.id);
       await supabase.from("profiles").upsert(
-        { id: data.user.id, username: username.trim(), is_premium: false },
+        { id: data.user.id, username: uniqueName, is_premium: false },
         { onConflict: "id" },
       );
     }

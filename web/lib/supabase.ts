@@ -71,9 +71,43 @@ export type ChatMessage = {
 };
 
 /**
+ * Generuje UNIKALNY nick — zapobiega podszywaniu się i myleniu graczy.
+ * Pierwszy gracz dostaje czysty nick (np. "Krzysiek"), kolejni dostają
+ * znacznik w stylu Discorda (np. "Krzysiek#4821"), więc dwóch identycznych
+ * nicków nie ma w bazie.
+ *
+ * @param base proponowany nick (np. z formularza lub z konta Google)
+ * @param ownId id bieżącego użytkownika — pomija jego własny wiersz przy sprawdzaniu
+ */
+export async function generateUniqueUsername(base: string, ownId?: string): Promise<string> {
+  const clean =
+    (base || "gracz").trim().replace(/\s+/g, " ").slice(0, 20) || "gracz";
+
+  const isTaken = async (name: string): Promise<boolean> => {
+    let q = supabase.from("profiles").select("id").eq("username", name).limit(1);
+    if (ownId) q = q.neq("id", ownId);
+    const { data } = await q;
+    return !!(data && data.length > 0);
+  };
+
+  // Najpierw spróbuj czysty nick
+  if (!(await isTaken(clean))) return clean;
+
+  // Zajęty — dokładaj losowy 4-cyfrowy znacznik aż trafimy wolny
+  for (let i = 0; i < 15; i++) {
+    const candidate = `${clean}#${Math.floor(1000 + Math.random() * 9000)}`;
+    if (!(await isTaken(candidate))) return candidate;
+  }
+
+  // Awaryjnie — gwarantowanie unikalny znacznik z czasu
+  return `${clean}#${Date.now().toString().slice(-6)}`;
+}
+
+/**
  * Gwarantuje, że zalogowany użytkownik ma wiersz w `profiles`.
  * Aplikacja Flutter tworzy profil ręcznie po rejestracji — web musi robić to samo,
  * inaczej nick się nie wyświetla, a typy nie zapisują się (FK predictions→profiles).
+ * Nick jest zawsze unikalny (patrz generateUniqueUsername).
  * Zwraca username (z profilu lub utworzony).
  */
 export async function ensureProfile(): Promise<{ id: string; username: string } | null> {
@@ -85,18 +119,22 @@ export async function ensureProfile(): Promise<{ id: string; username: string } 
 
   if (existing?.username) return existing;
 
-  // Brak profilu lub pusty nick — utwórz/uzupełnij
-  const fallback =
+  // Brak profilu lub pusty nick — zbuduj bazowy nick i nadaj mu unikalność
+  const base =
     (user.user_metadata?.username as string | undefined) ||
+    (user.user_metadata?.full_name as string | undefined) ||
+    (user.user_metadata?.name as string | undefined) ||
     (user.email ? user.email.split("@")[0] : null) ||
     `gracz_${user.id.slice(0, 6)}`;
 
+  const username = await generateUniqueUsername(base, user.id);
+
   const { data: created } = await supabase
     .from("profiles")
-    .upsert({ id: user.id, username: fallback, is_premium: false }, { onConflict: "id" })
+    .upsert({ id: user.id, username, is_premium: false }, { onConflict: "id" })
     .select("id, username").single();
 
-  return created ?? { id: user.id, username: fallback };
+  return created ?? { id: user.id, username };
 }
 
 // Kod zaproszenia: 6 znaków A-Z 0-9 (jak w aplikacji)
