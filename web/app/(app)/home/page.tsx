@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback } from "react";
 import { supabase, Match, Prediction, isLive, isFinished, isUpcoming, competitionLabel, ensureProfile } from "@/lib/supabase";
 import MatchCard, { TeamLogo } from "@/components/MatchCard";
-import { Search, ChevronRight, Zap, Clock, TrendingUp } from "lucide-react";
+import { ChevronRight, Zap, Clock, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useLang } from "@/contexts/LangContext";
 
@@ -75,12 +75,10 @@ export default function HomePage() {
   const [myPredictions, setMyPredictions] = useState<Record<string, Prediction>>({});
   const [recentPreds, setRecentPreds] = useState<PredWithMatch[]>([]);
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
-  const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [sport, setSport] = useState<string>("all");
   const [allMatches, setAllMatches] = useState<Match[]>([]);
-  const [featuredChance, setFeaturedChance] = useState<{ home: number; away: number } | null>(null);
+  const [featuredChance, setFeaturedChance] = useState<{ home: number; away: number; total: number } | null>(null);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -176,15 +174,6 @@ export default function HomePage() {
 
   useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    if (!search.trim()) { setSearchResults([]); return; }
-    const q = search.toLowerCase();
-    supabase.from("matches").select("*")
-      .or(`home_team_name.ilike.%${q}%,away_team_name.ilike.%${q}%`)
-      .order("match_time", { ascending: false }).limit(10)
-      .then(({ data }) => setSearchResults(data ?? []));
-  }, [search]);
-
   // Pasek dyscyplin — lista budowana z meczów w bazie (skaluje się sam)
   const availableSports = [...new Set(allMatches.map(m => m.sport_type).filter(Boolean))];
   const matchSport = (m: Match) => sport === "all" || m.sport_type === sport;
@@ -204,9 +193,9 @@ export default function HomePage() {
           else if (p.predicted_home_score < p.predicted_away_score) a++;
         }
         const total = h + a;
-        if (total === 0) { setFeaturedChance({ home: 50, away: 50 }); return; }
+        if (total === 0) { setFeaturedChance({ home: 50, away: 50, total: 0 }); return; }
         const home = Math.round((h / total) * 100);
-        setFeaturedChance({ home, away: 100 - home });
+        setFeaturedChance({ home, away: 100 - home, total });
       });
   }, [upcoming, sport]);
 
@@ -306,32 +295,8 @@ export default function HomePage() {
         );
       })()}
 
-      {/* Wyszukiwarka */}
-      <div className="relative mb-6">
-        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-        <input
-          value={search} onChange={e => setSearch(e.target.value)}
-          placeholder={t("home.search_placeholder")}
-          className="w-full bg-[#1e1e1e] border border-white/[0.10] rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F5C400]/40 transition"
-        />
-      </div>
-
-      {/* Wyniki wyszukiwania */}
-      {search && (
-        <div className="mb-6">
-          <SectionHeader title={t("home.results")} icon={<Search size={14} className="text-white/40" />} count={searchResults.length} />
-          {searchResults.length === 0 ? (
-            <p className="text-white/20 text-sm text-center py-4">{t("home.no_results")}</p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {searchResults.map((m, i) => <MatchCard key={m.id} match={m} myPrediction={myPredictions[m.id]} index={i} />)}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Duże kafelki kategorii — przewijane poziomo: Piłka · Siatkówka · Formuła · Piłka ręczna */}
-      {!search && (
+      {(
         <div className="flex gap-3 mb-6 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
           {[
             { href: "/matches", emoji: "⚽", label: t("sport.football"), glow: "from-[#1a2e1a] to-[#111]" },
@@ -350,7 +315,7 @@ export default function HomePage() {
       )}
 
       {/* Pasek dyscyplin — pojawia się tylko gdy jest więcej niż jeden sport */}
-      {!search && availableSports.length > 1 && (
+      {availableSports.length > 1 && (
         <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
           <button onClick={() => setSport("all")}
             className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-all ${
@@ -375,7 +340,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {!search && (
+      {(
         <>
           {/* NA ŻYWO */}
           {liveFiltered.length > 0 && (
@@ -417,19 +382,30 @@ export default function HomePage() {
                     <span className="text-white font-bold text-sm text-center leading-tight line-clamp-2">{featured.away_team_name}</span>
                   </div>
                 </div>
-                {/* Szanse na wygraną */}
-                {featuredChance && (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[#F5C400] font-black text-sm tabular-nums">{featuredChance.home}%</span>
-                      <span className="text-white/30 text-[11px] font-semibold">{t("home.win_chance")}</span>
-                      <span className="text-white/60 font-black text-sm tabular-nums">{featuredChance.away}%</span>
+                {/* Szanse na wygraną — kolorowe gdy są dane (≥3 typy), inaczej szary „jeszcze się nie zaczęło” */}
+                {featuredChance && (() => {
+                  const enough = featuredChance.total >= 3;
+                  return (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className={`font-black text-sm tabular-nums ${enough ? "text-[#F5C400]" : "text-white/30"}`}>
+                          {enough ? `${featuredChance.home}%` : "—"}
+                        </span>
+                        <span className="text-white/30 text-[11px] font-semibold">{t("home.win_chance")}</span>
+                        <span className={`font-black text-sm tabular-nums ${enough ? "text-white/60" : "text-white/30"}`}>
+                          {enough ? `${featuredChance.away}%` : "—"}
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-white/[0.08] overflow-hidden flex">
+                        {enough ? (
+                          <div className="h-full bg-[#F5C400] rounded-full transition-all" style={{ width: `${featuredChance.home}%` }} />
+                        ) : (
+                          <div className="h-full bg-white/15 rounded-full" style={{ width: "100%" }} />
+                        )}
+                      </div>
                     </div>
-                    <div className="h-2 rounded-full bg-white/[0.08] overflow-hidden flex">
-                      <div className="h-full bg-[#F5C400] rounded-full transition-all" style={{ width: `${featuredChance.home}%` }} />
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
                 {/* POSTAW TYP */}
                 <Link href={`/matches/${featured.id}`}
                   className="block w-full text-center py-3.5 rounded-xl bg-[#F5C400] text-black font-black text-sm uppercase tracking-wide active:scale-[0.97] transition shadow-[0_4px_24px_rgba(245,196,0,0.3)]">
