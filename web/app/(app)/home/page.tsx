@@ -330,16 +330,17 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Duże kafelki kategorii: Piłka · Siatkówka · Formuła */}
+      {/* Duże kafelki kategorii — przewijane poziomo: Piłka · Siatkówka · Formuła · Piłka ręczna */}
       {!search && (
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="flex gap-3 mb-6 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
           {[
             { href: "/matches", emoji: "⚽", label: t("sport.football"), glow: "from-[#1a2e1a] to-[#111]" },
             { href: "/volleyball", emoji: "🏐", label: t("sport.volleyball"), glow: "from-[#2e2a1a] to-[#111]" },
             { href: "/f1", emoji: "🏎️", label: t("sport.f1"), glow: "from-[#2e1a1a] to-[#111]" },
+            { href: "/handball", emoji: "🤾", label: t("sport.handball"), glow: "from-[#1a1a2e] to-[#111]" },
           ].map(({ href, emoji, label, glow }) => (
-            <Link key={href} href={href} className="block">
-              <div className={`flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.10] bg-gradient-to-b ${glow} py-5 active:scale-[0.96] transition-transform card-glow`}>
+            <Link key={href} href={href} className="flex-shrink-0 w-28">
+              <div className={`flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.10] bg-gradient-to-b ${glow} py-5 active:scale-[0.96] transition-transform card-glow h-full`}>
                 <span className="text-4xl leading-none">{emoji}</span>
                 <p className="text-white font-black text-xs uppercase tracking-wide text-center leading-tight">{label}</p>
               </div>
